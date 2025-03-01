@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.26
+    hooks:
+      - id: uv-lock
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.4
+    hooks:
+    - id: ruff
+      args: [ --fix ]
+    - id: ruff-format
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -v --cov=src --cov-report term-missing
+        language: python
+        pass_filenames: false
+        always_run: true
