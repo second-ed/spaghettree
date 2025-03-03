@@ -12,6 +12,13 @@ dependencies = [
     "black>=25.1.0",
     "isort>=6.0.1",
     "libcst>=1.6.0",
+    "matplotlib>=3.10.1",
+    "networkx>=3.4.2",
+    "pandas>=2.2.3",
+    "pydot>=3.0.4",
+    "scipy>=1.15.2",
+    "seaborn>=0.13.2",
+    "tqdm>=4.67.1",
 ]
 
 [project.scripts]
@@ -24,6 +31,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "ipykernel>=6.29.5",
+    "jinja2>=3.1.5",
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
