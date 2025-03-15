@@ -148,9 +148,13 @@ def format_code_str(code_snippet: str) -> str:
 
 
 def get_src_code(path: str) -> str:
-    with open(path, "r") as f:
-        src_code = f.read()
-    return src_code
+    try:
+        with open(path, "r") as f:
+            src_code = f.read()
+        return src_code
+    except Exception as e:
+        print(f"{e} for {path}")
+        return None
 
 
 def save_modified_code(
