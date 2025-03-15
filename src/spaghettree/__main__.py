@@ -119,7 +119,7 @@ def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
 
 @safe
 def get_adj_matrix(
-    data: pd.DataFrame, delim: str = "\n"
+    data: pd.DataFrame, delim: str = "."
 ) -> Result[pd.DataFrame, Exception]:
     data = data.to_dict("records")
     nodes = sorted(dict.fromkeys(entry["full_address_func_method"] for entry in data))

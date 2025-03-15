@@ -28,7 +28,7 @@ def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
         dissuade_hubs=True,
     )
 
-    node_colors = [color_map[n.split("\n")[0]] for n in G.nodes]
+    node_colors = [color_map[n.split(".")[0]] for n in G.nodes]
     nx.draw(
         G,
         pos=pos,
@@ -47,6 +47,5 @@ def plot_heatmap(adj_df: pd.DataFrame):
     nonzero_rows = adj_df.any(axis=1)
     nonzero_cols = adj_df.any(axis=0)
     adj_df_filtered = adj_df.loc[nonzero_rows, nonzero_cols]
-
     sns.heatmap(adj_df_filtered, annot=True)
     return True
