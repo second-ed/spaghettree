@@ -13,8 +13,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from attrs.validators import instance_of
+from matplotlib.cm import Set1
 from returns.maybe import Maybe, Nothing, Some
-from returns.result import Failure, Result, Success
+from returns.result import Failure, Result, Success, safe
 from tqdm import tqdm
 
 
@@ -49,17 +50,39 @@ def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
     return Success(modules)
 
 
+@safe
 def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Exception]:
     rows = []
 
-    try:
-        for module_name, module_data in tqdm(modules.items()):
-            for func in module_data.funcs:
-                if not func.calls:
+    for module_name, module_data in tqdm(modules.items()):
+        for func in module_data.funcs:
+            if not func.calls:
+                rows.append(
+                    {
+                        "module": module_name,
+                        "class": "",
+                        "func_method": func.name,
+                        "call": "",
+                    }
+                )
+            else:
+                for call in func.calls:
                     rows.append(
                         {
                             "module": module_name,
                             "class": "",
+                            "func_method": func.name,
+                            "call": call,
+                        }
+                    )
+
+        for class_ in module_data.classes:
+            for func in class_.methods:
+                if not func.calls:
+                    rows.append(
+                        {
+                            "module": module_name,
+                            "class": class_.name,
                             "func_method": func.name,
                             "call": "",
                         }
@@ -69,61 +92,38 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
                         rows.append(
                             {
                                 "module": module_name,
-                                "class": "",
-                                "func_method": func.name,
-                                "call": call,
-                            }
-                        )
-
-            for class_ in module_data.classes:
-                for func in class_.methods:
-                    if not func.calls:
-                        rows.append(
-                            {
-                                "module": module_name,
                                 "class": class_.name,
                                 "func_method": func.name,
-                                "call": "",
+                                "call": call.replace(
+                                    "self.", f"{module_name}.{class_.name}."
+                                ),
                             }
                         )
-                    else:
-                        for call in func.calls:
-                            rows.append(
-                                {
-                                    "module": module_name,
-                                    "class": class_.name,
-                                    "func_method": func.name,
-                                    "call": call.replace(
-                                        "self.", f"{module_name}.{class_.name}."
-                                    ),
-                                }
-                            )
-        return Success(pd.DataFrame(rows).drop_duplicates().reset_index(drop=True))
-    except Exception as e:
-        return Failure(e)
+    return pd.DataFrame(rows).drop_duplicates().reset_index(drop=True)
 
 
+@safe
 def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
-    try:
-        calls["full_address_func_method"] = (
-            calls["module"] + "." + calls["class"] + "." + calls["func_method"]
-        ).str.replace("..", ".")
-        full_address_mapping = dict(
-            calls[["func_method", "full_address_func_method"]].to_numpy().tolist()
-        )
-        calls["full_address_calls"] = calls["call"].apply(
-            lambda x: full_address_mapping.get(x, x)
-        )
-        calls.loc[
-            ~calls["full_address_calls"].isin(calls["full_address_func_method"]),
-            "full_address_calls",
-        ] = ""
-        return Success(calls)
-    except Exception as e:
-        return Failure(e)
+    calls["full_address_func_method"] = (
+        calls["module"] + "." + calls["class"] + "." + calls["func_method"]
+    ).str.replace("..", ".")
+    full_address_mapping = dict(
+        calls[["func_method", "full_address_func_method"]].to_numpy().tolist()
+    )
+    calls["full_address_calls"] = calls["call"].apply(
+        lambda x: full_address_mapping.get(x, x)
+    )
+    calls.loc[
+        ~calls["full_address_calls"].isin(calls["full_address_func_method"]),
+        "full_address_calls",
+    ] = ""
+    return calls
 
 
-def get_adj_matrix(data: pd.DataFrame, delim: str = "\n") -> pd.DataFrame:
+@safe
+def get_adj_matrix(
+    data: pd.DataFrame, delim: str = "\n"
+) -> Result[pd.DataFrame, Exception]:
     data = data.to_dict("records")
     nodes = sorted(dict.fromkeys(entry["full_address_func_method"] for entry in data))
     node_idx = {node: i for i, node in enumerate(nodes)}
@@ -146,6 +146,12 @@ def get_adj_matrix(data: pd.DataFrame, delim: str = "\n") -> pd.DataFrame:
 
     delimited_nodes = [n.replace(".", delim) for n in nodes]
     return pd.DataFrame(adj_matrix, index=delimited_nodes, columns=delimited_nodes)
+
+
+@safe
+def get_color_map(calls: pd.DataFrame) -> Result[dict, Exception]:
+    colors = Set1(range(calls["module"].nunique()))
+    return dict(zip(calls["module"].unique().tolist(), colors))
 
 
 def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
