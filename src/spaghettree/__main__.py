@@ -4,19 +4,16 @@ import os
 from copy import deepcopy
 from typing import Optional
 
-import attrs
-import black
-import isort
 import libcst as cst
-import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 import pandas as pd
-from attrs.validators import instance_of
-from matplotlib.cm import Set1
-from returns.maybe import Maybe, Nothing, Some
+from returns.maybe import Some
 from returns.result import Failure, Result, Success, safe
 from tqdm import tqdm
+
+from spaghettree.data_structures import ClassCST, ModuleCST, get_func_cst
+from spaghettree.io import get_src_code
+from spaghettree.utils import str_to_cst
 
 
 def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
@@ -122,7 +119,7 @@ def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
 
 @safe
 def get_adj_matrix(
-    data: pd.DataFrame, delim: str = "\n"
+    data: pd.DataFrame, delim: str = "."
 ) -> Result[pd.DataFrame, Exception]:
     data = data.to_dict("records")
     nodes = sorted(dict.fromkeys(entry["full_address_func_method"] for entry in data))
@@ -146,79 +143,6 @@ def get_adj_matrix(
 
     delimited_nodes = [n.replace(".", delim) for n in nodes]
     return pd.DataFrame(adj_matrix, index=delimited_nodes, columns=delimited_nodes)
-
-
-@safe
-def get_color_map(calls: pd.DataFrame) -> Result[dict, Exception]:
-    colors = Set1(range(calls["module"].nunique()))
-    return dict(zip(calls["module"].unique().tolist(), colors))
-
-
-def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
-    plt.figure(figsize=(12, 8))
-
-    G = nx.from_pandas_adjacency(adj_df)
-    G.remove_nodes_from(list(nx.isolates(G)))
-
-    pos = nx.forceatlas2_layout(
-        G,
-        scaling_ratio=2,
-        strong_gravity=True,
-        dissuade_hubs=True,
-    )
-
-    node_colors = [color_map[n.split("\n")[0]] for n in G.nodes]
-    nx.draw(
-        G,
-        pos=pos,
-        with_labels=True,
-        node_size=4000,
-        node_shape="o",
-        node_color=node_colors,
-        edge_color="gray",
-        arrows=True,
-        font_size=8,
-    )
-
-
-def format_code_str(code_snippet: str) -> str:
-    return black.format_str(isort.code(code_snippet), mode=black.FileMode())
-
-
-def get_src_code(path: str) -> Maybe[str]:
-    try:
-        with open(path, "r") as f:
-            src_code = f.read()
-        return Some(src_code)
-    except Exception as e:
-        print(f"{e} for {path}")
-        return Nothing
-
-
-def save_modified_code(
-    modified_code: str, filepath: str, format_code: bool = True
-) -> Result[bool, Exception]:
-    try:
-        if format_code:
-            modified_code = format_code_str(modified_code)
-        with open(filepath, "w") as f:
-            f.write(modified_code)
-        return Success(True)
-    except Exception as e:
-        print(f"{e} for {filepath}")
-        return Failure(e)
-
-
-def remove_duplicate_calls(calls: list[str]) -> list:
-    return list(dict.fromkeys(calls))
-
-
-def str_to_cst(code: str) -> cst.Module:
-    return cst.parse_module(code)
-
-
-def cst_to_str(node) -> str:
-    return cst.Module([]).code_for_node(node)
 
 
 def collect_names(json):
@@ -269,78 +193,3 @@ def _get_full_module_name(module) -> Optional[str]:
     elif isinstance(module, cst.Name):
         return module.value
     return None
-
-
-@attrs.define
-class ModuleCST:
-    name: str = attrs.field(validator=[])
-    tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    imports: list = attrs.field(default=None, repr=False)
-    func_trees: dict = attrs.field(default=None, repr=False)
-    class_trees: dict = attrs.field(default=None, repr=False)
-    funcs: list = attrs.field(default=None)
-    classes: list = attrs.field(default=None)
-
-    def __attrs_post_init__(self):
-        self.imports = [
-            node
-            for node in self.tree.children
-            if isinstance(node, cst.SimpleStatementLine)
-            and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
-        ]
-        self.func_trees = {
-            node.name.value: node
-            for node in self.tree.children
-            if isinstance(node, cst.FunctionDef)
-        }
-        self.class_trees = {
-            node.name.value: node
-            for node in self.tree.children
-            if isinstance(node, cst.ClassDef)
-        }
-        self.funcs, self.classes = [], []
-
-
-@attrs.define
-class ClassCST:
-    name: str = attrs.field(validator=[instance_of(str)])
-    tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
-    methods: list = attrs.field(validator=[instance_of(list)])
-
-
-@attrs.define
-class FuncCST:
-    name: str = attrs.field(validator=[instance_of(str)])
-    tree: cst.FunctionDef = attrs.field(
-        validator=[instance_of(cst.FunctionDef)], repr=False
-    )
-    calls: list = attrs.field(validator=[instance_of(list)])
-    internal: bool = attrs.field(default=False, validator=[instance_of(bool)])
-
-
-@attrs.define
-class CallVisitor(cst.CSTVisitor):
-    depth: int = attrs.field(default=0, validator=[instance_of(int)])  # type: ignore
-    calls: list = attrs.field(default=None)
-
-    def __attrs_post_init__(self):
-        self.calls = []
-
-    def visit_IndentedBlock(self, node: cst.IndentedBlock) -> None:
-        self.depth += 1
-
-    def leave_IndentedBlock(self, node: cst.IndentedBlock) -> None:
-        self.depth -= 1
-
-    def visit_Call(self, node: cst.Call) -> None:
-        if isinstance(node.func, cst.Name):
-            self.calls.append(node.func.value)
-        elif isinstance(node.func, cst.Attribute):
-            if isinstance(node.func.value, cst.Name):
-                self.calls.append(f"{node.func.value.value}.{node.func.attr.value}")
-
-
-def get_func_cst(tree):
-    cv = CallVisitor()
-    tree.visit(cv)
-    return FuncCST(tree.name.value, tree, cv.calls)
