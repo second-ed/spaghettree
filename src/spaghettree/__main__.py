@@ -13,65 +13,53 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from attrs.validators import instance_of
+from returns.maybe import Maybe, Nothing, Some
+from returns.result import Failure, Result, Success
 from tqdm import tqdm
 
 
-def get_modules(paths: list[str]) -> dict[str, ModuleCST]:
-    modules = {}
+def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
+    modules, fails = {}, []
 
     for path in tqdm(paths):
-        module = ModuleCST(get_module_name(path), str_to_cst(get_src_code(path)))
+        some_tree = get_src_code(path).map(str_to_cst)
+        match some_tree:
+            case Some(tree):
+                module = ModuleCST(get_module_name(path), tree)
 
-        for name, tree in module.func_trees.items():
-            func = get_func_cst(tree)
-            module.funcs.append(func)
+                for name, tree in module.func_trees.items():
+                    func = get_func_cst(tree)
+                    module.funcs.append(func)
 
-        for name, tree in module.class_trees.items():
-            methods = []
-            for f in tree.body.children:
-                if isinstance(f, cst.FunctionDef):
-                    func = get_func_cst(f)
-                    methods.append(func)
+                for name, tree in module.class_trees.items():
+                    methods = []
+                    for f in tree.body.children:
+                        if isinstance(f, cst.FunctionDef):
+                            func = get_func_cst(f)
+                            methods.append(func)
 
-            c_obj = ClassCST(name, tree, methods)
-            module.classes.append(c_obj)
+                    c_obj = ClassCST(name, tree, methods)
+                    module.classes.append(c_obj)
 
-        modules[module.name] = module
-    return modules
+                modules[module.name] = module
+            case _:
+                fails.append(path)
+    if fails:
+        return Failure(ValueError(f"Failed to get tree for paths: {fails}"))
+    return Success(modules)
 
 
-def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
+def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Exception]:
     rows = []
 
-    for module_name, module_data in tqdm(modules.items()):
-        for func in module_data.funcs:
-            if not func.calls:
-                rows.append(
-                    {
-                        "module": module_name,
-                        "class": "",
-                        "func_method": func.name,
-                        "call": "",
-                    }
-                )
-            else:
-                for call in func.calls:
-                    rows.append(
-                        {
-                            "module": module_name,
-                            "class": "",
-                            "func_method": func.name,
-                            "call": call,
-                        }
-                    )
-
-        for class_ in tqdm(module_data.classes):
-            for func in class_.methods:
+    try:
+        for module_name, module_data in tqdm(modules.items()):
+            for func in module_data.funcs:
                 if not func.calls:
                     rows.append(
                         {
                             "module": module_name,
-                            "class": class_.name,
+                            "class": "",
                             "func_method": func.name,
                             "call": "",
                         }
@@ -81,14 +69,58 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
                         rows.append(
                             {
                                 "module": module_name,
-                                "class": class_.name,
+                                "class": "",
                                 "func_method": func.name,
-                                "call": call.replace(
-                                    "self.", f"{module_name}.{class_.name}."
-                                ),
+                                "call": call,
                             }
                         )
-    return pd.DataFrame(rows)
+
+            for class_ in module_data.classes:
+                for func in class_.methods:
+                    if not func.calls:
+                        rows.append(
+                            {
+                                "module": module_name,
+                                "class": class_.name,
+                                "func_method": func.name,
+                                "call": "",
+                            }
+                        )
+                    else:
+                        for call in func.calls:
+                            rows.append(
+                                {
+                                    "module": module_name,
+                                    "class": class_.name,
+                                    "func_method": func.name,
+                                    "call": call.replace(
+                                        "self.", f"{module_name}.{class_.name}."
+                                    ),
+                                }
+                            )
+        return Success(pd.DataFrame(rows).drop_duplicates().reset_index(drop=True))
+    except Exception as e:
+        return Failure(e)
+
+
+def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
+    try:
+        calls["full_address_func_method"] = (
+            calls["module"] + "." + calls["class"] + "." + calls["func_method"]
+        ).str.replace("..", ".")
+        full_address_mapping = dict(
+            calls[["func_method", "full_address_func_method"]].to_numpy().tolist()
+        )
+        calls["full_address_calls"] = calls["call"].apply(
+            lambda x: full_address_mapping.get(x, x)
+        )
+        calls.loc[
+            ~calls["full_address_calls"].isin(calls["full_address_func_method"]),
+            "full_address_calls",
+        ] = ""
+        return Success(calls)
+    except Exception as e:
+        return Failure(e)
 
 
 def get_adj_matrix(data: pd.DataFrame, delim: str = "\n") -> pd.DataFrame:
@@ -147,28 +179,28 @@ def format_code_str(code_snippet: str) -> str:
     return black.format_str(isort.code(code_snippet), mode=black.FileMode())
 
 
-def get_src_code(path: str) -> str:
+def get_src_code(path: str) -> Maybe[str]:
     try:
         with open(path, "r") as f:
             src_code = f.read()
-        return src_code
+        return Some(src_code)
     except Exception as e:
         print(f"{e} for {path}")
-        return None
+        return Nothing
 
 
 def save_modified_code(
     modified_code: str, filepath: str, format_code: bool = True
-) -> bool:
+) -> Result[bool, Exception]:
     try:
         if format_code:
             modified_code = format_code_str(modified_code)
         with open(filepath, "w") as f:
             f.write(modified_code)
-        return True
+        return Success(True)
     except Exception as e:
         print(f"{e} for {filepath}")
-        return False
+        return Failure(e)
 
 
 def remove_duplicate_calls(calls: list[str]) -> list:
