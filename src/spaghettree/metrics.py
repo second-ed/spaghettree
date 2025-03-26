@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from returns.result import safe
 
 
+@safe
 def modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
+    adj_df = adj_df.copy().abs()
     degree = adj_df.sum(axis=0)
     total_edges = degree.sum()
 
@@ -18,7 +21,9 @@ def modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
     return modularity_matrix.sum() / total_edges
 
 
+@safe
 def directed_weighted_modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
+    adj_df = adj_df.copy().abs()
     out_degree = adj_df.sum(axis=0)
     in_degree = adj_df.sum(axis=1)
     total_edges = out_degree.sum()

@@ -51,7 +51,7 @@ def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
 def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Exception]:
     rows = []
 
-    for module_name, module_data in tqdm(modules.items()):
+    for module_name, module_data in modules.items():
         for func in module_data.funcs:
             if not func.calls:
                 rows.append(
@@ -127,7 +127,7 @@ def get_adj_matrix(
 
     adj_matrix = np.zeros((len(nodes), len(nodes)), dtype=int)
 
-    for entry in tqdm(data):
+    for entry in data:
         if entry["full_address_calls"]:
             i, j = (
                 node_idx[entry["full_address_func_method"]],

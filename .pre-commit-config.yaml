@@ -3,14 +3,19 @@ repos:
     rev: 0.5.26
     hooks:
       - id: uv-lock
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.4
-    hooks:
-    - id: ruff
-      args: [ --fix ]
-    - id: ruff-format
   - repo: local
     hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff check
+        language: system
+        types_or: [ python, pyi, jupyter ]
+        args: [ --fix ]
+      - id: ruff
+        name: ruff
+        entry: ruff format
+        language: system
+        types_or: [ python, pyi, jupyter ]
       - id: pytest
         name: pytest
         entry: uv run pytest -v --cov=src --cov-report term-missing
