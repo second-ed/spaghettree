@@ -59,16 +59,21 @@ def optimise_graph(
     epochs = []
 
     while temp > min_temp:
-        if random.choice((True, False)):
-            cand_df = update_func_loc(
-                search_df, random.choice(func_names), random.choice(module_names)
-            )
-            cand_score = get_modularity_score(cand_df)
-        else:
-            cand_df = update_class_loc(
-                search_df, random.choice(class_names), random.choice(module_names)
-            )
-            cand_score = get_modularity_score(cand_df)
+        match (bool(func_names), bool(class_names), random.choice((True, False))):
+            case (True, _, True):
+                cand_df = update_func_loc(
+                    search_df, random.choice(func_names), random.choice(module_names)
+                )
+                cand_score = get_modularity_score(cand_df)
+
+            case (_, True, False):
+                cand_df = update_class_loc(
+                    search_df, random.choice(class_names), random.choice(module_names)
+                )
+                cand_score = get_modularity_score(cand_df)
+
+            case _:
+                pass
 
         if cand_score > best_score:
             print(f"new high score: {cand_score:.3f}")
