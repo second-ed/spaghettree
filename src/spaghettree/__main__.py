@@ -193,3 +193,13 @@ def _get_full_module_name(module) -> Optional[str]:
     elif isinstance(module, cst.Name):
         return module.value
     return None
+
+
+def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
+    func_names, class_names = [], []
+
+    for mod_csts in mods.values():
+        func_names.extend(list(mod_csts.func_trees.keys()))
+        class_names.extend(list(mod_csts.class_trees.keys()))
+
+    return tuple(mods.keys()), tuple(func_names), tuple(class_names)
