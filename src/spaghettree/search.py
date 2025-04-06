@@ -8,18 +8,22 @@ from spaghettree.__main__ import clean_calls_df, get_adj_matrix
 from spaghettree.metrics import directed_weighted_modularity_df
 
 
-def update_func_loc(call_df: pd.DataFrame, func: str, new_module: str) -> pd.DataFrame:
+def _update_obj_loc(
+    call_df: pd.DataFrame, obj_col: str, obj: str, new_module: str
+) -> pd.DataFrame:
     call_df = call_df.copy()
-    call_df.loc[call_df["func_method"] == func, "module"] = new_module
+    call_df.loc[call_df[obj_col] == obj, "module"] = new_module
     return call_df
+
+
+def update_func_loc(call_df: pd.DataFrame, func: str, new_module: str) -> pd.DataFrame:
+    return _update_obj_loc(call_df, "func_method", func, new_module)
 
 
 def update_class_loc(
     call_df: pd.DataFrame, class_: str, new_module: str
 ) -> pd.DataFrame:
-    call_df = call_df.copy()
-    call_df.loc[call_df["class"] == class_, "module"] = new_module
-    return call_df
+    return _update_obj_loc(call_df, "class", class_, new_module)
 
 
 def get_modularity_score(calls_df: pd.DataFrame) -> float:
@@ -76,7 +80,7 @@ def optimise_graph(
                 pass
 
         if cand_score > best_score:
-            print(f"new high score: {cand_score:.3f}")
+            print(f"new high score: {cand_score:.5f}")
             best_score = cand_score
             search_df = cand_df.copy()
 

@@ -96,7 +96,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
                                 ),
                             }
                         )
-    return pd.DataFrame(rows).drop_duplicates().reset_index(drop=True)
+    return pd.DataFrame(rows).reset_index(drop=True)
 
 
 @safe
@@ -137,9 +137,9 @@ def get_adj_matrix(
                 entry["full_address_func_method"].split(".")[0]
                 == entry["full_address_calls"].split(".")[0]
             ):
-                adj_matrix[i, j] = 1
+                adj_matrix[i, j] += 1
             else:
-                adj_matrix[i, j] = -1
+                adj_matrix[i, j] += -1
 
     delimited_nodes = [n.replace(".", delim) for n in nodes]
     return pd.DataFrame(adj_matrix, index=delimited_nodes, columns=delimited_nodes)
