@@ -48,13 +48,10 @@ def optimise_graph(
     module_names: tuple,
     class_names: tuple,
     func_names: tuple,
-    min_temp: float = 0.01,
-    max_temp: float = 1,
-    alpha: float = 0.999,
+    sims: int = 5000,
 ) -> pd.DataFrame:
     search_df = search_df.copy()
 
-    temp = max_temp
     best_score = get_modularity_score(search_df)
     cand_score = -np.inf
 
@@ -62,7 +59,7 @@ def optimise_graph(
 
     epochs = []
 
-    while temp > min_temp:
+    for _ in range(sims):
         match (bool(func_names), bool(class_names), random.choice((True, False))):
             case (True, _, True):
                 cand_df = update_func_loc(
@@ -84,16 +81,6 @@ def optimise_graph(
             best_score = cand_score
             search_df = cand_df.copy()
 
-        # TODO: figure out if I want to add simulated annealing
-        # else:
-        #     delta_energy = best_score - cand_score
-        #     prob = np.exp(-delta_energy / temp)
-
-        #     if np.random.uniform(0, 1) < prob:
-        #         search_df = cand_df.copy()
-        #         best_score = cand_score
-
-        temp *= alpha
         epochs.append(
             {
                 "cand_score": cand_score,

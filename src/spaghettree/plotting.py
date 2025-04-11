@@ -5,18 +5,21 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.cm import Set1
 from returns.result import Result, safe
 
 
 @safe
 def get_color_map(calls: pd.DataFrame) -> Result[dict, Exception]:
-    colors = Set1(range(calls["module"].nunique()))
+    n = int(np.ceil(calls["module"].nunique() / 3))
+    reds = plt.cm.Reds(np.linspace(0.2, 1, n))
+    blues = plt.cm.Blues(np.linspace(0.2, 1, n))
+    greens = plt.cm.Greens(np.linspace(0.2, 1, n))
+    colors = np.vstack([reds, blues, greens])
     return dict(zip(calls["module"].unique().tolist(), colors))
 
 
 def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(24, 16))
 
     G = nx.from_pandas_adjacency(adj_df)
     G.remove_nodes_from(list(nx.isolates(G)))
@@ -44,8 +47,16 @@ def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
 
 @safe
 def plot_heatmap(adj_df: pd.DataFrame):
+    plt.figure(figsize=(24, 16))
     nonzero_rows = adj_df.any(axis=1)
     nonzero_cols = adj_df.any(axis=0)
     adj_df_filtered = adj_df.loc[nonzero_rows, nonzero_cols]
-    sns.heatmap(adj_df_filtered, annot=True)
+    sns.heatmap(
+        adj_df_filtered,
+        cmap=sns.color_palette("vlag", as_cmap=True),
+        center=0,
+        vmin=-1,
+        vmax=1,
+        # annot=True
+    )
     return True
