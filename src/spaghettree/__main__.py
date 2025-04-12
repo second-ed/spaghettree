@@ -1,174 +1,67 @@
 from __future__ import annotations
 
+import glob
 import os
-from typing import Optional
+import pprint
 
-import libcst as cst
-import numpy as np
-import pandas as pd
-from returns.maybe import Some
-from returns.result import Failure, Result, Success, safe
-from tqdm import tqdm
-
-from spaghettree.data_structures import ClassCST, ModuleCST, get_func_cst
-from spaghettree.io import get_src_code
-from spaghettree.utils import str_to_cst
-
-
-async def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
-    modules, fails = {}, []
-
-    for path in tqdm(paths, "creating objects"):
-        some_tree = (await get_src_code(path)).map(str_to_cst)
-        match some_tree:
-            case Some(tree):
-                module = ModuleCST(get_module_name(path), tree)
-
-                for name, tree in module.func_trees.items():
-                    func = get_func_cst(tree)
-                    module.funcs.append(func)
-
-                for name, tree in module.class_trees.items():
-                    methods = []
-                    for f in tree.body.children:
-                        if isinstance(f, cst.FunctionDef):
-                            func = get_func_cst(f)
-                            methods.append(func)
-
-                    c_obj = ClassCST(name, tree, methods)
-                    module.classes.append(c_obj)
-
-                modules[module.name] = module
-            case _:
-                fails.append(path)
-    if fails:
-        return Failure(ValueError(f"Failed to get tree for paths: {fails}"))
-    return Success(modules)
+from spaghettree.data_structures import OptResult
+from spaghettree.metrics import modularity_df
+from spaghettree.processing import (
+    clean_calls_df,
+    get_call_table,
+    get_entity_names,
+    get_modules,
+)
+from spaghettree.search import genetic_search, get_modularity_score, hill_climber_search
 
 
-@safe
-def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Exception]:
-    rows = []
+def process_package(p: str, total_sims: int = 8000, pop: int = 8):
+    sims = total_sims // pop
+    package_name = os.path.basename(p)
+    # print("*" * 79)
+    # print(f"{package_name = }")
+    paths = glob.glob(f"{p}/**/**.py", recursive=True)
+    modules = get_modules(paths)
+    module_names, func_names, class_names = modules.bind(get_entity_names)
+    raw_calls = modules.bind(get_call_table)
+    raw_calls_df = raw_calls.unwrap()
+    calls = raw_calls.bind(clean_calls_df)
 
-    for module_name, module_data in modules.items():
-        for func in module_data.funcs:
-            if not func.calls:
-                rows.append(
-                    {
-                        "module": module_name,
-                        "class": "",
-                        "func_method": func.name,
-                        "call": "",
-                    }
-                )
-            else:
-                for call in func.calls:
-                    rows.append(
-                        {
-                            "module": module_name,
-                            "class": "",
-                            "func_method": func.name,
-                            "call": call,
-                        }
-                    )
+    record = {
+        "package_name": package_name,
+        "n_modules": len(module_names),
+        "n_classes": len(class_names),
+        "n_funcs": len(func_names),
+        "base_dwm": get_modularity_score(calls.unwrap()),
+        "base_modularity": get_modularity_score(calls.unwrap(), modularity_df),
+        "total_sims": total_sims,
+        "initial_population_size": pop,
+        "generations": sims,
+    }
+    pprint.pprint(record, sort_dicts=False)
 
-        for class_ in module_data.classes:
-            for func in class_.methods:
-                if not func.calls:
-                    rows.append(
-                        {
-                            "module": module_name,
-                            "class": class_.name,
-                            "func_method": func.name,
-                            "call": "",
-                        }
-                    )
-                else:
-                    for call in func.calls:
-                        rows.append(
-                            {
-                                "module": module_name,
-                                "class": class_.name,
-                                "func_method": func.name,
-                                "call": call.replace(
-                                    "self.", f"{module_name}.{class_.name}."
-                                ),
-                            }
-                        )
-    return pd.DataFrame(rows)
-
-
-@safe
-def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
-    calls = calls.copy()
-    calls["full_address_func_method"] = (
-        calls["module"] + "." + calls["class"] + "." + calls["func_method"]
-    ).str.replace("..", ".")
-
-    full_address_mapping = dict(
-        zip(calls["func_method"], calls["full_address_func_method"])
+    search_df, epochs, best_score = hill_climber_search(
+        raw_calls_df,
+        module_names=module_names,
+        class_names=class_names,
+        func_names=func_names,
+        sims=total_sims,
     )
-    calls["full_address_calls"] = calls["call"].map(full_address_mapping).fillna("")
-    return calls
+    record["hill_climber_search_dwm"] = best_score
+    record["hill_climber_search_m"] = get_modularity_score(search_df, modularity_df)
 
-
-@safe
-def get_adj_matrix(
-    data: pd.DataFrame, delim: str = "."
-) -> Result[pd.DataFrame, Exception]:
-    funcs = data["full_address_func_method"].to_numpy()
-    calls = data["full_address_calls"].to_numpy()
-
-    nodes = np.unique(np.concatenate((funcs, calls[calls != ""])))
-    node_idx = {node: i for i, node in enumerate(nodes)}
-
-    n = len(nodes)
-    adj_mat = np.zeros((n, n), dtype=int)
-
-    same_mod = np.array(
-        [
-            f.split(".")[0] == c.split(".")[0] if c else False
-            for f, c in zip(funcs, calls)
-        ]
+    search_df, epochs, best_score = genetic_search(
+        raw_calls_df, module_names, class_names, func_names, population=pop, sims=sims
     )
+    record["genetic_search_dwm"] = best_score
+    record["genetic_search_m"] = get_modularity_score(search_df, modularity_df)
 
-    for i, call in enumerate(calls):
-        tgt = call
-        if not tgt:
-            continue
-        src = funcs[i]
-        src_idx = node_idx[src]
-        tgt_idx = node_idx[tgt]
-        adj_mat[src_idx, tgt_idx] += 1 if same_mod[i] else -1
-
-    if delim != ".":
-        formatted_nodes = [n.replace(".", delim) for n in nodes]
-    else:
-        formatted_nodes = nodes
-    return pd.DataFrame(adj_mat, index=formatted_nodes, columns=formatted_nodes)
-
-
-def get_module_name(path: str) -> str:
-    return os.path.splitext(os.path.basename(path))[0]
-
-
-def _get_full_module_name(module) -> Optional[str]:
-    if isinstance(module, cst.Attribute):
-        return (
-            _get_full_module_name(module.value)  # type: ignore
-            + "."
-            + module.attr.value
-        )
-    elif isinstance(module, cst.Name):
-        return module.value
-    return None
-
-
-def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
-    func_names, class_names = [], []
-
-    for mod_csts in mods.values():
-        func_names.extend(list(mod_csts.func_trees.keys()))
-        class_names.extend(list(mod_csts.class_trees.keys()))
-
-    return tuple(mods.keys()), tuple(func_names), tuple(class_names)
+    # print("*" * 79, end="\n\n")
+    return record, {
+        f"{package_name}_hill_climber": OptResult(
+            "hill_climber", search_df, epochs, best_score
+        ),
+        f"{package_name}_genetic_search": OptResult(
+            "genetic_search", search_df, epochs, best_score
+        ),
+    }

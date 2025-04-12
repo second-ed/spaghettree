@@ -8,8 +8,8 @@ import pandas as pd
 from returns.result import Failure, Success
 from tqdm import tqdm
 
-from spaghettree.__main__ import clean_calls_df, get_adj_matrix
 from spaghettree.metrics import directed_weighted_modularity_df
+from spaghettree.processing import clean_calls_df, get_adj_matrix
 
 
 def hill_climber_search(
