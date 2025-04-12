@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from copy import deepcopy
 from typing import Optional
 
 import libcst as cst
@@ -109,14 +108,7 @@ def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
     full_address_mapping = dict(
         zip(calls["func_method"], calls["full_address_func_method"])
     )
-    calls["full_address_calls"] = (
-        calls["call"].map(full_address_mapping).fillna(calls["call"])
-    )
-
-    calls.loc[
-        ~calls["full_address_calls"].isin(calls["full_address_func_method"]),
-        "full_address_calls",
-    ] = ""
+    calls["full_address_calls"] = calls["call"].map(full_address_mapping).fillna("")
     return calls
 
 
@@ -127,10 +119,11 @@ def get_adj_matrix(
     funcs = data["full_address_func_method"].to_numpy()
     calls = data["full_address_calls"].to_numpy()
 
-    all_nodes = np.unique(np.concatenate((funcs, calls[calls != ""])))
-    node_idx = {node: i for i, node in enumerate(all_nodes)}
+    nodes = np.unique(np.concatenate((funcs, calls[calls != ""])))
+    node_idx = {node: i for i, node in enumerate(nodes)}
 
-    adj_mat = np.zeros((len(all_nodes), len(all_nodes)), dtype=int)
+    n = len(nodes)
+    adj_mat = np.zeros((n, n), dtype=int)
 
     same_mod = np.array(
         [
@@ -139,51 +132,20 @@ def get_adj_matrix(
         ]
     )
 
-    for i in range(len(data)):
-        src = funcs[i]
-        tgt = calls[i]
+    for i, call in enumerate(calls):
+        tgt = call
         if not tgt:
             continue
+        src = funcs[i]
         src_idx = node_idx[src]
         tgt_idx = node_idx[tgt]
         adj_mat[src_idx, tgt_idx] += 1 if same_mod[i] else -1
 
-    formatted_nodes = [n.replace(".", delim) for n in all_nodes]
+    if delim != ".":
+        formatted_nodes = [n.replace(".", delim) for n in nodes]
+    else:
+        formatted_nodes = nodes
     return pd.DataFrame(adj_mat, index=formatted_nodes, columns=formatted_nodes)
-
-
-def collect_names(json):
-    def _collect_names(node, prefix=""):
-        name = node.get("name", "")
-        if name:
-            if prefix:
-                name = ".".join([prefix, name])
-            names.append(name)
-        for n in node.get("methods", []):
-            _collect_names(n, name)
-
-    names = []
-
-    for node in json.values():
-        _collect_names(node)
-
-    return names
-
-
-def filter_tree(json, defined_names):
-    json = deepcopy(json)
-
-    def _filter_calls(node):
-        if "calls" in node:
-            node["calls"] = [c for c in node.get("calls", []) if c in defined_names]
-
-        for m in node.get("methods", []):
-            _filter_calls(m)
-
-    for node in json.values():
-        _filter_calls(node)
-
-    return json
 
 
 def get_module_name(path: str) -> str:

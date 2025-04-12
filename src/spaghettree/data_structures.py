@@ -82,7 +82,7 @@ def get_func_cst(tree):
 
 
 @attrs.define(frozen=True)
-class Result:
+class OptResult:
     method: str = attrs.field()
     search_df: pd.DataFrame = attrs.field()
     epochs: pd.DataFrame = attrs.field()

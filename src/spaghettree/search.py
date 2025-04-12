@@ -12,7 +12,6 @@ from spaghettree.__main__ import clean_calls_df, get_adj_matrix
 from spaghettree.metrics import directed_weighted_modularity_df
 
 
-# @profile_func("tottime")
 def hill_climber_search(
     search_df: pd.DataFrame,
     module_names: tuple,
@@ -47,7 +46,6 @@ def hill_climber_search(
     return search_df, pd.DataFrame(epochs), best_score
 
 
-# @profile_func("tottime")
 def genetic_search(
     search_df: pd.DataFrame,
     module_names: tuple,
