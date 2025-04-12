@@ -6,7 +6,7 @@ from returns.result import Failure, Result, Success
 from spaghettree.utils import format_code_str
 
 
-def get_src_code(path: str) -> Maybe[str]:
+async def get_src_code(path: str) -> Maybe[str]:
     try:
         with open(path, "r") as f:
             src_code = f.read()
@@ -16,7 +16,7 @@ def get_src_code(path: str) -> Maybe[str]:
         return Nothing
 
 
-def save_modified_code(
+async def save_modified_code(
     modified_code: str, filepath: str, format_code: bool = True
 ) -> Result[bool, Exception]:
     try:

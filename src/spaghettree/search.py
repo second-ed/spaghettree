@@ -6,13 +6,12 @@ import numpy as np
 import pandas as pd
 from returns.result import Failure, Success
 from tqdm import tqdm
-from useful_decorators.decorators import profile_func
 
 from spaghettree.__main__ import clean_calls_df, get_adj_matrix
 from spaghettree.metrics import directed_weighted_modularity_df
 
 
-@profile_func()
+# @profile_func("tottime")
 def hill_climber_search(
     search_df: pd.DataFrame,
     module_names: tuple,
@@ -47,7 +46,7 @@ def hill_climber_search(
     return search_df, epochs
 
 
-@profile_func()
+# @profile_func("tottime")
 def genetic_search(
     search_df: pd.DataFrame,
     module_names: tuple,
@@ -97,17 +96,17 @@ def mutate(
                 search_df, random.choice(func_names), random.choice(module_names)
             )
             cand_score = get_modularity_score(cand_df)
+            return cand_df, cand_score
 
         case (_, True, False):
             cand_df = update_class_loc(
                 search_df, random.choice(class_names), random.choice(module_names)
             )
             cand_score = get_modularity_score(cand_df)
+            return cand_df, cand_score
 
         case _:
             return search_df, -np.inf
-
-    return cand_df, cand_score
 
 
 def _update_obj_loc(

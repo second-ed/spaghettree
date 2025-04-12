@@ -16,11 +16,11 @@ from spaghettree.io import get_src_code
 from spaghettree.utils import str_to_cst
 
 
-def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
+async def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
     modules, fails = {}, []
 
     for path in tqdm(paths):
-        some_tree = get_src_code(path).map(str_to_cst)
+        some_tree = (await get_src_code(path)).map(str_to_cst)
         match some_tree:
             case Some(tree):
                 module = ModuleCST(get_module_name(path), tree)
@@ -96,7 +96,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
                                 ),
                             }
                         )
-    return pd.DataFrame(rows).reset_index(drop=True)
+    return pd.DataFrame(rows)
 
 
 @safe
