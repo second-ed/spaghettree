@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import attrs
 import libcst as cst
+import pandas as pd
 from attrs.validators import instance_of
 
 
@@ -78,3 +79,11 @@ def get_func_cst(tree):
     cv = CallVisitor()
     tree.visit(cv)
     return FuncCST(tree.name.value, tree, cv.calls)
+
+
+@attrs.define(frozen=True)
+class Result:
+    method: str = attrs.field()
+    search_df: pd.DataFrame = attrs.field()
+    epochs: pd.DataFrame = attrs.field()
+    best_score: float = attrs.field()

@@ -19,7 +19,7 @@ from spaghettree.utils import str_to_cst
 async def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
     modules, fails = {}, []
 
-    for path in tqdm(paths):
+    for path in tqdm(paths, "creating objects"):
         some_tree = (await get_src_code(path)).map(str_to_cst)
         match some_tree:
             case Some(tree):

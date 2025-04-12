@@ -1,6 +1,7 @@
 import random
 from copy import deepcopy
 from functools import partial
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -24,11 +25,11 @@ def hill_climber_search(
     best_score = get_modularity_score(search_df)
     cand_score = -np.inf
 
-    print(f"base score: {best_score:.3f}")
+    print(f"    base score: {best_score:.3f}")
 
     epochs = []
 
-    for _ in tqdm(range(sims)):
+    for _ in tqdm(range(sims), "hill climbing..."):
         cand_df, cand_score = mutate(search_df, module_names, func_names, class_names)
 
         if cand_score > best_score:
@@ -42,8 +43,8 @@ def hill_climber_search(
             }
         )
 
-    print(f"{best_score = }")
-    return search_df, epochs
+    print(f"    {best_score = }")
+    return search_df, pd.DataFrame(epochs), best_score
 
 
 # @profile_func("tottime")
@@ -56,7 +57,7 @@ def genetic_search(
     sims: int = 100,
 ) -> tuple[pd.DataFrame, list[dict]]:
     best_score = get_modularity_score(search_df)
-    print(f"base score: {best_score:.3f}")
+    print(f"    base score: {best_score:.3f}")
 
     init_mutate = partial(
         mutate,
@@ -70,18 +71,23 @@ def genetic_search(
 
     epochs = []
 
-    for _ in tqdm(range(sims)):
+    for _ in tqdm(range(sims), "evolving..."):
         mutated = sorted([init_mutate(df) for df, _ in curr_gen], key=lambda x: -x[1])
         best = mutated[: population // 2]
         scores = [b[1] for b in best]
         mean_score = np.mean(scores)
+
+        cand_df, cand_score = best[0]
+        if cand_score > best_score:
+            best_score = cand_score
+            search_df = cand_df.copy()
+
         doubled_best = best + best
         curr_gen = deepcopy(doubled_best)
-        epochs.append({"best_score": scores[0], "mean_score": mean_score})
+        epochs.append({"mean_score": mean_score, "best_score": scores[0]})
 
-    best_df, best_score = curr_gen[0]
-    print(f"{best_score = }")
-    return best_df, epochs
+    print(f"    {best_score = }")
+    return search_df, pd.DataFrame(epochs), best_score
 
 
 def mutate(
@@ -127,13 +133,10 @@ def update_class_loc(
     return _update_obj_loc(call_df, "class", class_, new_module)
 
 
-def get_modularity_score(calls_df: pd.DataFrame) -> float:
-    res = (
-        Success(calls_df)
-        .bind(clean_calls_df)
-        .bind(get_adj_matrix)
-        .bind(directed_weighted_modularity_df)
-    )
+def get_modularity_score(
+    calls_df: pd.DataFrame, fitness_func: Callable = directed_weighted_modularity_df
+) -> float:
+    res = Success(calls_df).bind(clean_calls_df).bind(get_adj_matrix).bind(fitness_func)
 
     match res:
         case Success(score):
