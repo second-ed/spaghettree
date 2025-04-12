@@ -101,15 +101,18 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
 
 @safe
 def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
+    calls = calls.copy()
     calls["full_address_func_method"] = (
         calls["module"] + "." + calls["class"] + "." + calls["func_method"]
     ).str.replace("..", ".")
+
     full_address_mapping = dict(
-        calls[["func_method", "full_address_func_method"]].to_numpy().tolist()
+        zip(calls["func_method"], calls["full_address_func_method"])
     )
-    calls["full_address_calls"] = calls["call"].apply(
-        lambda x: full_address_mapping.get(x, x)
+    calls["full_address_calls"] = (
+        calls["call"].map(full_address_mapping).fillna(calls["call"])
     )
+
     calls.loc[
         ~calls["full_address_calls"].isin(calls["full_address_func_method"]),
         "full_address_calls",
@@ -121,28 +124,32 @@ def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
 def get_adj_matrix(
     data: pd.DataFrame, delim: str = "."
 ) -> Result[pd.DataFrame, Exception]:
-    data = data.to_dict("records")
-    nodes = sorted(dict.fromkeys(entry["full_address_func_method"] for entry in data))
-    node_idx = {node: i for i, node in enumerate(nodes)}
+    funcs = data["full_address_func_method"].to_numpy()
+    calls = data["full_address_calls"].to_numpy()
 
-    adj_matrix = np.zeros((len(nodes), len(nodes)), dtype=int)
+    all_nodes = np.unique(np.concatenate((funcs, calls[calls != ""])))
+    node_idx = {node: i for i, node in enumerate(all_nodes)}
 
-    for entry in data:
-        if entry["full_address_calls"]:
-            i, j = (
-                node_idx[entry["full_address_func_method"]],
-                node_idx[entry["full_address_calls"]],
-            )
-            if (
-                entry["full_address_func_method"].split(".")[0]
-                == entry["full_address_calls"].split(".")[0]
-            ):
-                adj_matrix[i, j] += 1
-            else:
-                adj_matrix[i, j] += -1
+    adj_mat = np.zeros((len(all_nodes), len(all_nodes)), dtype=int)
 
-    delimited_nodes = [n.replace(".", delim) for n in nodes]
-    return pd.DataFrame(adj_matrix, index=delimited_nodes, columns=delimited_nodes)
+    same_mod = np.array(
+        [
+            f.split(".")[0] == c.split(".")[0] if c else False
+            for f, c in zip(funcs, calls)
+        ]
+    )
+
+    for i in range(len(data)):
+        src = funcs[i]
+        tgt = calls[i]
+        if not tgt:
+            continue
+        src_idx = node_idx[src]
+        tgt_idx = node_idx[tgt]
+        adj_mat[src_idx, tgt_idx] += 1 if same_mod[i] else -1
+
+    formatted_nodes = [n.replace(".", delim) for n in all_nodes]
+    return pd.DataFrame(adj_mat, index=formatted_nodes, columns=formatted_nodes)
 
 
 def collect_names(json):
