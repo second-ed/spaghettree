@@ -1,17 +1,15 @@
 import random
 from copy import deepcopy
-from functools import partial
 from typing import Callable
 
 import numpy as np
 import pandas as pd
-from returns.result import Failure, Success
-from tqdm import tqdm
 
 from spaghettree.metrics import directed_weighted_modularity_df
 from spaghettree.processing import clean_calls_df, get_adj_matrix
 
 
+# @profile_func("time")
 def hill_climber_search(
     search_df: pd.DataFrame,
     module_names: tuple,
@@ -22,13 +20,13 @@ def hill_climber_search(
     search_df = search_df.copy()
 
     best_score = get_modularity_score(search_df)
-    cand_score = -np.inf
+    cand_score = -1
 
     print(f"    base score: {best_score:.3f}")
 
     epochs = []
 
-    for _ in tqdm(range(sims), "hill climbing..."):
+    for _ in range(sims):
         cand_df, cand_score = mutate(search_df, module_names, func_names, class_names)
 
         if cand_score > best_score:
@@ -46,6 +44,7 @@ def hill_climber_search(
     return search_df, pd.DataFrame(epochs), best_score
 
 
+# @profile_func()
 def genetic_search(
     search_df: pd.DataFrame,
     module_names: tuple,
@@ -57,20 +56,16 @@ def genetic_search(
     best_score = get_modularity_score(search_df)
     print(f"    base score: {best_score:.3f}")
 
-    init_mutate = partial(
-        mutate,
-        module_names=module_names,
-        func_names=func_names,
-        class_names=class_names,
-    )
-
-    init_pop = [(search_df.copy(), -np.inf) for _ in range(population)]
+    init_pop = [(search_df.copy(), -1) for _ in range(population)]
     curr_gen = init_pop
 
     epochs = []
 
-    for _ in tqdm(range(sims), "evolving..."):
-        mutated = sorted([init_mutate(df) for df, _ in curr_gen], key=lambda x: -x[1])
+    for _ in range(sims):
+        mutated = sorted(
+            [mutate(df, module_names, func_names, class_names) for df, _ in curr_gen],
+            key=lambda x: -x[1],
+        )
         best = mutated[: population // 2]
         scores = [b[1] for b in best]
         mean_score = np.mean(scores)
@@ -110,7 +105,7 @@ def mutate(
             return cand_df, cand_score
 
         case _:
-            return search_df, -np.inf
+            return search_df, -1
 
 
 def _update_obj_loc(
@@ -135,12 +130,4 @@ def update_class_loc(
 def get_modularity_score(
     calls_df: pd.DataFrame, fitness_func: Callable = directed_weighted_modularity_df
 ) -> float:
-    res = Success(calls_df).bind(clean_calls_df).bind(get_adj_matrix).bind(fitness_func)
-
-    match res:
-        case Success(score):
-            return score
-        case Failure(_):
-            return -1
-        case _:
-            raise RuntimeError("Invalid return item")
+    return fitness_func(get_adj_matrix(clean_calls_df(calls_df)))

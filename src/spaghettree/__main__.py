@@ -27,15 +27,15 @@ def process_package(p: str, total_sims: int = 8000, pop: int = 8):
     module_names, func_names, class_names = modules.bind(get_entity_names)
     raw_calls = modules.bind(get_call_table)
     raw_calls_df = raw_calls.unwrap()
-    calls = raw_calls.bind(clean_calls_df)
+    calls_df = clean_calls_df(raw_calls_df)
 
     record = {
         "package_name": package_name,
         "n_modules": len(module_names),
         "n_classes": len(class_names),
         "n_funcs": len(func_names),
-        "base_dwm": get_modularity_score(calls.unwrap()),
-        "base_modularity": get_modularity_score(calls.unwrap(), modularity_df),
+        "base_dwm": get_modularity_score(calls_df),
+        "base_modularity": get_modularity_score(calls_df, modularity_df),
         "total_sims": total_sims,
         "initial_population_size": pop,
         "generations": sims,

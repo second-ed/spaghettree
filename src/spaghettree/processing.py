@@ -98,8 +98,8 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
     return pd.DataFrame(rows)
 
 
-@safe
-def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
+# @safe
+def clean_calls_df(calls: pd.DataFrame) -> pd.DataFrame:
     calls = calls.copy()
     calls["full_address_func_method"] = (
         calls["module"] + "." + calls["class"] + "." + calls["func_method"]
@@ -112,10 +112,8 @@ def clean_calls_df(calls: pd.DataFrame) -> Result[pd.DataFrame, Exception]:
     return calls
 
 
-@safe
-def get_adj_matrix(
-    data: pd.DataFrame, delim: str = "."
-) -> Result[pd.DataFrame, Exception]:
+# @safe
+def get_adj_matrix(data: pd.DataFrame, delim: str = ".") -> pd.DataFrame:
     funcs = data["full_address_func_method"].to_numpy()
     calls = data["full_address_calls"].to_numpy()
 
@@ -125,18 +123,18 @@ def get_adj_matrix(
     n = len(nodes)
     adj_mat = np.zeros((n, n), dtype=int)
 
+    filtered_funcs = funcs[calls != ""]
+    filtered_calls = calls[calls != ""]
+
     same_mod = np.array(
         [
-            f.split(".")[0] == c.split(".")[0] if c else False
-            for f, c in zip(funcs, calls)
+            f.split(".")[0] == c.split(".")[0]
+            for f, c in zip(filtered_funcs, filtered_calls)
         ]
     )
 
-    for i, call in enumerate(calls):
-        tgt = call
-        if not tgt:
-            continue
-        src = funcs[i]
+    for i, tgt in enumerate(filtered_calls):
+        src = filtered_funcs[i]
         src_idx = node_idx[src]
         tgt_idx = node_idx[tgt]
         adj_mat[src_idx, tgt_idx] += 1 if same_mod[i] else -1
