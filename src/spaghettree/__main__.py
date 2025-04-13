@@ -16,6 +16,8 @@ from spaghettree.search import genetic_search, get_modularity_score, hill_climbe
 
 
 def process_package(p: str, total_sims: int = 8000, pop: int = 8):
+    results = {}
+
     sims = total_sims // pop
     package_name = os.path.basename(p)
     # print("*" * 79)
@@ -47,21 +49,20 @@ def process_package(p: str, total_sims: int = 8000, pop: int = 8):
         func_names=func_names,
         sims=total_sims,
     )
+    results[f"{package_name}_hillclimber"] = OptResult(
+        "hill_climber", search_df, epochs, best_score
+    )
     record["hill_climber_search_dwm"] = best_score
     record["hill_climber_search_m"] = get_modularity_score(search_df, modularity_df)
 
     search_df, epochs, best_score = genetic_search(
         raw_calls_df, module_names, class_names, func_names, population=pop, sims=sims
     )
+    results[f"{package_name}_genetic_search"] = OptResult(
+        "genetic_search", search_df, epochs, best_score
+    )
     record["genetic_search_dwm"] = best_score
     record["genetic_search_m"] = get_modularity_score(search_df, modularity_df)
 
     # print("*" * 79, end="\n\n")
-    return record, {
-        f"{package_name}_hill_climber": OptResult(
-            "hill_climber", search_df, epochs, best_score
-        ),
-        f"{package_name}_genetic_search": OptResult(
-            "genetic_search", search_df, epochs, best_score
-        ),
-    }
+    return record, results

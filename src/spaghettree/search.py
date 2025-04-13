@@ -117,7 +117,8 @@ def _update_obj_loc(
     call_df: pd.DataFrame, obj_col: str, obj: str, new_module: str
 ) -> pd.DataFrame:
     call_df = call_df.copy()
-    call_df.loc[call_df[obj_col] == obj, "module"] = new_module
+    mask = call_df[obj_col].to_numpy() == obj
+    call_df.loc[mask, "module"] = new_module
     return call_df
 
 
