@@ -5,6 +5,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 from returns.result import Failure, Success
+from tqdm import tqdm
 
 from spaghettree.metrics import directed_weighted_modularity_df
 from spaghettree.processing import clean_calls_df, get_adj_matrix
@@ -27,7 +28,7 @@ def hill_climber_search(
 
     epochs = []
 
-    for _ in range(sims):
+    for _ in tqdm(range(sims), "climbing..."):
         cand_df, cand_score = mutate(search_df, module_names, func_names, class_names)
 
         if cand_score > best_score:
@@ -62,7 +63,7 @@ def genetic_search(
 
     epochs = []
 
-    for _ in range(sims):
+    for _ in tqdm(range(sims), "evolving..."):
         mutated = sorted(
             [mutate(df, module_names, func_names, class_names) for df, _ in curr_gen],
             key=lambda x: -x[1],
@@ -82,6 +83,58 @@ def genetic_search(
 
     print(f"    {best_score = }")
     return search_df, pd.DataFrame(epochs), best_score
+
+
+def simulated_annealing_search(
+    search_df: pd.DataFrame,
+    module_names: tuple,
+    class_names: tuple,
+    func_names: tuple,
+    sims: int = 1000,
+    temp: float = 1.0,
+    cooling_rate: float = 0.995,
+) -> tuple[pd.DataFrame, pd.DataFrame, float]:
+    search_df = search_df.copy()
+    best_df = search_df.copy()
+
+    best_score = get_modularity_score(search_df)
+    curr_score = best_score
+    curr_df = search_df.copy()
+
+    print(f"    base score: {best_score:.3f}")
+    epochs = []
+
+    for _ in tqdm(range(sims), "annealing..."):
+        new_df, new_score = mutate(curr_df, module_names, func_names, class_names)
+        score_diff = new_score - curr_score
+
+        accept = False
+        if score_diff > 0:
+            accept = True
+        else:
+            prob = np.exp(score_diff / temp)
+            accept = np.random.rand() < prob
+
+        if accept:
+            curr_df = new_df.copy()
+            curr_score = new_score
+
+            if curr_score > best_score:
+                best_score = curr_score
+                best_df = curr_df.copy()
+
+        temp *= cooling_rate
+
+        epochs.append(
+            {
+                "curr_score": curr_score,
+                "best_score": best_score,
+                "temperature": temp,
+            }
+        )
+
+    print(f"    {best_score = }")
+    return best_df, pd.DataFrame(epochs), best_score
 
 
 def mutate(
