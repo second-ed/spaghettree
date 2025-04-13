@@ -47,7 +47,7 @@ def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
 
 
 @safe
-def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Exception]:
+def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
     rows = []
 
     for module_name, module_data in modules.items():
@@ -98,7 +98,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> Result[pd.DataFrame, Except
     return pd.DataFrame(rows)
 
 
-# @safe
+@safe
 def clean_calls_df(calls: pd.DataFrame) -> pd.DataFrame:
     calls = calls.copy()
     calls["full_address_func_method"] = (
@@ -112,7 +112,7 @@ def clean_calls_df(calls: pd.DataFrame) -> pd.DataFrame:
     return calls
 
 
-# @safe
+@safe
 def get_adj_matrix(data: pd.DataFrame, delim: str = ".") -> pd.DataFrame:
     funcs = data["full_address_func_method"].to_numpy()
     calls = data["full_address_calls"].to_numpy()

@@ -4,6 +4,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+from returns.result import Failure, Success
 
 from spaghettree.metrics import directed_weighted_modularity_df
 from spaghettree.processing import clean_calls_df, get_adj_matrix
@@ -130,4 +131,12 @@ def update_class_loc(
 def get_modularity_score(
     calls_df: pd.DataFrame, fitness_func: Callable = directed_weighted_modularity_df
 ) -> float:
-    return fitness_func(get_adj_matrix(clean_calls_df(calls_df)))
+    res = Success(calls_df).bind(clean_calls_df).bind(get_adj_matrix).bind(fitness_func)
+
+    match res:
+        case Success(score):
+            return score
+        case Failure(_):
+            return -1
+        case _:
+            raise RuntimeError(f"Invalid return item: {res}")

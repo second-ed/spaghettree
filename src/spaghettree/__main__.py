@@ -27,7 +27,7 @@ def process_package(p: str, total_sims: int = 8000, pop: int = 8):
     module_names, func_names, class_names = modules.bind(get_entity_names)
     raw_calls = modules.bind(get_call_table)
     raw_calls_df = raw_calls.unwrap()
-    calls_df = clean_calls_df(raw_calls_df)
+    calls_df = raw_calls.bind(clean_calls_df).unwrap()
 
     record = {
         "package_name": package_name,
