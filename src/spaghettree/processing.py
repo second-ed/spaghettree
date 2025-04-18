@@ -105,8 +105,8 @@ def clean_calls_np(modules, classes, funcs, calls):
     full_addr_map = dict(zip(funcs, full_func_addr))
     full_call_addr = np.vectorize(lambda x: full_addr_map.get(x))(calls)
 
-    full_func_addr = full_func_addr[full_call_addr is not None]
-    full_call_addr = full_call_addr[full_call_addr is not None]
+    full_func_addr = full_func_addr[full_call_addr != None]  # noqa: E711
+    full_call_addr = full_call_addr[full_call_addr != None]  # noqa: E711
 
     return full_func_addr, full_call_addr
 
