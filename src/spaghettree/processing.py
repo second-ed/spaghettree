@@ -98,52 +98,32 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-@safe
-def clean_calls_df(calls: pd.DataFrame) -> pd.DataFrame:
-    calls = calls.copy()
-    calls["full_address_func_method"] = (
-        calls["module"] + "." + calls["class"] + "." + calls["func_method"]
-    ).str.replace("..", ".")
-
-    full_address_mapping = dict(
-        zip(calls["func_method"], calls["full_address_func_method"])
+def clean_calls_np(modules, classes, funcs, calls):
+    full_func_addr = np.where(
+        classes, modules + "." + classes + "." + funcs, modules + "." + funcs
     )
-    calls["full_address_calls"] = calls["call"].map(full_address_mapping).fillna("")
-    return calls
+    full_addr_map = dict(zip(funcs, full_func_addr))
+    full_call_addr = np.vectorize(lambda x: full_addr_map.get(x))(calls)
+
+    full_func_addr = full_func_addr[full_call_addr is not None]
+    full_call_addr = full_call_addr[full_call_addr is not None]
+
+    return full_func_addr, full_call_addr
 
 
-@safe
-def get_adj_matrix(data: pd.DataFrame, delim: str = ".") -> pd.DataFrame:
-    funcs = data["full_address_func_method"].to_numpy()
-    calls = data["full_address_calls"].to_numpy()
-
-    nodes = np.unique(np.concatenate((funcs, calls[calls != ""])))
+def get_adj_matrix(full_func_addr, full_call_addr):
+    nodes = np.unique(np.concatenate((full_func_addr, full_call_addr)))
     node_idx = {node: i for i, node in enumerate(nodes)}
 
     n = len(nodes)
     adj_mat = np.zeros((n, n), dtype=int)
 
-    filtered_funcs = funcs[calls != ""]
-    filtered_calls = calls[calls != ""]
-
-    same_mod = np.array(
-        [
-            f.split(".")[0] == c.split(".")[0]
-            for f, c in zip(filtered_funcs, filtered_calls)
-        ]
-    )
-
-    for i, tgt in enumerate(filtered_calls):
-        src = filtered_funcs[i]
+    for i, tgt in enumerate(full_call_addr):
+        src = full_func_addr[i]
         src_idx = node_idx[src]
         tgt_idx = node_idx[tgt]
-        adj_mat[src_idx, tgt_idx] += 1 if same_mod[i] else -1
-
-    if delim != ".":
-        formatted_nodes = [n.replace(".", delim) for n in nodes]
-    else:
-        formatted_nodes = nodes
-    return pd.DataFrame(adj_mat, index=formatted_nodes, columns=formatted_nodes)
+        adj_mat[src_idx, tgt_idx] += 1
+    return adj_mat, nodes
 
 
 def get_module_name(path: str) -> str:
@@ -170,3 +150,12 @@ def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
         class_names.extend(list(mod_csts.class_trees.keys()))
 
     return tuple(mods.keys()), tuple(func_names), tuple(class_names)
+
+
+def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
+    return (
+        search_df["module"].values,
+        search_df["class"].values,
+        search_df["func_method"].values,
+        search_df["call"].values,
+    )

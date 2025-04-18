@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
-from returns.result import safe
 
 
-@safe
-def modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
-    adj_mat = np.abs(adj_df.to_numpy())
+def modularity(adj_mat, nodes, delim: str = ".") -> float:
+    adj_mat = np.abs(adj_mat)
     degree = adj_mat.sum(axis=0)
     total_edges = degree.sum()
 
-    col_names = np.array(adj_df.columns)
-    communities = np.array([col.split(delim)[0] for col in col_names])
+    communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]
 
     expected_matrix = np.outer(degree, degree) / total_edges
@@ -20,15 +16,13 @@ def modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
     return modularity_matrix.sum() / total_edges
 
 
-@safe
-def directed_weighted_modularity_df(adj_df: pd.DataFrame, delim: str = ".") -> float:
-    adj_mat = np.abs(adj_df.to_numpy())
+def directed_weighted_modularity(adj_mat, nodes, delim: str = ".") -> float:
+    adj_mat = np.abs(adj_mat)
     out_degree = adj_mat.sum(axis=0)
     in_degree = adj_mat.sum(axis=1)
     total_edges = out_degree.sum()
 
-    col_names = np.array(adj_df.columns)
-    communities = np.array([col.split(delim)[0] for col in col_names])
+    communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]
 
     expected_matrix = np.outer(out_degree, in_degree) / total_edges
