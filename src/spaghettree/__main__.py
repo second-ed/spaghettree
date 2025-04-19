@@ -4,6 +4,8 @@ import glob
 import os
 import pprint
 
+import numpy as np
+
 from spaghettree.data_structures import OptResult
 from spaghettree.metrics import modularity
 from spaghettree.processing import (
@@ -29,9 +31,31 @@ def process_package(
     use_sim_annealing: bool = True,
     use_genetic_search: bool = True,
 ):
+    sims = total_sims // pop
+
+    config = {
+        "hill_climber": {
+            "use": use_hill_climbing,
+            "func": hill_climber_search,
+            "kwargs": {"sims": total_sims},
+        },
+        "sim_annealing": {
+            "use": use_sim_annealing,
+            "func": simulated_annealing_search,
+            "kwargs": {"sims": total_sims},
+        },
+        "genetic": {
+            "use": use_genetic_search,
+            "func": genetic_search,
+            "kwargs": {
+                "population": pop,
+                "sims": sims,
+            },
+        },
+    }
+
     results = {}
 
-    sims = total_sims // pop
     package_name = os.path.basename(p)
     print("*" * 79)
     print(f"{package_name = }")
@@ -63,75 +87,32 @@ def process_package(
     }
     pprint.pprint(record, sort_dicts=False)
 
-    if use_hill_climbing:
-        search_df, epochs, best_score = hill_climber_search(
-            raw_calls_df,
-            module_names=module_names,
-            class_names=class_names,
-            func_names=func_names,
-            sims=total_sims,
-        )
+    for name, conf in config.items():
+        if conf["use"]:
+            search_df, epochs, best_score = conf["func"](
+                raw_calls_df,
+                module_names=module_names,
+                class_names=class_names,
+                func_names=func_names,
+                **conf["kwargs"],
+            )
 
-        modules, classes, funcs, calls = get_np_arrays(search_df)
-        results[f"{package_name}_hillclimber"] = OptResult(
-            "hill_climber",
-            search_df,
-            epochs,
-            best_score,
-            replicates=replicates,
-            permutates=permutates,
-        )
-        record["hill_climber_search_dwm"] = best_score
-        record["hill_climber_search_m"] = get_modularity_score(
-            modules, classes, funcs, calls, modularity
-        )
+            results[f"{package_name}_{name}"] = OptResult(
+                name,
+                search_df,
+                epochs,
+                best_score,
+                permutates=permutates,
+                replicates=replicates,
+            )
+            record[f"{name}_search_dwm"] = best_score
 
-    if use_sim_annealing:
-        search_df, epochs, best_score = simulated_annealing_search(
-            raw_calls_df,
-            module_names=module_names,
-            class_names=class_names,
-            func_names=func_names,
-            sims=total_sims,
-        )
-
-        modules, classes, funcs, calls = get_np_arrays(search_df)
-        results[f"{package_name}_sim_annealing"] = OptResult(
-            "sim_annealing",
-            search_df,
-            epochs,
-            best_score,
-            replicates=replicates,
-            permutates=permutates,
-        )
-        record["sim_annealing_search_dwm"] = best_score
-        record["sim_annealing_search_m"] = get_modularity_score(
-            modules, classes, funcs, calls, modularity
-        )
-
-    if use_genetic_search:
-        search_df, epochs, best_score = genetic_search(
-            raw_calls_df,
-            module_names=module_names,
-            class_names=class_names,
-            func_names=func_names,
-            population=pop,
-            sims=sims,
-        )
-
-        modules, classes, funcs, calls = get_np_arrays(search_df)
-        results[f"{package_name}_genetic_search"] = OptResult(
-            "genetic_search",
-            search_df,
-            epochs,
-            best_score,
-            replicates=replicates,
-            permutates=permutates,
-        )
-        record["genetic_search_dwm"] = best_score
-        record["genetic_search_m"] = get_modularity_score(
-            modules, classes, funcs, calls, modularity
-        )
+            modules, classes, funcs, calls = get_np_arrays(search_df)
+            record[f"{name}_search_m"] = get_modularity_score(
+                modules, classes, funcs, calls, modularity
+            )
+            record[f"{name}_pvalue_replicates"] = np.mean(best_score < replicates)
+            record[f"{name}_pvalue_permutates"] = np.mean(best_score < permutates)
 
     print("*" * 79, end="\n\n")
     return record, results
