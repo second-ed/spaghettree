@@ -150,12 +150,3 @@ def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
         class_names.extend(list(mod_csts.class_trees.keys()))
 
     return tuple(mods.keys()), tuple(func_names), tuple(class_names)
-
-
-def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
-    return (
-        search_df["module"].values,
-        search_df["class"].values,
-        search_df["func_method"].values,
-        search_df["call"].values,
-    )

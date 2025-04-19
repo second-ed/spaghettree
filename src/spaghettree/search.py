@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from spaghettree.metrics import directed_weighted_modularity
-from spaghettree.processing import clean_calls_np, get_adj_matrix, get_np_arrays
+from spaghettree.processing import clean_calls_np, get_adj_matrix
 
 
 def hill_climber_search(
@@ -183,10 +183,10 @@ def genetic_search(
 
 
 def mutate(
-    modules,
-    classes,
-    funcs,
-    calls,
+    modules: np.array,
+    classes: np.array,
+    funcs: np.array,
+    calls: np.array,
     module_names: tuple[str],
     func_names: tuple[str],
     class_names: tuple[str],
@@ -214,10 +214,10 @@ def mutate(
 
 
 def get_modularity_score(
-    modules,
-    classes,
-    funcs,
-    calls,
+    modules: np.array,
+    classes: np.array,
+    funcs: np.array,
+    calls: np.array,
     fitness_func: Callable = directed_weighted_modularity,
 ) -> float:
     full_func_addr, full_call_addr = clean_calls_np(
@@ -231,3 +231,27 @@ def update_module(modules, entities, ent_name: str, new_module: str):
     modules = np.copy(modules)
     modules[entities == ent_name] = new_module
     return modules
+
+
+def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
+    return (
+        search_df["module"].values,
+        search_df["class"].values,
+        search_df["func_method"].values,
+        search_df["call"].values,
+    )
+
+
+def create_random_replicates(
+    search_df: pd.DataFrame, sims: int = 10000, replace: bool = False
+) -> list[float]:
+    modules, classes, funcs, calls = get_np_arrays(search_df.copy())
+    return [
+        get_modularity_score(
+            np.random.choice(modules, size=len(modules), replace=replace),
+            classes,
+            funcs,
+            calls,
+        )
+        for _ in range(sims)
+    ]

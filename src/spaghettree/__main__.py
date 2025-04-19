@@ -10,11 +10,12 @@ from spaghettree.processing import (
     get_call_table,
     get_entity_names,
     get_modules,
-    get_np_arrays,
 )
 from spaghettree.search import (
+    create_random_replicates,
     genetic_search,
     get_modularity_score,
+    get_np_arrays,
     hill_climber_search,
     simulated_annealing_search,
 )
@@ -41,6 +42,9 @@ def process_package(
     raw_calls_df = raw_calls.unwrap()
 
     modules, classes, funcs, calls = get_np_arrays(raw_calls_df)
+
+    replicates = create_random_replicates(raw_calls_df, replace=True)
+    permutates = create_random_replicates(raw_calls_df)
 
     record = {
         "package_name": package_name,
@@ -70,7 +74,12 @@ def process_package(
 
         modules, classes, funcs, calls = get_np_arrays(search_df)
         results[f"{package_name}_hillclimber"] = OptResult(
-            "hill_climber", search_df, epochs, best_score
+            "hill_climber",
+            search_df,
+            epochs,
+            best_score,
+            replicates=replicates,
+            permutates=permutates,
         )
         record["hill_climber_search_dwm"] = best_score
         record["hill_climber_search_m"] = get_modularity_score(
@@ -88,7 +97,12 @@ def process_package(
 
         modules, classes, funcs, calls = get_np_arrays(search_df)
         results[f"{package_name}_sim_annealing"] = OptResult(
-            "sim_annealing", search_df, epochs, best_score
+            "sim_annealing",
+            search_df,
+            epochs,
+            best_score,
+            replicates=replicates,
+            permutates=permutates,
         )
         record["sim_annealing_search_dwm"] = best_score
         record["sim_annealing_search_m"] = get_modularity_score(
@@ -107,7 +121,12 @@ def process_package(
 
         modules, classes, funcs, calls = get_np_arrays(search_df)
         results[f"{package_name}_genetic_search"] = OptResult(
-            "genetic_search", search_df, epochs, best_score
+            "genetic_search",
+            search_df,
+            epochs,
+            best_score,
+            replicates=replicates,
+            permutates=permutates,
         )
         record["genetic_search_dwm"] = best_score
         record["genetic_search_m"] = get_modularity_score(

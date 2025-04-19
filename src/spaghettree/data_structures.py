@@ -87,3 +87,5 @@ class OptResult:
     search_df: pd.DataFrame = attrs.field()
     epochs: pd.DataFrame = attrs.field()
     best_score: float = attrs.field()
+    replicates: list = attrs.field()
+    permutates: list = attrs.field()
