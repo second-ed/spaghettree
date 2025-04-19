@@ -9,16 +9,17 @@ from returns.result import Result, safe
 
 
 @safe
-def get_color_map(calls: pd.DataFrame) -> Result[dict, Exception]:
-    n = int(np.ceil(calls["module"].nunique() / 3))
+def get_color_map(module_names: tuple) -> Result[dict, Exception]:
+    n = int(np.ceil(len(module_names) / 3))
     reds = plt.cm.Reds(np.linspace(0.2, 1, n))
     blues = plt.cm.Blues(np.linspace(0.2, 1, n))
     greens = plt.cm.Greens(np.linspace(0.2, 1, n))
     colors = np.vstack([reds, blues, greens])
-    return dict(zip(calls["module"].unique().tolist(), colors))
+    return dict(zip(module_names, colors))
 
 
-def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
+def plot_graph(adj_mat: np.array, nodes: list, color_map: dict[str, np.array]) -> None:
+    adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=(24, 16))
 
     G = nx.from_pandas_adjacency(adj_df)
@@ -46,7 +47,8 @@ def plot_graph(adj_df: pd.DataFrame, color_map: dict[str, np.array]) -> None:
 
 
 @safe
-def plot_heatmap(adj_df: pd.DataFrame):
+def plot_heatmap(adj_mat: np.array, nodes: list):
+    adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=(24, 16))
     nonzero_rows = adj_df.any(axis=1)
     nonzero_cols = adj_df.any(axis=0)

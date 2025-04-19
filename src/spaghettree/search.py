@@ -4,24 +4,23 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
-from returns.result import Failure, Success
 from tqdm import tqdm
 
-from spaghettree.metrics import directed_weighted_modularity_df
-from spaghettree.processing import clean_calls_df, get_adj_matrix
+from spaghettree.metrics import directed_weighted_modularity
+from spaghettree.processing import clean_calls_np, get_adj_matrix
 
 
-# @profile_func("time")
 def hill_climber_search(
     search_df: pd.DataFrame,
     module_names: tuple,
     class_names: tuple,
     func_names: tuple,
-    sims: int = 5000,
+    sims: int = 8000,
 ) -> tuple[pd.DataFrame, list[dict]]:
     search_df = search_df.copy()
 
-    best_score = get_modularity_score(search_df)
+    best_modules, classes, funcs, calls = get_np_arrays(search_df)
+    best_score = get_modularity_score(best_modules, classes, funcs, calls)
     cand_score = -1
 
     print(f"    base score: {best_score:.3f}")
@@ -29,11 +28,19 @@ def hill_climber_search(
     epochs = []
 
     for _ in tqdm(range(sims), "climbing..."):
-        cand_df, cand_score = mutate(search_df, module_names, func_names, class_names)
+        cand_modules, cand_score = mutate(
+            best_modules,
+            classes,
+            funcs,
+            calls,
+            module_names,
+            func_names,
+            class_names,
+        )
 
         if cand_score > best_score:
             best_score = cand_score
-            search_df = cand_df.copy()
+            best_modules = np.copy(cand_modules)
 
         epochs.append(
             {
@@ -43,45 +50,12 @@ def hill_climber_search(
         )
 
     print(f"    {best_score = }")
-    return search_df, pd.DataFrame(epochs), best_score
 
+    search_df["module"] = best_modules
+    search_df["class"] = classes
+    search_df["func_method"] = funcs
+    search_df["call"] = calls
 
-# @profile_func()
-def genetic_search(
-    search_df: pd.DataFrame,
-    module_names: tuple,
-    class_names: tuple,
-    func_names: tuple,
-    population: int = 50,
-    sims: int = 100,
-) -> tuple[pd.DataFrame, list[dict]]:
-    best_score = get_modularity_score(search_df)
-    print(f"    base score: {best_score:.3f}")
-
-    init_pop = [(search_df.copy(), -1) for _ in range(population)]
-    curr_gen = init_pop
-
-    epochs = []
-
-    for _ in tqdm(range(sims), "evolving..."):
-        mutated = sorted(
-            [mutate(df, module_names, func_names, class_names) for df, _ in curr_gen],
-            key=lambda x: -x[1],
-        )
-        best = mutated[: population // 2]
-        scores = [b[1] for b in best]
-        mean_score = np.mean(scores)
-
-        cand_df, cand_score = best[0]
-        if cand_score > best_score:
-            best_score = cand_score
-            search_df = cand_df.copy()
-
-        doubled_best = best + best
-        curr_gen = deepcopy(doubled_best)
-        epochs.append({"mean_score": mean_score, "best_score": scores[0]})
-
-    print(f"    {best_score = }")
     return search_df, pd.DataFrame(epochs), best_score
 
 
@@ -95,17 +69,25 @@ def simulated_annealing_search(
     cooling_rate: float = 0.995,
 ) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     search_df = search_df.copy()
-    best_df = search_df.copy()
 
-    best_score = get_modularity_score(search_df)
+    best_modules, classes, funcs, calls = get_np_arrays(search_df)
+    best_score = get_modularity_score(best_modules, classes, funcs, calls)
     curr_score = best_score
-    curr_df = search_df.copy()
+    curr_modules = np.copy(best_modules)
 
     print(f"    base score: {best_score:.3f}")
     epochs = []
 
     for _ in tqdm(range(sims), "annealing..."):
-        new_df, new_score = mutate(curr_df, module_names, func_names, class_names)
+        new_modules, new_score = mutate(
+            best_modules,
+            classes,
+            funcs,
+            calls,
+            module_names,
+            func_names,
+            class_names,
+        )
         score_diff = new_score - curr_score
 
         accept = False
@@ -116,12 +98,12 @@ def simulated_annealing_search(
             accept = np.random.rand() < prob
 
         if accept:
-            curr_df = new_df.copy()
+            curr_modules = np.copy(new_modules)
             curr_score = new_score
 
             if curr_score > best_score:
                 best_score = curr_score
-                best_df = curr_df.copy()
+                best_modules = np.copy(curr_modules)
 
         temp *= cooling_rate
 
@@ -134,62 +116,142 @@ def simulated_annealing_search(
         )
 
     print(f"    {best_score = }")
-    return best_df, pd.DataFrame(epochs), best_score
+
+    search_df["module"] = best_modules
+    search_df["class"] = classes
+    search_df["func_method"] = funcs
+    search_df["call"] = calls
+
+    return search_df, pd.DataFrame(epochs), best_score
+
+
+def genetic_search(
+    search_df: pd.DataFrame,
+    module_names: tuple,
+    class_names: tuple,
+    func_names: tuple,
+    population: int = 50,
+    sims: int = 100,
+) -> tuple[pd.DataFrame, list[dict]]:
+    search_df = search_df.copy()
+    best_modules, classes, funcs, calls = get_np_arrays(search_df)
+    best_score = get_modularity_score(best_modules, classes, funcs, calls)
+    print(f"    base score: {best_score:.3f}")
+
+    init_pop = [(np.copy(best_modules), -1) for _ in range(population)]
+    curr_gen = init_pop
+
+    epochs = []
+
+    for _ in tqdm(range(sims), "evolving..."):
+        mutated = sorted(
+            [
+                mutate(
+                    modules,
+                    classes,
+                    funcs,
+                    calls,
+                    module_names,
+                    func_names,
+                    class_names,
+                )
+                for modules, _ in curr_gen
+            ],
+            key=lambda x: -x[1],
+        )
+        best = mutated[: population // 2]
+        scores = [b[1] for b in best]
+        mean_score = np.mean(scores)
+
+        cand_modules, cand_score = best[0]
+        if cand_score > best_score:
+            best_score = cand_score
+            best_modules = np.copy(cand_modules)
+
+        doubled_best = best + best
+        curr_gen = deepcopy(doubled_best)
+        epochs.append({"mean_score": mean_score, "best_score": scores[0]})
+
+    print(f"    {best_score = }")
+
+    search_df["module"] = best_modules
+    search_df["class"] = classes
+    search_df["func_method"] = funcs
+    search_df["call"] = calls
+
+    return search_df, pd.DataFrame(epochs), best_score
 
 
 def mutate(
-    search_df: pd.DataFrame,
+    modules: np.array,
+    classes: np.array,
+    funcs: np.array,
+    calls: np.array,
     module_names: tuple[str],
     func_names: tuple[str],
     class_names: tuple[str],
-) -> tuple[pd.DataFrame, float]:
+):
     match (bool(func_names), bool(class_names), random.choice((True, False))):
         case (True, _, True):
-            cand_df = update_func_loc(
-                search_df, random.choice(func_names), random.choice(module_names)
+            modules = update_module(
+                modules, funcs, random.choice(func_names), random.choice(module_names)
             )
-            cand_score = get_modularity_score(cand_df)
-            return cand_df, cand_score
+            cand_score = get_modularity_score(modules, classes, funcs, calls)
+            return modules, cand_score
 
         case (_, True, False):
-            cand_df = update_class_loc(
-                search_df, random.choice(class_names), random.choice(module_names)
+            modules = update_module(
+                modules,
+                classes,
+                random.choice(class_names),
+                random.choice(module_names),
             )
-            cand_score = get_modularity_score(cand_df)
-            return cand_df, cand_score
+            cand_score = get_modularity_score(modules, classes, funcs, calls)
+            return modules, cand_score
 
         case _:
-            return search_df, -1
-
-
-def _update_obj_loc(
-    call_df: pd.DataFrame, obj_col: str, obj: str, new_module: str
-) -> pd.DataFrame:
-    call_df = call_df.copy()
-    mask = call_df[obj_col].to_numpy() == obj
-    call_df.loc[mask, "module"] = new_module
-    return call_df
-
-
-def update_func_loc(call_df: pd.DataFrame, func: str, new_module: str) -> pd.DataFrame:
-    return _update_obj_loc(call_df, "func_method", func, new_module)
-
-
-def update_class_loc(
-    call_df: pd.DataFrame, class_: str, new_module: str
-) -> pd.DataFrame:
-    return _update_obj_loc(call_df, "class", class_, new_module)
+            return modules, -1
 
 
 def get_modularity_score(
-    calls_df: pd.DataFrame, fitness_func: Callable = directed_weighted_modularity_df
+    modules: np.array,
+    classes: np.array,
+    funcs: np.array,
+    calls: np.array,
+    fitness_func: Callable = directed_weighted_modularity,
 ) -> float:
-    res = Success(calls_df).bind(clean_calls_df).bind(get_adj_matrix).bind(fitness_func)
+    full_func_addr, full_call_addr = clean_calls_np(
+        modules=modules, classes=classes, funcs=funcs, calls=calls
+    )
+    adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
+    return fitness_func(adj_mat, nodes)
 
-    match res:
-        case Success(score):
-            return score
-        case Failure(_):
-            return -1
-        case _:
-            raise RuntimeError(f"Invalid return item: {res}")
+
+def update_module(modules, entities, ent_name: str, new_module: str):
+    modules = np.copy(modules)
+    modules[entities == ent_name] = new_module
+    return modules
+
+
+def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
+    return (
+        search_df["module"].values,
+        search_df["class"].values,
+        search_df["func_method"].values,
+        search_df["call"].values,
+    )
+
+
+def create_random_replicates(
+    search_df: pd.DataFrame, sims: int = 10000, replace: bool = False
+) -> list[float]:
+    modules, classes, funcs, calls = get_np_arrays(search_df.copy())
+    return [
+        get_modularity_score(
+            np.random.choice(modules, size=len(modules), replace=replace),
+            classes,
+            funcs,
+            calls,
+        )
+        for _ in range(sims)
+    ]
