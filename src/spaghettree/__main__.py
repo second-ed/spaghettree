@@ -5,6 +5,7 @@ import os
 import pprint
 
 import numpy as np
+from returns.result import safe
 
 from spaghettree.data_structures import OptResult
 from spaghettree.metrics import modularity
@@ -23,6 +24,7 @@ from spaghettree.search import (
 )
 
 
+@safe
 def process_package(
     p: str,
     total_sims: int = 8000,

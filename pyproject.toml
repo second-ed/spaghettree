@@ -53,4 +53,13 @@ research = [
     "textual==3.1.0",
     "locust==2.35.0",
     "typer==0.15.2",
+    "class-inspector==0.3.1",
+    "icecream==2.1.4",
+    "dynaconf==3.2.10",
+    "pipx==1.7.1",
+    "more-itertools==10.6.0",
+    "urllib3==2.4.0",
+    "pyupgrade==3.19.1",
+    "tox==4.25.0",
+    "beartype>=0.20.2",
 ]
