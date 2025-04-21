@@ -67,16 +67,13 @@ def process_package(
 
     modules, classes, funcs, calls = get_np_arrays(raw_calls_df)
 
-    replicates = create_random_replicates(raw_calls_df, replace=True)
-    permutates = create_random_replicates(raw_calls_df)
-
     record = {
         "package_name": package_name,
         "n_modules": len(module_names),
         "n_classes": len(class_names),
         "n_funcs": len(func_names),
-        # "n_calls": len(calls_df),
-        # "n_calls_package_funcs": len(calls_df[calls_df["full_address_calls"] != ""]),
+        "n_calls": len(calls),
+        "n_calls_package_funcs": len(calls[calls != ""]),
         "base_dwm": get_modularity_score(modules, classes, funcs, calls),
         "base_modularity": get_modularity_score(
             modules, classes, funcs, calls, modularity
@@ -86,6 +83,12 @@ def process_package(
         "generations": sims,
     }
     pprint.pprint(record, sort_dicts=False)
+
+    replicates = create_random_replicates(raw_calls_df, replace=True)
+    permutates = create_random_replicates(raw_calls_df)
+    unique_replicates = create_random_replicates(
+        raw_calls_df, replace=True, unique=True
+    )
 
     for name, conf in config.items():
         if conf["use"]:
@@ -98,12 +101,14 @@ def process_package(
             )
 
             results[f"{package_name}_{name}"] = OptResult(
+                package_name,
                 name,
                 search_df,
                 epochs,
                 best_score,
-                permutates=permutates,
                 replicates=replicates,
+                permutates=permutates,
+                unique_replicates=unique_replicates,
             )
             record[f"{name}_search_dwm"] = best_score
 

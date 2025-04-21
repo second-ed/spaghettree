@@ -18,7 +18,9 @@ def get_color_map(module_names: tuple) -> Result[dict, Exception]:
     return dict(zip(module_names, colors))
 
 
-def plot_graph(adj_mat: np.array, nodes: list, color_map: dict[str, np.array]) -> None:
+def plot_graph(
+    adj_mat: np.array, nodes: list, color_map: dict[str, np.array], delim: str = "."
+) -> None:
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=(24, 16))
 
@@ -32,7 +34,7 @@ def plot_graph(adj_mat: np.array, nodes: list, color_map: dict[str, np.array]) -
         dissuade_hubs=True,
     )
 
-    node_colors = [color_map[n.split(".")[0]] for n in G.nodes]
+    node_colors = [color_map[n.split(delim)[0]] for n in G.nodes]
     nx.draw(
         G,
         pos=pos,

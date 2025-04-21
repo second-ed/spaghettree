@@ -243,12 +243,18 @@ def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
 
 
 def create_random_replicates(
-    search_df: pd.DataFrame, sims: int = 10000, replace: bool = False
+    search_df: pd.DataFrame,
+    sims: int = 1000,
+    replace: bool = False,
+    unique: bool = False,
 ) -> list[float]:
     modules, classes, funcs, calls = get_np_arrays(search_df.copy())
+    size = len(modules)
+    if unique:
+        modules = np.unique(modules)
     return [
         get_modularity_score(
-            np.random.choice(modules, size=len(modules), replace=replace),
+            np.random.choice(modules, size=size, replace=replace),
             classes,
             funcs,
             calls,
