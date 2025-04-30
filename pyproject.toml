@@ -15,8 +15,6 @@ dependencies = [
     "matplotlib>=3.10.1",
     "networkx>=3.4.2",
     "pandas>=2.2.3",
-    "polars>=1.27.1",
-    "pyarrow>=19.0.1",
     "pydot>=3.0.4",
     "returns>=0.24.0",
     "scipy>=1.15.2",
@@ -26,16 +24,6 @@ dependencies = [
 
 [project.scripts]
 spaghettree = "spaghettree:main"
-
-[project.optional-dependencies]
-research = [
-    "black>=25.1.0",
-    "faker>=37.1.0",
-    "fastapi>=0.115.12",
-    "manimgl>=1.7.2",
-    "pydantic>=2.11.3",
-    "rich>=14.0.0",
-]
 
 [build-system]
 requires = ["hatchling"]
@@ -49,4 +37,35 @@ dev = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "ruff>=0.9.9",
+]
+research = [
+    "attrs==25.1.0",
+    "black==25.1.0",
+    "faker==37.1.0",
+    "fastapi==0.115.12",
+    "manimgl==1.7.2",
+    "pydantic==2.11.3",
+    "pytest==8.3.4",
+    "pre-commit==4.1.0",
+    "poetry==2.1.2",
+    "prophet==1.1.6",
+    "rich==14.0.0",
+    "textual==3.1.0",
+    "locust==2.35.0",
+    "typer==0.15.2",
+    "class-inspector==0.3.1",
+    "icecream==2.1.4",
+    "dynaconf==3.2.10",
+    "pipx==1.7.1",
+    "more-itertools==10.6.0",
+    "urllib3==2.4.0",
+    "pyupgrade==3.19.1",
+    "tox==4.25.0",
+    "beartype>=0.20.2",
+    "sherlock-project>=0.15.0",
+    "diagrams>=0.24.4",
+    "loguru>=0.7.3",
+    "sqlmodel>=0.0.24",
+    "redis>=6.0.0",
+    "schedule>=1.2.2",
 ]
