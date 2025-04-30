@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import datetime as dt
 import glob
 import os
 import pprint
 import time
+from multiprocessing import Pool
+from pathlib import Path
 
 import numpy as np
-from returns.result import safe
+import pandas as pd
+from returns.result import Failure, Success, safe
 
 from spaghettree.data_structures import OptResult
+from spaghettree.io import save_results
 from spaghettree.metrics import modularity
 from spaghettree.processing import (
     get_call_table,
@@ -23,6 +28,74 @@ from spaghettree.search import (
     hill_climber_search,
     simulated_annealing_search,
 )
+
+REPO_ROOT = Path(__file__).parents[2]
+
+
+def main(parallel: bool):
+    packages = (
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/attr",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/black",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/fastapi",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/faker",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pydantic",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pre_commit",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/poetry",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/prophet",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/rich",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/textual",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/locust",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/typer",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/icecream",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/class_inspector",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/dynaconf",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pipx",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/urllib3",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/more_itertools",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pyupgrade",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/tox",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/beartype",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/manimlib",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/_pytest",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/diagrams",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/loguru",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/redis",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/schedule",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/sqlmodel",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/sherlock_project",
+    )
+
+    if parallel:
+        pool = Pool()
+        res = pool.map(process_package, packages)
+    else:
+        res = [process_package(p) for p in packages]
+    res = [r.unwrap() for r in res if isinstance(r, Success)]
+    fails = [r.failure() for r in res if isinstance(r, Failure)]
+
+    if fails:
+        print(f"{len(fails)} failed packages")
+        print(fails)
+
+    now = dt.datetime.now().strftime(format="%y%m%d_%H%M")
+
+    results = {}
+    for r in res:
+        results.update(r[1])
+
+    save_results(results)
+
+    records = [r[0] for r in res]
+    res_df = pd.DataFrame(records)
+
+    for col in res_df.columns:
+        if col.endswith("_search_dwm"):
+            res_df[f"{col}_gain"] = res_df[col] - res_df["base_dwm"]
+
+        if col.endswith("_search_m"):
+            res_df[f"{col}_gain"] = res_df[col] - res_df["base_modularity"]
+
+    res_df.to_csv(f"./results/{now}_results.csv", index=False)
 
 
 @safe
@@ -127,3 +200,7 @@ def process_package(
 
     print("*" * 79, end="\n\n")
     return record, results
+
+
+if __name__ == "__main__":
+    main(False)
