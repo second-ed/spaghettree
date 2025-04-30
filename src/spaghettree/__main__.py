@@ -3,6 +3,7 @@ from __future__ import annotations
 import glob
 import os
 import pprint
+import time
 
 import numpy as np
 from returns.result import safe
@@ -94,6 +95,7 @@ def process_package(
 
     for name, conf in config.items():
         if conf["use"]:
+            start_time = time.time()
             search_df, epochs, best_score = conf["func"](
                 raw_calls_df,
                 module_names=module_names,
@@ -101,6 +103,8 @@ def process_package(
                 func_names=func_names,
                 **conf["kwargs"],
             )
+            end_time = time.time()
+            record[f"{name}_duration"] = end_time - start_time
 
             results[f"{package_name}_{name}"] = OptResult(
                 package_name,

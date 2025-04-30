@@ -166,3 +166,5 @@ dmypy.json
 cython_debug/
 .python-version
 plain.txt
+
+results/

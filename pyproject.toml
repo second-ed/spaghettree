@@ -62,4 +62,10 @@ research = [
     "pyupgrade==3.19.1",
     "tox==4.25.0",
     "beartype>=0.20.2",
+    "sherlock-project>=0.15.0",
+    "diagrams>=0.24.4",
+    "loguru>=0.7.3",
+    "sqlmodel>=0.0.24",
+    "redis>=6.0.0",
+    "schedule>=1.2.2",
 ]
