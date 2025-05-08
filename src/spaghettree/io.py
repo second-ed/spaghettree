@@ -36,7 +36,7 @@ def save_modified_code(
         return Failure(e)
 
 
-def load_yaml(path: str) -> dict:
+def read_yaml(path: str) -> dict:
     with open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
