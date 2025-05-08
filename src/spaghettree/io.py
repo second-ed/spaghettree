@@ -6,20 +6,19 @@ import os
 import attrs
 import pandas as pd
 import yaml
-from returns.maybe import Maybe, Nothing, Some
 from returns.result import Failure, Result, Success
 
 from spaghettree.utils import format_code_str
 
 
-def get_src_code(path: str) -> Maybe[str]:
+def get_src_code(path: str) -> Result[str, Exception]:
     try:
         with open(path, "r") as f:
             src_code = f.read()
-        return Some(src_code)
+        return Success(src_code)
     except Exception as e:
         print(f"{e} for {path}")
-        return Nothing
+        return Failure(e)
 
 
 def save_modified_code(

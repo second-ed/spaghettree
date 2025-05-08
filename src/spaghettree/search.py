@@ -227,7 +227,9 @@ def get_modularity_score(
     return fitness_func(adj_mat, nodes)
 
 
-def update_module(modules, entities, ent_name: str, new_module: str):
+def update_module(
+    modules: np.array, entities: np.array, ent_name: str, new_module: str
+) -> np.array:
     modules = np.copy(modules)
     modules[entities == ent_name] = new_module
     return modules

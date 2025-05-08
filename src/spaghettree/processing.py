@@ -6,7 +6,6 @@ from typing import Optional
 import libcst as cst
 import numpy as np
 import pandas as pd
-from returns.maybe import Some
 from returns.result import Failure, Result, Success, safe
 from tqdm import tqdm
 
@@ -21,7 +20,7 @@ def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
     for path in tqdm(paths, "creating objects"):
         some_tree = (get_src_code(path)).map(str_to_cst)
         match some_tree:
-            case Some(tree):
+            case Success(tree):
                 module = ModuleCST(get_module_name(path), tree)
 
                 for name, tree in module.func_trees.items():
@@ -100,7 +99,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
 
 def clean_calls_np(
     modules: np.array, classes: np.array, funcs: np.array, calls: np.array
-):
+) -> tuple[np.array]:
     full_func_addr = np.where(
         classes, modules + "." + classes + "." + funcs, modules + "." + funcs
     )
