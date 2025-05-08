@@ -98,7 +98,9 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def clean_calls_np(modules, classes, funcs, calls):
+def clean_calls_np(
+    modules: np.array, classes: np.array, funcs: np.array, calls: np.array
+):
     full_func_addr = np.where(
         classes, modules + "." + classes + "." + funcs, modules + "." + funcs
     )
@@ -111,7 +113,7 @@ def clean_calls_np(modules, classes, funcs, calls):
     return full_func_addr, full_call_addr
 
 
-def get_adj_matrix(full_func_addr, full_call_addr):
+def get_adj_matrix(full_func_addr: np.array, full_call_addr: np.array):
     nodes = np.unique(np.concatenate((full_func_addr, full_call_addr)))
     node_idx = {node: i for i, node in enumerate(nodes)}
 
