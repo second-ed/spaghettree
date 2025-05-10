@@ -177,6 +177,13 @@ def process_package(
     unique_replicates = create_random_replicates(
         raw_calls_df, replace=True, unique=True
     )
+    random_reps = {
+        "replicates": replicates,
+        "permutates": permutates,
+        "unique_replicates": unique_replicates,
+    }
+    for rand_name, reps in random_reps.items():
+        record[f"base_pvalue_{rand_name}"] = np.mean(record["base_dwm"] < reps)
 
     for name, conf in config.items():
         if conf["use"]:
@@ -207,8 +214,8 @@ def process_package(
             record[f"{name}_search_m"] = get_modularity_score(
                 modules, classes, funcs, calls, modularity
             )
-            record[f"{name}_pvalue_replicates"] = np.mean(best_score < replicates)
-            record[f"{name}_pvalue_permutates"] = np.mean(best_score < permutates)
+            for rand_name, reps in random_reps.items():
+                record[f"{name}_pvalue_{rand_name}"] = np.mean(best_score < reps)
 
     print("*" * 79, end="\n\n")
     return record, results
