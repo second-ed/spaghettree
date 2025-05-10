@@ -6,7 +6,7 @@ from typing import Optional
 import libcst as cst
 import numpy as np
 import pandas as pd
-from returns.result import Result, safe
+from returns.result import safe
 from tqdm import tqdm
 
 from spaghettree.data_structures import ClassCST, ModuleCST, get_func_cst
@@ -14,7 +14,7 @@ from spaghettree.utils import str_to_cst
 
 
 @safe
-def get_modules(src_code: dict[str, str]) -> Result[dict[str, ModuleCST], Exception]:
+def get_modules(src_code: dict[str, str]) -> dict[str, ModuleCST]:
     def get_module_name(path: str) -> str:
         return os.path.splitext(os.path.basename(path))[0]
 
