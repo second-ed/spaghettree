@@ -5,11 +5,11 @@ import glob
 import os
 
 import attrs
+import black
+import isort
 import pandas as pd
 import yaml
 from returns.result import Failure, Result, Success, safe
-
-from spaghettree.utils import format_code_str
 
 
 @safe
@@ -37,6 +37,9 @@ def read_files(root: str) -> dict[str, str]:
 def write_file(
     modified_code: str, filepath: str, format_code: bool = True
 ) -> Result[bool, Exception]:
+    def format_code_str(code_snippet: str) -> str:
+        return black.format_str(isort.code(code_snippet), mode=black.FileMode())
+
     try:
         if format_code:
             modified_code = format_code_str(modified_code)

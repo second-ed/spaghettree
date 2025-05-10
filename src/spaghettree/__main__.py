@@ -12,12 +12,11 @@ import pandas as pd
 from returns.pipeline import is_successful
 from returns.result import Failure, Success, safe
 
-from spaghettree.data_structures import OptResult
+from spaghettree.data_structures import ModuleCST, OptResult
 from spaghettree.io import read_files, save_results
 from spaghettree.metrics import modularity
 from spaghettree.processing import (
     get_call_table,
-    get_entity_names,
     get_modules,
 )
 from spaghettree.search import (
@@ -107,6 +106,15 @@ def process_package(
     use_sim_annealing: bool = True,
     use_genetic_search: bool = True,
 ):
+    def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
+        func_names, class_names = [], []
+
+        for mod_csts in mods.values():
+            func_names.extend(list(mod_csts.func_trees.keys()))
+            class_names.extend(list(mod_csts.class_trees.keys()))
+
+        return tuple(mods.keys()), tuple(func_names), tuple(class_names)
+
     sims = total_sims // pop
 
     config = {
