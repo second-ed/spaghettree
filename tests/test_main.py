@@ -57,3 +57,31 @@ def test_correct_config(process_mock_package, key, expected_value):
 def test_optimisation_improves(process_mock_package, search_method):
     record, _ = process_mock_package.unwrap()
     assert record[search_method] > record["base_dwm"]
+
+
+@pytest.mark.parametrize(
+    "key",
+    (
+        pytest.param(
+            "mock_package_hill_climber",
+            id="ensure `mock_package_hill_climber` finds expected communities",
+        ),
+        pytest.param(
+            "mock_package_sim_annealing",
+            id="ensure `mock_package_sim_annealing` finds expected communities",
+        ),
+        pytest.param(
+            "mock_package_genetic",
+            id="ensure `mock_package_genetic` finds expected communities",
+        ),
+    ),
+)
+def test_communities(process_mock_package, key):
+    _, result_obj = process_mock_package.unwrap()
+    res_comms = dict(
+        result_obj[key].search_df.groupby("module")["func_method"].agg(list)
+    )
+    assert res_comms == {
+        "module_a": ["func_a", "func_b"],
+        "module_b": ["func_c", "func_e", "func_d", "method_a"],
+    }
