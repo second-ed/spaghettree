@@ -6,43 +6,40 @@ from typing import Optional
 import libcst as cst
 import numpy as np
 import pandas as pd
-from returns.result import Failure, Result, Success, safe
+from returns.result import Result, safe
 from tqdm import tqdm
 
 from spaghettree.data_structures import ClassCST, ModuleCST, get_func_cst
-from spaghettree.io import get_src_code
 from spaghettree.utils import str_to_cst
 
 
-def get_modules(paths: list[str]) -> Result[dict[str, ModuleCST], Exception]:
-    modules, fails = {}, []
+@safe
+def get_modules(src_code: dict[str, str]) -> Result[dict[str, ModuleCST], Exception]:
+    def get_module_name(path: str) -> str:
+        return os.path.splitext(os.path.basename(path))[0]
 
-    for path in tqdm(paths, "creating objects"):
-        some_tree = (get_src_code(path)).map(str_to_cst)
-        match some_tree:
-            case Success(tree):
-                module = ModuleCST(get_module_name(path), tree)
+    modules = {}
 
-                for name, tree in module.func_trees.items():
-                    func = get_func_cst(tree)
-                    module.funcs.append(func)
+    for path, data in tqdm(src_code.items(), "creating objects"):
+        tree = str_to_cst(data)
+        module = ModuleCST(get_module_name(path), tree)
 
-                for name, tree in module.class_trees.items():
-                    methods = []
-                    for f in tree.body.children:
-                        if isinstance(f, cst.FunctionDef):
-                            func = get_func_cst(f)
-                            methods.append(func)
+        for name, tree in module.func_trees.items():
+            func = get_func_cst(tree)
+            module.funcs.append(func)
 
-                    c_obj = ClassCST(name, tree, methods)
-                    module.classes.append(c_obj)
+        for name, tree in module.class_trees.items():
+            methods = []
+            for f in tree.body.children:
+                if isinstance(f, cst.FunctionDef):
+                    func = get_func_cst(f)
+                    methods.append(func)
 
-                modules[module.name] = module
-            case _:
-                fails.append(path)
-    if fails:
-        return Failure(ValueError(f"Failed to get tree for paths: {fails}"))
-    return Success(modules)
+            c_obj = ClassCST(name, tree, methods)
+            module.classes.append(c_obj)
+
+        modules[module.name] = module
+    return modules
 
 
 @safe
@@ -125,10 +122,6 @@ def get_adj_matrix(full_func_addr: np.array, full_call_addr: np.array):
         tgt_idx = node_idx[tgt]
         adj_mat[src_idx, tgt_idx] += 1
     return adj_mat, nodes
-
-
-def get_module_name(path: str) -> str:
-    return os.path.splitext(os.path.basename(path))[0]
 
 
 def _get_full_module_name(module) -> Optional[str]:

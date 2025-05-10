@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime as dt
-import glob
 import os
 import pprint
 import time
@@ -10,10 +9,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from returns.pipeline import is_successful
 from returns.result import Failure, Success, safe
 
 from spaghettree.data_structures import OptResult
-from spaghettree.io import save_results
+from spaghettree.io import read_files, save_results
 from spaghettree.metrics import modularity
 from spaghettree.processing import (
     get_call_table,
@@ -135,11 +135,15 @@ def process_package(
     package_name = os.path.basename(p)
     print("*" * 79)
     print(f"{package_name = }")
-    paths = glob.glob(f"{p}/**/**.py", recursive=True)
-    modules = get_modules(paths)
+
+    modules = read_files(p).bind(get_modules)
     module_names, func_names, class_names = modules.bind(get_entity_names)
     raw_calls = modules.bind(get_call_table)
-    raw_calls_df = raw_calls.unwrap()
+    if is_successful(raw_calls):
+        raw_calls_df = raw_calls.unwrap()
+    else:
+        print(raw_calls)
+        return {}, {}
 
     modules, classes, funcs, calls = get_np_arrays(raw_calls_df)
 

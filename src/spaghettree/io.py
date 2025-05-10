@@ -1,27 +1,40 @@
 from __future__ import annotations
 
 import datetime as dt
+import glob
 import os
 
 import attrs
 import pandas as pd
 import yaml
-from returns.result import Failure, Result, Success
+from returns.result import Failure, Result, Success, safe
 
 from spaghettree.utils import format_code_str
 
 
-def get_src_code(path: str) -> Result[str, Exception]:
-    try:
-        with open(path, "r") as f:
-            src_code = f.read()
-        return Success(src_code)
-    except Exception as e:
-        print(f"{e} for {path}")
-        return Failure(e)
+@safe
+def read_file(path: str) -> str:
+    with open(path, "r") as f:
+        data = f.read()
+    return data
 
 
-def save_modified_code(
+def read_files(root: str) -> dict[str, str]:
+    paths = glob.glob(f"{root}/**/**.py", recursive=True)
+
+    results = {}
+    for path in paths:
+        res = read_file(path)
+        match res:
+            case Success(data):
+                results[path] = data
+            case Failure(_):
+                print(res)
+                return res
+    return Success(results)
+
+
+def write_file(
     modified_code: str, filepath: str, format_code: bool = True
 ) -> Result[bool, Exception]:
     try:
