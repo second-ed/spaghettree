@@ -94,7 +94,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def clean_calls_np(
+def clean_calls(
     modules: np.array, classes: np.array, funcs: np.array, calls: np.array
 ) -> tuple[np.array]:
     full_func_addr = np.where(

@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from spaghettree.metrics import directed_weighted_modularity
-from spaghettree.processing import clean_calls_np, get_adj_matrix
+from spaghettree.processing import clean_calls, get_adj_matrix
 
 
 def hill_climber_search(
@@ -220,7 +220,7 @@ def get_modularity_score(
     calls: np.array,
     fitness_func: Callable = directed_weighted_modularity,
 ) -> float:
-    full_func_addr, full_call_addr = clean_calls_np(
+    full_func_addr, full_call_addr = clean_calls(
         modules=modules, classes=classes, funcs=funcs, calls=calls
     )
     adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
