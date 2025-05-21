@@ -7,7 +7,9 @@ import os
 import attrs
 import black
 import isort
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 import yaml
 from returns.result import Failure, Result, Success, safe
 
@@ -72,7 +74,31 @@ def save_results(results: dict):
 
         for key, attrib in res_obj.items():
             if isinstance(attrib, pd.DataFrame):
+                if key == "epochs":
+                    save_plot(
+                        attrib, f"./results/{now}/{package}/{name}_epochs.png", name
+                    )
                 res_obj[key] = attrib.to_dict("records")
 
         os.makedirs(f"./results/{now}/{package}", exist_ok=True)
         write_yaml(res_obj, f"./results/{now}/{package}/{name}.yaml")
+
+
+@safe
+def save_plot(df: pd.DataFrame, path: str, name: str):
+    plt.figure()
+    for col in df.columns:
+        sns.lineplot(
+            x=df.index,
+            y=df[col],
+            label=col,
+            linewidth=2 if col == "best_score" else 1,
+            color="k" if col == "best_score" else "b",
+            alpha=1.0 if col == "best_score" else 0.5,
+        )
+
+    plt.title(name.title().replace("_", " "))
+    plt.legend()
+    plt.ylabel("Fitness Score")
+    plt.xlabel("Epoch")
+    plt.savefig(path, dpi=300, bbox_inches="tight")
