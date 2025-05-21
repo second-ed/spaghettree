@@ -66,7 +66,7 @@ def simulated_annealing_search(
     func_names: tuple,
     sims: int = 1000,
     temp: float = 1.0,
-    cooling_rate: float = 0.995,
+    cooling_rate: float = 0.999,
 ) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     search_df = search_df.copy()
 

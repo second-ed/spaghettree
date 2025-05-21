@@ -66,10 +66,11 @@ def write_yaml(data: dict, filepath: str) -> None:
 
 def save_results(results: dict):
     now = dt.datetime.now().strftime(format="%y%m%d_%H%M")
-    os.makedirs(f"./results/{now}", exist_ok=True)
 
     for name, result in results.items():
         package = result.package
+        os.makedirs(f"./results/{now}/{package}", exist_ok=True)
+
         res_obj = attrs.asdict(result)
 
         for key, attrib in res_obj.items():
@@ -80,7 +81,6 @@ def save_results(results: dict):
                     )
                 res_obj[key] = attrib.to_dict("records")
 
-        os.makedirs(f"./results/{now}/{package}", exist_ok=True)
         write_yaml(res_obj, f"./results/{now}/{package}/{name}.yaml")
 
 
