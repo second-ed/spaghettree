@@ -15,13 +15,16 @@ from returns.result import Failure, Success, safe
 from spaghettree.data_structures import ModuleCST, OptResult
 from spaghettree.io import read_files, save_results
 from spaghettree.metrics import modularity
+from spaghettree.plotting import get_color_map, plot_graph, plot_heatmap
 from spaghettree.processing import (
     get_call_table,
     get_modules,
 )
 from spaghettree.search import (
+    clean_calls,
     create_random_replicates,
     genetic_search,
+    get_adj_matrix,
     get_modularity_score,
     get_np_arrays,
     hill_climber_search,
@@ -153,6 +156,7 @@ def process_package(
         print(raw_calls)
         return {}, {}
 
+    save_graph_plots(package_name, False, raw_calls_df)
     modules, classes, funcs, calls = get_np_arrays(raw_calls_df)
 
     record = {
@@ -198,6 +202,8 @@ def process_package(
             end_time = time.time()
             record[f"{name}_duration"] = end_time - start_time
 
+            save_graph_plots(package_name, True, search_df)
+
             results[f"{package_name}_{name}"] = OptResult(
                 package_name,
                 name,
@@ -219,6 +225,41 @@ def process_package(
 
     print("*" * 79, end="\n\n")
     return record, results
+
+
+def save_graph_plots(package: str, opt: bool, call_df: pd.DataFrame, delim: str = "."):
+    save_dir = (
+        f"{REPO_ROOT}/results/plots/optimised"
+        if opt
+        else f"{REPO_ROOT}/results/plots/unoptimised"
+    )
+    os.makedirs(save_dir, exist_ok=True)
+
+    modules, classes, funcs, calls = get_np_arrays(call_df)
+    full_func_addr, full_call_addr = clean_calls(
+        modules=modules, classes=classes, funcs=funcs, calls=calls
+    )
+    adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
+    color_map = get_color_map(modules).unwrap()
+    communities = np.array([col.split(delim)[0] for col in nodes])
+    community_mat = communities[:, None] == communities[None, :]
+
+    x = int(len(np.unique(modules)) * 3.5)
+    y = np.ceil(x * 0.7)
+
+    plot_graph(
+        f"{save_dir}/{package}_graph.png",
+        adj_mat,
+        np.array([node.replace(".", "\n") for node in nodes]),
+        color_map=color_map,
+        delim="\n",
+        figsize=(x, y),
+    )
+    internal_calls = np.where(community_mat, 1, -1)
+    adj_mat = adj_mat * internal_calls
+    plot_heatmap(
+        f"{save_dir}/{package}_heatmap.png", adj_mat, nodes, annot=True, figsize=(x, y)
+    )
 
 
 if __name__ == "__main__":

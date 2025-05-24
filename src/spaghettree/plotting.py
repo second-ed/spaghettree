@@ -11,18 +11,23 @@ from returns.result import Result, safe
 @safe
 def get_color_map(module_names: tuple) -> Result[dict, Exception]:
     n = int(np.ceil(len(module_names) / 3))
-    reds = plt.cm.Reds(np.linspace(0.2, 1, n))
-    blues = plt.cm.Blues(np.linspace(0.2, 1, n))
-    greens = plt.cm.Greens(np.linspace(0.2, 1, n))
-    colors = np.vstack([reds, blues, greens])
+    reds = plt.cm.Reds(np.linspace(0.2, 0.8, n))
+    blues = plt.cm.Blues(np.linspace(0.2, 0.8, n))
+    greens = plt.cm.Greens(np.linspace(0.2, 0.8, n))
+    colors = np.vstack([reds, blues, greens])[::-1]
     return dict(zip(module_names, colors))
 
 
 def plot_graph(
-    adj_mat: np.array, nodes: list, color_map: dict[str, np.array], delim: str = "."
+    path: str,
+    adj_mat: np.array,
+    nodes: list,
+    color_map: dict[str, np.array],
+    delim: str = ".",
+    figsize: tuple[int] = (24, 16),
 ) -> None:
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
-    plt.figure(figsize=(24, 16))
+    plt.figure(figsize=figsize)
 
     G = nx.from_pandas_adjacency(adj_df)
     G.remove_nodes_from(list(nx.isolates(G)))
@@ -46,12 +51,19 @@ def plot_graph(
         arrows=True,
         font_size=8,
     )
+    plt.savefig(path, dpi=300, bbox_inches="tight")
 
 
 @safe
-def plot_heatmap(adj_mat: np.array, nodes: list):
+def plot_heatmap(
+    path: str,
+    adj_mat: np.array,
+    nodes: list,
+    annot: bool = False,
+    figsize: tuple[int] = (24, 16),
+):
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
-    plt.figure(figsize=(24, 16))
+    plt.figure(figsize=figsize)
     nonzero_rows = adj_df.any(axis=1)
     nonzero_cols = adj_df.any(axis=0)
     adj_df_filtered = adj_df.loc[nonzero_rows, nonzero_cols]
@@ -61,6 +73,7 @@ def plot_heatmap(adj_mat: np.array, nodes: list):
         center=0,
         vmin=-1,
         vmax=1,
-        # annot=True
+        annot=annot,
     )
+    plt.savefig(path, dpi=300, bbox_inches="tight")
     return True
