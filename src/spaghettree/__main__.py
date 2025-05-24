@@ -202,7 +202,7 @@ def process_package(
             end_time = time.time()
             record[f"{name}_duration"] = end_time - start_time
 
-            save_graph_plots(package_name, True, search_df)
+            save_graph_plots(package_name, True, search_df, opt_method=name)
 
             results[f"{package_name}_{name}"] = OptResult(
                 package_name,
@@ -227,11 +227,17 @@ def process_package(
     return record, results
 
 
-def save_graph_plots(package: str, opt: bool, call_df: pd.DataFrame, delim: str = "."):
+def save_graph_plots(
+    package: str,
+    opt: bool,
+    call_df: pd.DataFrame,
+    delim: str = ".",
+    opt_method: str = "",
+):
     save_dir = (
-        f"{REPO_ROOT}/results/plots/optimised"
+        f"{REPO_ROOT}/results/plots/{package}/optimised"
         if opt
-        else f"{REPO_ROOT}/results/plots/unoptimised"
+        else f"{REPO_ROOT}/results/plots/{package}/unoptimised"
     )
     os.makedirs(save_dir, exist_ok=True)
 
@@ -248,7 +254,7 @@ def save_graph_plots(package: str, opt: bool, call_df: pd.DataFrame, delim: str 
     y = np.ceil(x * 0.7)
 
     plot_graph(
-        f"{save_dir}/{package}_graph.png",
+        f"{save_dir}/{package}_{opt_method}_graph.png".replace("__", "_"),
         adj_mat,
         np.array([node.replace(".", "\n") for node in nodes]),
         color_map=color_map,
@@ -258,7 +264,11 @@ def save_graph_plots(package: str, opt: bool, call_df: pd.DataFrame, delim: str 
     internal_calls = np.where(community_mat, 1, -1)
     adj_mat = adj_mat * internal_calls
     plot_heatmap(
-        f"{save_dir}/{package}_heatmap.png", adj_mat, nodes, annot=True, figsize=(x, y)
+        f"{save_dir}/{package}_{opt_method}_heatmap.png".replace("__", "_"),
+        adj_mat,
+        nodes,
+        annot=True,
+        figsize=(x, y),
     )
 
 
