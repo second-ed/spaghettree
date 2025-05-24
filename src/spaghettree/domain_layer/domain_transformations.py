@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 import libcst as cst
-import numpy as np
 import pandas as pd
 from returns.result import safe
 from tqdm import tqdm
 
-from spaghettree.data_structures import ClassCST, ModuleCST, get_func_cst
-from spaghettree.utils import str_to_cst
+from spaghettree.domain_layer.data_structures import ClassCST, ModuleCST, get_func_cst
+
+
+def str_to_cst(code: str) -> cst.Module:
+    return cst.parse_module(code)
 
 
 @safe
@@ -92,45 +93,3 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
                             }
                         )
     return pd.DataFrame(rows)
-
-
-def clean_calls(
-    modules: np.array, classes: np.array, funcs: np.array, calls: np.array
-) -> tuple[np.array]:
-    full_func_addr = np.where(
-        classes, modules + "." + classes + "." + funcs, modules + "." + funcs
-    )
-    full_addr_map = dict(zip(funcs, full_func_addr))
-    full_call_addr = np.vectorize(lambda x: full_addr_map.get(x, ""))(calls)
-
-    full_func_addr = full_func_addr[full_call_addr != ""]  # noqa: E711
-    full_call_addr = full_call_addr[full_call_addr != ""]  # noqa: E711
-
-    return full_func_addr, full_call_addr
-
-
-def get_adj_matrix(full_func_addr: np.array, full_call_addr: np.array):
-    nodes = np.unique(np.concatenate((full_func_addr, full_call_addr)))
-    node_idx = {node: i for i, node in enumerate(nodes)}
-
-    n = len(nodes)
-    adj_mat = np.zeros((n, n), dtype=int)
-
-    for i, tgt in enumerate(full_call_addr):
-        src = full_func_addr[i]
-        src_idx = node_idx[src]
-        tgt_idx = node_idx[tgt]
-        adj_mat[src_idx, tgt_idx] += 1
-    return adj_mat, nodes
-
-
-def _get_full_module_name(module) -> Optional[str]:
-    if isinstance(module, cst.Attribute):
-        return (
-            _get_full_module_name(module.value)  # type: ignore
-            + "."
-            + module.attr.value
-        )
-    elif isinstance(module, cst.Name):
-        return module.value
-    return None

@@ -6,30 +6,27 @@ import pprint
 import time
 from multiprocessing import Pool
 from pathlib import Path
+from typing import Any
 
+import attrs
 import numpy as np
 import pandas as pd
 from returns.pipeline import is_successful
 from returns.result import Failure, Success, safe
 
-from spaghettree.data_structures import ModuleCST, OptResult
-from spaghettree.io import read_files, save_results
-from spaghettree.metrics import modularity
-from spaghettree.plotting import get_color_map, plot_graph, plot_heatmap
-from spaghettree.processing import (
-    get_call_table,
-    get_modules,
-)
-from spaghettree.search import (
-    clean_calls,
+from spaghettree.domain_layer.data_structures import ModuleCST
+from spaghettree.domain_layer.domain_transformations import get_call_table, get_modules
+from spaghettree.input_layer.io import read_files
+from spaghettree.optimisation_layer.metrics import modularity
+from spaghettree.optimisation_layer.search import (
     create_random_replicates,
     genetic_search,
-    get_adj_matrix,
     get_modularity_score,
     get_np_arrays,
     hill_climber_search,
     simulated_annealing_search,
 )
+from spaghettree.output_layer.save_results import save_results
 
 REPO_ROOT = Path(__file__).parents[2]
 
@@ -102,14 +99,16 @@ def main(parallel: bool):
 
 @safe
 def process_package(
-    p: str,
+    p: str | Path,
     total_sims: int = 8000,
     pop: int = 8,
     use_hill_climbing: bool = True,
     use_sim_annealing: bool = True,
     use_genetic_search: bool = True,
-):
-    def get_entity_names(mods: dict[str, ModuleCST]) -> tuple[str, str, str]:
+) -> tuple[dict[str, Any], dict[str, OptResult]]:
+    def get_entity_names(
+        mods: dict[str, ModuleCST],
+    ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
         func_names, class_names = [], []
 
         for mod_csts in mods.values():
@@ -156,7 +155,6 @@ def process_package(
         print(raw_calls)
         return {}, {}
 
-    save_graph_plots(package_name, False, raw_calls_df)
     modules, classes, funcs, calls = get_np_arrays(raw_calls_df)
 
     record = {
@@ -202,11 +200,10 @@ def process_package(
             end_time = time.time()
             record[f"{name}_duration"] = end_time - start_time
 
-            save_graph_plots(package_name, True, search_df, opt_method=name)
-
             results[f"{package_name}_{name}"] = OptResult(
                 package_name,
                 name,
+                raw_calls_df,
                 search_df,
                 epochs,
                 best_score,
@@ -227,49 +224,21 @@ def process_package(
     return record, results
 
 
-def save_graph_plots(
-    package: str,
-    opt: bool,
-    call_df: pd.DataFrame,
-    delim: str = ".",
-    opt_method: str = "",
-):
-    save_dir = (
-        f"{REPO_ROOT}/results/plots/{package}/optimised"
-        if opt
-        else f"{REPO_ROOT}/results/plots/{package}/unoptimised"
-    )
-    os.makedirs(save_dir, exist_ok=True)
+def convert_to_float(lst: list):
+    return [float(x) for x in lst]
 
-    modules, classes, funcs, calls = get_np_arrays(call_df)
-    full_func_addr, full_call_addr = clean_calls(
-        modules=modules, classes=classes, funcs=funcs, calls=calls
-    )
-    adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
-    color_map = get_color_map(np.unique(modules)).unwrap()
-    communities = np.array([col.split(delim)[0] for col in nodes])
-    community_mat = communities[:, None] == communities[None, :]
 
-    x = int(len(np.unique(modules)) * 3.5)
-    y = np.ceil(x * 0.7)
-
-    plot_graph(
-        f"{save_dir}/{package}_{opt_method}_graph.png".replace("__", "_"),
-        adj_mat,
-        np.array([node.replace(".", "\n") for node in nodes]),
-        color_map=color_map,
-        delim="\n",
-        figsize=(x, y),
-    )
-    internal_calls = np.where(community_mat, 1, -1)
-    adj_mat = adj_mat * internal_calls
-    plot_heatmap(
-        f"{save_dir}/{package}_{opt_method}_heatmap.png".replace("__", "_"),
-        adj_mat,
-        nodes,
-        annot=True,
-        figsize=(x, y),
-    )
+@attrs.define(frozen=True)
+class OptResult:
+    package: str = attrs.field()
+    method: str = attrs.field()
+    original_fact_df: pd.DataFrame = attrs.field()
+    search_df: pd.DataFrame = attrs.field()
+    epochs: pd.DataFrame = attrs.field()
+    best_score: float = attrs.field(converter=float)
+    replicates: list = attrs.field(converter=convert_to_float)
+    permutates: list = attrs.field(converter=convert_to_float)
+    unique_replicates: list = attrs.field(converter=convert_to_float)
 
 
 if __name__ == "__main__":

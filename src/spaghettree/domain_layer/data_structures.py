@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import attrs
 import libcst as cst
-import pandas as pd
 from attrs.validators import instance_of
 
 
@@ -79,19 +78,3 @@ def get_func_cst(tree):
     cv = CallVisitor()
     tree.visit(cv)
     return FuncCST(tree.name.value, tree, cv.calls)
-
-
-def convert_to_float(lst: list):
-    return [float(x) for x in lst]
-
-
-@attrs.define(frozen=True)
-class OptResult:
-    package: str = attrs.field()
-    method: str = attrs.field()
-    search_df: pd.DataFrame = attrs.field()
-    epochs: pd.DataFrame = attrs.field()
-    best_score: float = attrs.field(converter=float)
-    replicates: list = attrs.field(converter=convert_to_float)
-    permutates: list = attrs.field(converter=convert_to_float)
-    unique_replicates: list = attrs.field(converter=convert_to_float)

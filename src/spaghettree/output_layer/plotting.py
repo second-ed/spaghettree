@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -54,6 +56,7 @@ def plot_graph(
     )
     nx.draw_networkx_edges(G, pos, node_size=4000)
     plt.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 @safe
@@ -62,8 +65,8 @@ def plot_heatmap(
     adj_mat: np.array,
     nodes: list,
     annot: bool = False,
-    figsize: tuple[int] = (24, 16),
-):
+    figsize: tuple[int, int] = (24, 16),
+) -> Literal[True]:
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=figsize)
     nonzero_rows = adj_df.any(axis=1)
@@ -78,4 +81,5 @@ def plot_heatmap(
         annot=annot,
     )
     plt.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close()
     return True

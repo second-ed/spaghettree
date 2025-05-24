@@ -6,8 +6,12 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from spaghettree.metrics import directed_weighted_modularity
-from spaghettree.processing import clean_calls, get_adj_matrix
+from spaghettree.optimisation_layer.metrics import directed_weighted_modularity
+from spaghettree.optimisation_layer.processing import (
+    clean_calls,
+    get_adj_matrix,
+    get_np_arrays,
+)
 
 
 def hill_climber_search(
@@ -233,15 +237,6 @@ def update_module(
     modules = np.copy(modules)
     modules[entities == ent_name] = new_module
     return modules
-
-
-def get_np_arrays(search_df: pd.DataFrame) -> tuple[np.array]:
-    return (
-        search_df["module"].values,
-        search_df["class"].values,
-        search_df["func_method"].values,
-        search_df["call"].values,
-    )
 
 
 def create_random_replicates(
