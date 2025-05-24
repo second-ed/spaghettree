@@ -29,7 +29,7 @@ def plot_graph(
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=figsize)
 
-    G = nx.from_pandas_adjacency(adj_df)
+    G = nx.from_pandas_adjacency(adj_df, create_using=nx.DiGraph)
     G.remove_nodes_from(list(nx.isolates(G)))
 
     pos = nx.forceatlas2_layout(
@@ -49,8 +49,10 @@ def plot_graph(
         node_color=node_colors,
         edge_color="gray",
         arrows=True,
+        arrowsize=2,
         font_size=8,
     )
+    nx.draw_networkx_edges(G, pos, node_size=4000)
     plt.savefig(path, dpi=300, bbox_inches="tight")
 
 
