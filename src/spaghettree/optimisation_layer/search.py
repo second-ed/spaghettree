@@ -66,15 +66,8 @@ def simulated_annealing_search(
     epochs = []
 
     for _ in tqdm(range(sims), "annealing..."):
-        cand_modules, cand_score = mutate(
-            best_modules,
-            classes,
-            funcs,
-            calls,
-            module_names,
-            func_names,
-            class_names,
-        )
+        cand_modules, cand_score = mutate(best_modules, classes, funcs, calls, module_names, func_names, class_names)
+
         score_diff = cand_score - curr_score
 
         accept = False
