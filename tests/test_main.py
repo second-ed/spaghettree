@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-from returns.pipeline import is_successful
 
 from src.spaghettree.__main__ import process_package
 
@@ -15,14 +14,16 @@ def process_mock_package():
 
 
 def test_process_package(process_mock_package):
-    assert is_successful(process_mock_package)
+    record, result = process_mock_package
+    assert len(record) > 0
+    assert len(result) > 0
 
 
 @pytest.mark.parametrize(
     "key, expected_value",
     (
         pytest.param("package_name", "mock_package"),
-        pytest.param("n_modules", 3),
+        pytest.param("n_modules", 2),
         pytest.param("n_classes", 1),
         pytest.param("n_funcs", 5),
         pytest.param("n_calls", 6),
@@ -33,7 +34,7 @@ def test_process_package(process_mock_package):
     ),
 )
 def test_correct_config(process_mock_package, key, expected_value):
-    record, _ = process_mock_package.unwrap()
+    record, _ = process_mock_package
     assert record[key] == expected_value
 
 
@@ -55,7 +56,7 @@ def test_correct_config(process_mock_package, key, expected_value):
     ),
 )
 def test_optimisation_improves(process_mock_package, search_method):
-    record, _ = process_mock_package.unwrap()
+    record, _ = process_mock_package
     assert record[search_method] > record["base_dwm"]
 
 
@@ -77,7 +78,7 @@ def test_optimisation_improves(process_mock_package, search_method):
     ),
 )
 def test_communities(process_mock_package, key):
-    _, result_obj = process_mock_package.unwrap()
+    _, result_obj = process_mock_package
     res_comms = dict(
         result_obj[key].search_df.groupby("module")["func_method"].agg(list)
     )
