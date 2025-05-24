@@ -15,12 +15,8 @@ from spaghettree.optimisation_layer.processing import (
 
 
 def hill_climber_search(
-    search_df: pd.DataFrame,
-    module_names: tuple,
-    class_names: tuple,
-    func_names: tuple,
-    sims: int = 8000,
-) -> tuple[pd.DataFrame, list[dict]]:
+    search_df: pd.DataFrame, module_names: tuple, class_names: tuple, func_names: tuple, sims: int = 8000
+) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     search_df = search_df.copy()
 
     best_modules, classes, funcs, calls = get_np_arrays(search_df)
@@ -32,26 +28,13 @@ def hill_climber_search(
     epochs = []
 
     for _ in tqdm(range(sims), "climbing..."):
-        cand_modules, cand_score = mutate(
-            best_modules,
-            classes,
-            funcs,
-            calls,
-            module_names,
-            func_names,
-            class_names,
-        )
+        cand_modules, cand_score = mutate(best_modules, classes, funcs, calls, module_names, func_names, class_names)
 
         if cand_score > best_score:
             best_score = cand_score
             best_modules = np.copy(cand_modules)
 
-        epochs.append(
-            {
-                "cand_score": cand_score,
-                "best_score": best_score,
-            }
-        )
+        epochs.append({"cand_score": cand_score, "best_score": best_score})
 
     print(f"    {best_score = }")
 
@@ -83,7 +66,7 @@ def simulated_annealing_search(
     epochs = []
 
     for _ in tqdm(range(sims), "annealing..."):
-        new_modules, new_score = mutate(
+        cand_modules, cand_score = mutate(
             best_modules,
             classes,
             funcs,
@@ -92,7 +75,7 @@ def simulated_annealing_search(
             func_names,
             class_names,
         )
-        score_diff = new_score - curr_score
+        score_diff = cand_score - curr_score
 
         accept = False
         if score_diff > 0:
@@ -102,8 +85,8 @@ def simulated_annealing_search(
             accept = np.random.rand() < prob
 
         if accept:
-            curr_modules = np.copy(new_modules)
-            curr_score = new_score
+            curr_modules = np.copy(cand_modules)
+            curr_score = cand_score
 
             if curr_score > best_score:
                 best_score = curr_score
@@ -136,7 +119,7 @@ def genetic_search(
     func_names: tuple,
     population: int = 50,
     sims: int = 100,
-) -> tuple[pd.DataFrame, list[dict]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     search_df = search_df.copy()
     best_modules, classes, funcs, calls = get_np_arrays(search_df)
     best_score = get_modularity_score(best_modules, classes, funcs, calls)
@@ -187,19 +170,17 @@ def genetic_search(
 
 
 def mutate(
-    modules: np.array,
-    classes: np.array,
-    funcs: np.array,
-    calls: np.array,
+    modules: np.ndarray,
+    classes: np.ndarray,
+    funcs: np.ndarray,
+    calls: np.ndarray,
     module_names: tuple[str],
     func_names: tuple[str],
     class_names: tuple[str],
 ):
     match (bool(func_names), bool(class_names), random.choice((True, False))):
         case (True, _, True):
-            modules = update_module(
-                modules, funcs, random.choice(func_names), random.choice(module_names)
-            )
+            modules = update_module(modules, funcs, random.choice(func_names), random.choice(module_names))
             cand_score = get_modularity_score(modules, classes, funcs, calls)
             return modules, cand_score
 
@@ -218,22 +199,18 @@ def mutate(
 
 
 def get_modularity_score(
-    modules: np.array,
-    classes: np.array,
-    funcs: np.array,
-    calls: np.array,
+    modules: np.ndarray,
+    classes: np.ndarray,
+    funcs: np.ndarray,
+    calls: np.ndarray,
     fitness_func: Callable = directed_weighted_modularity,
 ) -> float:
-    full_func_addr, full_call_addr = clean_calls(
-        modules=modules, classes=classes, funcs=funcs, calls=calls
-    )
+    full_func_addr, full_call_addr = clean_calls(modules=modules, classes=classes, funcs=funcs, calls=calls)
     adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
     return fitness_func(adj_mat, nodes)
 
 
-def update_module(
-    modules: np.array, entities: np.array, ent_name: str, new_module: str
-) -> np.array:
+def update_module(modules: np.ndarray, entities: np.ndarray, ent_name: str, new_module: str) -> np.ndarray:
     modules = np.copy(modules)
     modules[entities == ent_name] = new_module
     return modules

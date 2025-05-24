@@ -87,9 +87,7 @@ def get_call_table(modules: dict[str, ModuleCST]) -> pd.DataFrame:
                                 "module": module_name,
                                 "class": class_.name,
                                 "func_method": func.name,
-                                "call": call.replace(
-                                    "self.", f"{module_name}.{class_.name}."
-                                ),
+                                "call": call.replace("self.", f"{module_name}.{class_.name}."),
                             }
                         )
     return pd.DataFrame(rows)

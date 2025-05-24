@@ -19,19 +19,10 @@ class ModuleCST:
         self.imports = [
             node
             for node in self.tree.children
-            if isinstance(node, cst.SimpleStatementLine)
-            and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
+            if isinstance(node, cst.SimpleStatementLine) and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
         ]
-        self.func_trees = {
-            node.name.value: node
-            for node in self.tree.children
-            if isinstance(node, cst.FunctionDef)
-        }
-        self.class_trees = {
-            node.name.value: node
-            for node in self.tree.children
-            if isinstance(node, cst.ClassDef)
-        }
+        self.func_trees = {node.name.value: node for node in self.tree.children if isinstance(node, cst.FunctionDef)}
+        self.class_trees = {node.name.value: node for node in self.tree.children if isinstance(node, cst.ClassDef)}
         self.funcs, self.classes = [], []
 
 
@@ -45,9 +36,7 @@ class ClassCST:
 @attrs.define
 class FuncCST:
     name: str = attrs.field(validator=[instance_of(str)])
-    tree: cst.FunctionDef = attrs.field(
-        validator=[instance_of(cst.FunctionDef)], repr=False
-    )
+    tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
     calls: list = attrs.field(validator=[instance_of(list)])
     internal: bool = attrs.field(default=False, validator=[instance_of(bool)])
 

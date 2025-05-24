@@ -8,4 +8,4 @@ def func_d():
 
 class ClassA:
     def method_a(self):
-        return func_d()
+        return func_d() + func_d()

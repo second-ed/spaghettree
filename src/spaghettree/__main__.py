@@ -134,9 +134,7 @@ def process_package(
             "n_calls": len(calls),
             "n_calls_package_funcs": len(calls[calls != ""]),
             "base_dwm": get_modularity_score(modules, classes, funcs, calls),
-            "base_modularity": get_modularity_score(
-                modules, classes, funcs, calls, modularity
-            ),
+            "base_modularity": get_modularity_score(modules, classes, funcs, calls, modularity),
             "total_sims": total_sims,
             "initial_population_size": pop,
             "generations": sims,
@@ -145,9 +143,7 @@ def process_package(
 
         replicates = create_random_replicates(raw_calls_df, replace=True)
         permutates = create_random_replicates(raw_calls_df)
-        unique_replicates = create_random_replicates(
-            raw_calls_df, replace=True, unique=True
-        )
+        unique_replicates = create_random_replicates(raw_calls_df, replace=True, unique=True)
         random_reps = {
             "replicates": replicates,
             "permutates": permutates,
@@ -183,9 +179,7 @@ def process_package(
                 record[f"{name}_search_dwm"] = best_score
 
                 modules, classes, funcs, calls = get_np_arrays(search_df)
-                record[f"{name}_search_m"] = get_modularity_score(
-                    modules, classes, funcs, calls, modularity
-                )
+                record[f"{name}_search_m"] = get_modularity_score(modules, classes, funcs, calls, modularity)
                 for rand_name, reps in random_reps.items():
                     record[f"{name}_pvalue_{rand_name}"] = np.mean(best_score < reps)
 

@@ -38,13 +38,9 @@ def save_results(results: dict):
                         name,
                     )
                 if key == "original_fact_df":
-                    save_graph_plots(
-                        f"./results/{now}/{package}/plots/{package}_unopt", attrib
-                    )
+                    save_graph_plots(f"./results/{now}/{package}/plots/{package}_unopt", attrib)
                 if key == "search_df":
-                    save_graph_plots(
-                        f"./results/{now}/{package}/plots/{name}_opt", attrib
-                    )
+                    save_graph_plots(f"./results/{now}/{package}/plots/{name}_opt", attrib)
 
                 res_obj[key] = attrib.to_dict("records")
 
@@ -78,9 +74,7 @@ def save_graph_plots(
     delim: str = ".",
 ):
     modules, classes, funcs, calls = proc.get_np_arrays(call_df)
-    full_func_addr, full_call_addr = proc.clean_calls(
-        modules=modules, classes=classes, funcs=funcs, calls=calls
-    )
+    full_func_addr, full_call_addr = proc.clean_calls(modules=modules, classes=classes, funcs=funcs, calls=calls)
     adj_mat, nodes = proc.get_adj_matrix(full_func_addr, full_call_addr)
     communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]

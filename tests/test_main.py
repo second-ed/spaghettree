@@ -26,8 +26,8 @@ def test_process_package(process_mock_package):
         pytest.param("n_modules", 2),
         pytest.param("n_classes", 1),
         pytest.param("n_funcs", 5),
-        pytest.param("n_calls", 6),
-        pytest.param("n_calls_package_funcs", 4),
+        pytest.param("n_calls", 7),
+        pytest.param("n_calls_package_funcs", 5),
         pytest.param("total_sims", 8000),
         pytest.param("initial_population_size", 8),
         pytest.param("generations", 1000),
@@ -79,10 +79,8 @@ def test_optimisation_improves(process_mock_package, search_method):
 )
 def test_communities(process_mock_package, key):
     _, result_obj = process_mock_package
-    res_comms = dict(
-        result_obj[key].search_df.groupby("module")["func_method"].agg(list)
-    )
+    res_comms = dict(result_obj[key].search_df.groupby("module")["func_method"].agg(list))
     assert res_comms == {
         "module_a": ["func_a", "func_b"],
-        "module_b": ["func_c", "func_e", "func_d", "method_a"],
+        "module_b": ["func_c", "func_e", "func_d", "method_a", "method_a"],
     }
