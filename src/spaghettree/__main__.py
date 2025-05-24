@@ -240,7 +240,7 @@ def save_graph_plots(package: str, opt: bool, call_df: pd.DataFrame, delim: str 
         modules=modules, classes=classes, funcs=funcs, calls=calls
     )
     adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
-    color_map = get_color_map(modules).unwrap()
+    color_map = get_color_map(np.unique(modules)).unwrap()
     communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]
 
