@@ -26,7 +26,9 @@ def clean_calls(
     return full_func_addr, full_call_addr
 
 
-def get_adj_matrix(full_func_addr: np.ndarray, full_call_addr: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def get_adj_matrix(
+    full_func_addr: np.ndarray, full_call_addr: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     nodes = np.unique(np.concatenate((full_func_addr, full_call_addr)))
     node_idx = {node: i for i, node in enumerate(nodes)}
 

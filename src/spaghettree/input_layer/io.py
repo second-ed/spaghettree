@@ -31,7 +31,9 @@ def read_files(root: str | Path) -> Result[dict[str, str], Exception]:
     return Success(results)
 
 
-def write_file(modified_code: str, filepath: str, format_code: bool = True) -> Result[bool, Exception]:
+def write_file(
+    modified_code: str, filepath: str, format_code: bool = True
+) -> Result[bool, Exception]:
     def format_code_str(code_snippet: str) -> str:
         return black.format_str(isort.code(code_snippet), mode=black.FileMode())
 

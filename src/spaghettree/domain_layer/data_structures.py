@@ -19,10 +19,17 @@ class ModuleCST:
         self.imports = [
             node
             for node in self.tree.children
-            if isinstance(node, cst.SimpleStatementLine) and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
+            if isinstance(node, cst.SimpleStatementLine)
+            and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
         ]
-        self.func_trees = {node.name.value: node for node in self.tree.children if isinstance(node, cst.FunctionDef)}
-        self.class_trees = {node.name.value: node for node in self.tree.children if isinstance(node, cst.ClassDef)}
+        self.func_trees = {
+            node.name.value: node
+            for node in self.tree.children
+            if isinstance(node, cst.FunctionDef)
+        }
+        self.class_trees = {
+            node.name.value: node for node in self.tree.children if isinstance(node, cst.ClassDef)
+        }
         self.funcs, self.classes = [], []
 
 

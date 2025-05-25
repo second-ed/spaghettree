@@ -74,7 +74,9 @@ def save_graph_plots(
     delim: str = ".",
 ):
     modules, classes, funcs, calls = proc.get_np_arrays(call_df)
-    full_func_addr, full_call_addr = proc.clean_calls(modules=modules, classes=classes, funcs=funcs, calls=calls)
+    full_func_addr, full_call_addr = proc.clean_calls(
+        modules=modules, classes=classes, funcs=funcs, calls=calls
+    )
     adj_mat, nodes = proc.get_adj_matrix(full_func_addr, full_call_addr)
     communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]
@@ -86,7 +88,7 @@ def save_graph_plots(
     plot.plot_graph(
         f"{path}_graph.png",
         adj_mat,
-        np.array([node.replace(".", "\n") for node in nodes]),
+        [node.replace(".", "\n") for node in nodes],
         color_map=color_map,
         delim="\n",
         figsize=(x, y),

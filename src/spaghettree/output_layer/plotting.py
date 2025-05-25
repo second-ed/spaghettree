@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Literal
 
 import matplotlib.pyplot as plt
@@ -7,11 +8,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from returns.result import Result, safe
+from returns.result import safe
 
 
 @safe
-def get_color_map(module_names: tuple) -> Result[dict, Exception]:
+def get_color_map(module_names: tuple) -> dict[str, np.ndarray]:
     n = int(np.ceil(len(module_names) / 3))
     reds = plt.cm.Reds(np.linspace(0.2, 0.8, n))
     blues = plt.cm.Blues(np.linspace(0.2, 0.8, n))
@@ -22,11 +23,11 @@ def get_color_map(module_names: tuple) -> Result[dict, Exception]:
 
 def plot_graph(
     path: str,
-    adj_mat: np.array,
+    adj_mat: np.ndarray,
     nodes: list,
-    color_map: dict[str, np.array],
+    color_map: dict[str, np.ndarray],
     delim: str = ".",
-    figsize: tuple[int] = (24, 16),
+    figsize: tuple[int, int] = (24, 16),
 ) -> None:
     adj_df = pd.DataFrame(adj_mat, columns=nodes, index=nodes)
     plt.figure(figsize=figsize)
@@ -62,7 +63,7 @@ def plot_graph(
 @safe
 def plot_heatmap(
     path: str,
-    adj_mat: np.array,
+    adj_mat: np.ndarray,
     nodes: list,
     annot: bool = False,
     figsize: tuple[int, int] = (24, 16),
@@ -83,3 +84,31 @@ def plot_heatmap(
     plt.savefig(path, dpi=300, bbox_inches="tight")
     plt.close()
     return True
+
+
+def bootstrap_column(series: pd.Series, sims: int = 1000) -> np.array[np.floating]:
+    return np.array(
+        [np.mean(np.random.choice(series, len(series), replace=True)) for _ in range(sims)]
+    )
+
+
+@safe
+def save_demeaned_control_test(
+    path: str, df: pd.DataFrame, col: str, sims: int = 1000, figsize: tuple[int, int] = (7, 5)
+) -> None:
+    observed = bootstrap_column(df[col], sims=sims)
+    null = bootstrap_column(df[col] - df[col].mean(), sims=sims)
+
+    min_obs_value = np.min(observed)
+    p_val = np.mean(null > min_obs_value)
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    plt.figure(figsize=figsize)
+
+    sns.histplot(observed, label="observed")
+    sns.histplot(null, label="demeaned")
+    plt.title(f"Demeaned control test: {col} | p-value={p_val:.3f}")
+    plt.legend()
+    plt.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close()

@@ -25,6 +25,7 @@ from spaghettree.optimisation_layer.search import (
     hill_climber_search,
     simulated_annealing_search,
 )
+from spaghettree.output_layer.plotting import save_demeaned_control_test
 from spaghettree.output_layer.save_results import save_results
 
 REPO_ROOT = Path(__file__).parents[2]
@@ -179,7 +180,9 @@ def process_package(
                 record[f"{name}_search_dwm"] = best_score
 
                 modules, classes, funcs, calls = get_np_arrays(search_df)
-                record[f"{name}_search_m"] = get_modularity_score(modules, classes, funcs, calls, modularity)
+                record[f"{name}_search_m"] = get_modularity_score(
+                    modules, classes, funcs, calls, modularity
+                )
                 for rand_name, reps in random_reps.items():
                     record[f"{name}_pvalue_{rand_name}"] = np.mean(best_score < reps)
 
@@ -224,9 +227,15 @@ def save_outputs(
     for col in res_df.columns:
         if col.endswith("_search_dwm"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_dwm"]
+            save_demeaned_control_test(
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10_000
+            )
 
         if col.endswith("_search_m"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_modularity"]
+            save_demeaned_control_test(
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10_000
+            )
 
     res_df.to_csv(f"./results/{now}_results.csv", index=False)
     return True

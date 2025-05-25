@@ -15,7 +15,11 @@ from spaghettree.optimisation_layer.processing import (
 
 
 def hill_climber_search(
-    search_df: pd.DataFrame, module_names: tuple, class_names: tuple, func_names: tuple, sims: int = 8000
+    search_df: pd.DataFrame,
+    module_names: tuple,
+    class_names: tuple,
+    func_names: tuple,
+    sims: int = 8000,
 ) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     search_df = search_df.copy()
 
@@ -28,7 +32,9 @@ def hill_climber_search(
     epochs = []
 
     for _ in tqdm(range(sims), "climbing..."):
-        cand_modules, cand_score = mutate(best_modules, classes, funcs, calls, module_names, func_names, class_names)
+        cand_modules, cand_score = mutate(
+            best_modules, classes, funcs, calls, module_names, func_names, class_names
+        )
 
         if cand_score > best_score:
             best_score = cand_score
@@ -66,7 +72,9 @@ def simulated_annealing_search(
     epochs = []
 
     for _ in tqdm(range(sims), "annealing..."):
-        cand_modules, cand_score = mutate(best_modules, classes, funcs, calls, module_names, func_names, class_names)
+        cand_modules, cand_score = mutate(
+            best_modules, classes, funcs, calls, module_names, func_names, class_names
+        )
 
         score_diff = cand_score - curr_score
 
@@ -173,7 +181,9 @@ def mutate(
 ):
     match (bool(func_names), bool(class_names), random.choice((True, False))):
         case (True, _, True):
-            modules = update_module(modules, funcs, random.choice(func_names), random.choice(module_names))
+            modules = update_module(
+                modules, funcs, random.choice(func_names), random.choice(module_names)
+            )
             cand_score = get_modularity_score(modules, classes, funcs, calls)
             return modules, cand_score
 
@@ -198,12 +208,16 @@ def get_modularity_score(
     calls: np.ndarray,
     fitness_func: Callable = directed_weighted_modularity,
 ) -> float:
-    full_func_addr, full_call_addr = clean_calls(modules=modules, classes=classes, funcs=funcs, calls=calls)
+    full_func_addr, full_call_addr = clean_calls(
+        modules=modules, classes=classes, funcs=funcs, calls=calls
+    )
     adj_mat, nodes = get_adj_matrix(full_func_addr, full_call_addr)
     return fitness_func(adj_mat, nodes)
 
 
-def update_module(modules: np.ndarray, entities: np.ndarray, ent_name: str, new_module: str) -> np.ndarray:
+def update_module(
+    modules: np.ndarray, entities: np.ndarray, ent_name: str, new_module: str
+) -> np.ndarray:
     modules = np.copy(modules)
     modules[entities == ent_name] = new_module
     return modules
