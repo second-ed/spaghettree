@@ -16,20 +16,25 @@ def get_np_arrays(call_df: pd.DataFrame) -> tuple[np.ndarray, ...]:
 def clean_calls(
     modules: np.ndarray, classes: np.ndarray, funcs: np.ndarray, calls: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    full_func_addr = np.where(classes, modules + "." + classes + "." + funcs, modules + "." + funcs)
-    full_addr_map = dict(zip(funcs, full_func_addr))
-    full_call_addr = np.vectorize(lambda x: full_addr_map.get(x, ""))(calls)
+    has_class = classes != ""
+    full_func_addr = np.where(
+        has_class, modules + "." + classes + "." + funcs, modules + "." + funcs
+    )
 
-    full_func_addr = full_func_addr[full_call_addr != ""]  # noqa: E711
-    full_call_addr = full_call_addr[full_call_addr != ""]  # noqa: E711
+    full_addr_map = dict(zip(funcs, full_func_addr))
+    full_call_addr = np.frompyfunc(lambda x: full_addr_map.get(x, ""), 1, 1)(calls)
+
+    mask = full_call_addr != ""
+    full_func_addr = full_func_addr[mask]  # noqa: E711
+    full_call_addr = full_call_addr[mask]  # noqa: E711
 
     return full_func_addr, full_call_addr
 
 
 def get_adj_matrix(
     full_func_addr: np.ndarray, full_call_addr: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-    nodes = np.unique(np.concatenate((full_func_addr, full_call_addr)))
+) -> tuple[np.ndarray, list[str]]:
+    nodes = sorted(set(np.concatenate((full_func_addr, full_call_addr))))
     node_idx = {node: i for i, node in enumerate(nodes)}
 
     n = len(nodes)
