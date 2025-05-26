@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from returns.result import safe
+
+if TYPE_CHECKING:
+    from spaghettree.__main__ import OptResult
 
 
 @safe
@@ -110,5 +113,24 @@ def save_demeaned_control_test(
     sns.histplot(null, label="demeaned")
     plt.title(f"Demeaned control test: {col} | p-value={p_val:.3f}")
     plt.legend()
+    plt.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+@safe
+def save_replicates(path: str, package_result: OptResult):
+    plt.figure(figsize=(8, 6))
+
+    all_randomised_values = []
+    all_randomised_values.extend(package_result.permutates)
+    all_randomised_values.extend(package_result.replicates)
+    all_randomised_values.extend(package_result.unique_replicates)
+
+    plt.axvline(package_result.best_score, label=package_result.method, color="k", linewidth=2)
+    sns.histplot(all_randomised_values, bins="sqrt", label="randomised_values")
+    plt.legend()
+    plt.title(
+        f"Observed vs randomised replicates for {package_result.package} {package_result.method}"
+    )
     plt.savefig(path, dpi=300, bbox_inches="tight")
     plt.close()

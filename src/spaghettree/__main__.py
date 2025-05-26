@@ -12,6 +12,7 @@ import attrs
 import numpy as np
 import pandas as pd
 from returns.pipeline import is_successful
+from tqdm import tqdm
 
 from spaghettree.domain_layer.data_structures import ModuleCST
 from spaghettree.domain_layer.domain_transformations import get_call_table, get_modules
@@ -27,41 +28,42 @@ from spaghettree.optimisation_layer.search import (
 )
 from spaghettree.output_layer.plotting import save_demeaned_control_test
 from spaghettree.output_layer.save_results import save_results
+from spaghettree.utils import print_color
 
 REPO_ROOT = Path(__file__).parents[2]
 
 
 def recreate_research():
     packages = (
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/_pytest",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/_pytest",
         REPO_ROOT / ".venv/lib/python3.12/site-packages/attr",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/beartype",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/black",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/class_inspector",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/diagrams",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/dynaconf",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/faker",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/fastapi",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/icecream",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/locust",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/loguru",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/manimlib",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/more_itertools",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/pipx",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/poetry",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/pre_commit",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/prophet",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/pydantic",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/pyupgrade",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/redis",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/rich",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/schedule",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/sherlock_project",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/sqlmodel",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/textual",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/tox",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/typer",
-        REPO_ROOT / ".venv/lib/python3.12/site-packages/urllib3",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/beartype",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/black",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/class_inspector",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/diagrams",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/dynaconf",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/faker",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/fastapi",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/icecream",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/locust",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/loguru",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/manimlib",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/more_itertools",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pipx",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/poetry",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pre_commit",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/prophet",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pydantic",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pyupgrade",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/redis",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/rich",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/schedule",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/sherlock_project",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/sqlmodel",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/textual",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/tox",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/typer",
+        # REPO_ROOT / ".venv/lib/python3.12/site-packages/urllib3",
     )
     res = [process_package(package_path) for package_path in packages]
     save_outputs(res)
@@ -188,8 +190,8 @@ def process_package(
 
         print("*" * 79, end="\n\n")
         return record, results
-    except Exception:
-        print(f"Unhandled exception for {package_path}")
+    except Exception as e:
+        print_color(f"Unhandled exception for {package_path} {repr(e)}", "red")
         return {}, {}
 
 
@@ -215,29 +217,30 @@ def save_outputs(
 ) -> Literal[True]:
     now = dt.datetime.now().strftime(format="%y%m%d_%H%M")
 
-    results = {}
-    for r in res:
-        results.update(r[1])
-
-    save_results(results)
-
     records = [r[0] for r in res]
     res_df = pd.DataFrame(records)
 
-    for col in res_df.columns:
+    for col in tqdm(res_df.columns, "deriving gains"):
         if col.endswith("_search_dwm"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_dwm"]
             save_demeaned_control_test(
-                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10_000
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=1000
             )
 
         if col.endswith("_search_m"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_modularity"]
             save_demeaned_control_test(
-                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10_000
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=1000
             )
 
     res_df.to_csv(f"./results/{now}_results.csv", index=False)
+
+    results = {}
+    for r in tqdm(res, "combining results"):
+        results.update(r[1])
+
+    save_results(results)
+
     return True
 
 
@@ -280,7 +283,7 @@ if __name__ == "__main__":
         default=False,
     )
     args = parser.parse_args()
-    print(args)
+    print_color(args, "yellow")
 
     if args.process:
         save_outputs(

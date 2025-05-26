@@ -26,6 +26,7 @@ def save_results(results: dict):
     for name, result in results.items():
         package = result.package
         os.makedirs(f"./results/{now}/{package}/plots", exist_ok=True)
+        plot.save_replicates(f"./results/{now}/{package}/plots/{name}_replicates.png", result)
 
         res_obj = attrs.asdict(result)
 
@@ -65,6 +66,7 @@ def save_plot(path: str, df: pd.DataFrame, name: str):
     plt.ylabel("Fitness Score")
     plt.xlabel("Epoch")
     plt.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 @safe
@@ -81,8 +83,8 @@ def save_graph_plots(
     communities = np.array([col.split(delim)[0] for col in nodes])
     community_mat = communities[:, None] == communities[None, :]
 
-    x = int(len(np.unique(modules)) * 3.5)
-    y = np.ceil(x * 0.7)
+    x = min(int(len(np.unique(modules)) * 3.5), 24)
+    y = min(np.ceil(x * 0.7), 18)
 
     color_map = plot.get_color_map(np.unique(modules)).unwrap()
     plot.plot_graph(
@@ -101,6 +103,6 @@ def save_graph_plots(
         f"{path}_heatmap.png",
         adj_mat,
         nodes,
-        annot=True,
+        annot=(x <= 12),
         figsize=(x, y),
     )

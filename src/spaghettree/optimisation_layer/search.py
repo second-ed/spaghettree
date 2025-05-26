@@ -228,17 +228,20 @@ def create_random_replicates(
     sims: int = 1000,
     replace: bool = False,
     unique: bool = False,
-) -> list[float]:
+) -> np.ndarray:
     modules, classes, funcs, calls = get_np_arrays(search_df.copy())
     size = len(modules)
     if unique:
         modules = np.unique(modules)
-    return [
-        get_modularity_score(
-            np.random.choice(modules, size=size, replace=replace),
-            classes,
-            funcs,
-            calls,
-        )
-        for _ in range(sims)
-    ]
+    return np.array(
+        [
+            get_modularity_score(
+                np.random.choice(modules, size=size, replace=replace),
+                classes,
+                funcs,
+                calls,
+            )
+            for _ in range(sims)
+        ],
+        dtype=np.float32,
+    )
