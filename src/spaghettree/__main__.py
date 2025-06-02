@@ -11,6 +11,7 @@ from typing import Any, Literal
 import attrs
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from returns.pipeline import is_successful
 from tqdm import tqdm
 
@@ -33,40 +34,47 @@ from spaghettree.utils import print_color
 REPO_ROOT = Path(__file__).parents[2]
 
 
-def recreate_research():
+def recreate_research(parallel: bool = False):
     packages = (
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/_pytest",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/_pytest",
         REPO_ROOT / ".venv/lib/python3.12/site-packages/attr",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/beartype",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/black",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/class_inspector",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/diagrams",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/dynaconf",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/faker",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/fastapi",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/icecream",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/locust",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/loguru",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/manimlib",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/more_itertools",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pipx",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/poetry",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pre_commit",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/prophet",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pydantic",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/pyupgrade",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/redis",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/rich",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/schedule",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/sherlock_project",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/sqlmodel",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/textual",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/tox",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/typer",
-        # REPO_ROOT / ".venv/lib/python3.12/site-packages/urllib3",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/beartype",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/black",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/class_inspector",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/dynaconf",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/faker",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/fastapi",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/icecream",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/locust",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/loguru",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/manimlib",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/more_itertools",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pipx",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/poetry",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pre_commit",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/prophet",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pydantic",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/pyupgrade",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/redis",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/rich",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/schedule",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/sherlock_project",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/sqlmodel",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/textual",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/tox",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/typer",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/urllib3",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/stamina",
+        REPO_ROOT / ".venv/lib/python3.12/site-packages/structlog",
     )
-    res = [process_package(package_path) for package_path in packages]
-    save_outputs(res)
+    if parallel:
+        # -3 to save 2 cores on the users computer
+        res = Parallel(n_jobs=-3, backend="loky", return_as="list")(
+            delayed(process_package)(pkg) for pkg in packages
+        )
+    else:
+        res = [process_package(package_path) for package_path in packages]
+    save_outputs(res)  # type: ignore
 
 
 def process_package(
@@ -224,13 +232,13 @@ def save_outputs(
         if col.endswith("_search_dwm"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_dwm"]
             save_demeaned_control_test(
-                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=1000
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10000
             )
 
         if col.endswith("_search_m"):
             res_df[f"{col}_gain"] = res_df[col] - res_df["base_modularity"]
             save_demeaned_control_test(
-                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=1000
+                f"./results/{now}/plots/{col}_demeaned_gain.png", res_df, f"{col}_gain", sims=10000
             )
 
     res_df.to_csv(f"./results/{now}_results.csv", index=False)
@@ -251,6 +259,13 @@ if __name__ == "__main__":
         type=str,
         help="Target package to process, only used if --recreate-research is False",
         default="",
+    )
+    parser.add_argument(
+        "--parallel",
+        "-p",
+        action="store_true",
+        help="Use parallel processing",
+        default=False,
     )
     parser.add_argument(
         "--sims",
@@ -300,4 +315,7 @@ if __name__ == "__main__":
         )
     else:
         np.random.seed(42)
-        recreate_research()
+        if args.parallel:
+            recreate_research(parallel=True)
+        else:
+            recreate_research()

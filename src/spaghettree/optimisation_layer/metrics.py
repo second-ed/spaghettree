@@ -4,7 +4,6 @@ import numpy as np
 
 
 def modularity(adj_mat, nodes, delim: str = ".") -> float:
-    adj_mat = np.abs(adj_mat)
     degree = adj_mat.sum(axis=0)
     total_edges = degree.sum()
 
@@ -17,7 +16,6 @@ def modularity(adj_mat, nodes, delim: str = ".") -> float:
 
 
 def directed_weighted_modularity(adj_mat, nodes, delim: str = ".") -> float:
-    adj_mat = np.abs(adj_mat)
     out_degree = adj_mat.sum(axis=0)
     in_degree = adj_mat.sum(axis=1)
     total_edges = out_degree.sum()

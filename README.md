@@ -41,6 +41,12 @@ Run the following command:
 uv run -m spaghettree
 ```
 
+To execute the code in parallel run the following command:
+```shell
+uv run -m spaghettree -p
+```
+
+
 ### To run the code on a different package:
 Using all three of the optimisation methods: 
 - `--use-hc`: use the hill climbing method
