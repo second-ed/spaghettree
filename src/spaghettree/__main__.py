@@ -298,7 +298,7 @@ if __name__ == "__main__":
         default=False,
     )
     args = parser.parse_args()
-    print_color(args, "yellow")
+    print_color(str(args), "yellow")
 
     if args.process:
         save_outputs(
