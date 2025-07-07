@@ -9,11 +9,11 @@ from attrs.validators import instance_of
 class ModuleCST:
     name: str = attrs.field(validator=[])
     tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    imports: list = attrs.field(default=None, repr=False)
-    func_trees: dict = attrs.field(default=None, repr=False)
-    class_trees: dict = attrs.field(default=None, repr=False)
-    funcs: list = attrs.field(default=None)
-    classes: list = attrs.field(default=None)
+    imports: list[cst.Import | cst.ImportFrom] = attrs.field(default=None, repr=False)
+    func_trees: dict[str, cst.FunctionDef] = attrs.field(default=None, repr=False)
+    class_trees: dict[str, cst.ClassDef] = attrs.field(default=None, repr=False)
+    funcs: list[FuncCST] = attrs.field(default=None)
+    classes: list[ClassCST] = attrs.field(default=None)
 
     def __attrs_post_init__(self):
         self.imports = [
@@ -37,21 +37,21 @@ class ModuleCST:
 class ClassCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
-    methods: list = attrs.field(validator=[instance_of(list)])
+    methods: list[FuncCST] = attrs.field(validator=[instance_of(list)])
 
 
 @attrs.define
 class FuncCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
-    calls: list = attrs.field(validator=[instance_of(list)])
+    calls: list[str] = attrs.field(validator=[instance_of(list)])
     internal: bool = attrs.field(default=False, validator=[instance_of(bool)])
 
 
 @attrs.define
 class CallVisitor(cst.CSTVisitor):
     depth: int = attrs.field(default=0, validator=[instance_of(int)])  # type: ignore
-    calls: list = attrs.field(default=None)
+    calls: list[str] = attrs.field(default=None)
 
     def __attrs_post_init__(self):
         self.calls = []
