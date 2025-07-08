@@ -70,7 +70,7 @@ class CallVisitor(cst.CSTVisitor):
                 self.calls.append(f"{node.func.value.value}.{node.func.attr.value}")
 
 
-def get_func_cst(tree):
+def get_func_cst(tree) -> FuncCST:
     cv = CallVisitor()
     tree.visit(cv)
     return FuncCST(tree.name.value, tree, cv.calls)
