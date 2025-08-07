@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Any, Callable, Literal, Self, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, ParamSpec, Self, Sequence, TypeVar
 
 import attrs
 
@@ -67,7 +67,7 @@ class Ok:
 @attrs.define
 class Err:
     inner = attrs.field(repr=False)
-    error: Exception = attrs.field(
+    error: Exception | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(Exception)),
     )
@@ -111,10 +111,12 @@ class Err:
 
 Result = Ok | Err
 
+P = ParamSpec("P")
 
-def safe(func: callable) -> callable:
+
+def safe(func: Callable[P, T]) -> Callable[P, Result]:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> Result:  # noqa: ANN002 ANN003
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result:  # noqa: ANN002 ANN003
         try:
             return Ok(func(*args, **kwargs))
         except Exception as e:  # noqa: BLE001
