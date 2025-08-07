@@ -4,14 +4,14 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
-from spaghettree.v2.domain.cst_parsing.imports import ImportVisitor
+from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportVisitor
 
 
 @attrs.define
 class ModuleCST:
     name: str = attrs.field(validator=instance_of(str))
     tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    imports: dict = attrs.field(default=None, repr=False)
+    imports: list[ImportCST] = attrs.field(default=None, repr=False)
     func_trees: dict[tuple[str, str], cst.FunctionDef] = attrs.field(default=None, repr=False)
     class_trees: dict[str, cst.ClassDef] = attrs.field(default=None, repr=False)
     funcs: list[FuncCST] = attrs.field(factory=list)

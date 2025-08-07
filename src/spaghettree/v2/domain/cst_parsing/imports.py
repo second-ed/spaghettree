@@ -37,7 +37,7 @@ class ImportCST:
 
 @attrs.define
 class ImportVisitor(cst.CSTVisitor):
-    imports: list[dict[str, str]] = attrs.field(factory=list)
+    imports: list[ImportCST] = attrs.field(factory=list)
 
     def visit_Import(self, node: cst.Import) -> None:
         for alias in node.names:
@@ -63,7 +63,7 @@ class ImportVisitor(cst.CSTVisitor):
             asname = alias.asname.name.value if alias.asname else name
             self._add_import(module, ImportType.FROM, name, asname)
 
-    def _add_import(self, key: str, import_type: str, name: str, as_name: str) -> None:
+    def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
         self.imports.append(ImportCST(key, import_type, name, as_name))
 
     def _resolve_attr(self, node: cst.BaseExpression | None) -> str | None:
