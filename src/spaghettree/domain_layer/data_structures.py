@@ -51,15 +51,12 @@ class FuncCST:
 @attrs.define
 class CallVisitor(cst.CSTVisitor):
     depth: int = attrs.field(default=0, validator=[instance_of(int)])  # type: ignore
-    calls: list[str] = attrs.field(default=None)
-
-    def __attrs_post_init__(self):
-        self.calls = []
+    calls: list[str] = attrs.field(default=attrs.Factory(list))
 
     def visit_IndentedBlock(self, node: cst.IndentedBlock) -> None:
         self.depth += 1
 
-    def leave_IndentedBlock(self, node: cst.IndentedBlock) -> None:
+    def leave_IndentedBlock(self, original_node: cst.IndentedBlock) -> None:
         self.depth -= 1
 
     def visit_Call(self, node: cst.Call) -> None:
