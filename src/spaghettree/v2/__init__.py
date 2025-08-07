@@ -46,9 +46,7 @@ U = TypeVar("U")
 
 @attrs.define
 class Ok:
-    inner = attrs.field(
-        default=None,
-    )
+    inner = attrs.field(default=None)
 
     def is_ok(self) -> Literal[True]:
         return True
