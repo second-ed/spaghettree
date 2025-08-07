@@ -14,19 +14,24 @@ from spaghettree.v2 import safe
 class ModuleCST:
     name: str = attrs.field(validator=instance_of(str))
     tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    imports: list[cst.Import | cst.ImportFrom] = attrs.field(default=None, repr=False)
+    imports: dict = attrs.field(default=None, repr=False)
     func_trees: dict[tuple[str, str], cst.FunctionDef] = attrs.field(default=None, repr=False)
     class_trees: dict[str, cst.ClassDef] = attrs.field(default=None, repr=False)
     funcs: list[FuncCST] = attrs.field(default=attrs.Factory(list))
-    classes: list[ClassCST] = attrs.field(default=attrs.Factory(list))
+    classes: list[ClassCST] = attrs.field(factory=list)
 
     def __attrs_post_init__(self):
-        self.imports = [
-            node
-            for node in self.tree.children
-            if isinstance(node, cst.SimpleStatementLine)
-            and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
-        ]
+        iv = ImportVisitor()
+        cst.Module(
+            [
+                node
+                for node in self.tree.children
+                if isinstance(node, cst.SimpleStatementLine)
+                and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
+            ]
+        ).visit(iv)
+        self.imports = iv.imports
+
         self.func_trees = {
             f"{self.name}.{node.name.value}": node
             for node in self.tree.children
@@ -70,6 +75,50 @@ class CallVisitor(cst.CSTVisitor):
         elif isinstance(node.func, cst.Attribute):
             if isinstance(node.func.value, cst.Name):
                 self.calls.append(f"{node.func.value.value}.{node.func.attr.value}")
+
+
+@attrs.define
+class ImportVisitor(cst.CSTVisitor):
+    imports: dict[str, list[dict[str, str]]] = attrs.field(factory=dict)
+
+    def visit_Import(self, node: cst.Import) -> None:
+        for alias in node.names:
+            name = self._resolve_attr(alias.name)
+            asname = alias.asname.name.value if alias.asname else name
+            self._add_import(name, name, asname)
+
+    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
+        module = self._resolve_attr(node.module)
+        if module is None:
+            return  # skip relative imports
+
+        if isinstance(node.names, cst.ImportStar):
+            self._add_import(module, "*", "*")
+            return
+
+        aliases = node.names
+        if isinstance(aliases, cst.ImportAlias):
+            aliases = [aliases]
+
+        for alias in aliases:
+            name = self._resolve_attr(alias.name)
+            asname = alias.asname.name.value if alias.asname else name
+            self._add_import(module, name, asname)
+
+    def _add_import(self, key: str, name: str, asname: str) -> None:
+        if key not in self.imports:
+            self.imports[key] = []
+        self.imports[key].append({"name": name, "as_name": asname})
+
+    def _resolve_attr(self, node: cst.BaseExpression | None) -> str | None:
+        if node is None:
+            return None
+        if isinstance(node, cst.Name):
+            return node.value
+        if isinstance(node, cst.Attribute):
+            parent = self._resolve_attr(node.value)
+            return f"{parent}.{node.attr.value}" if parent else node.attr.value
+        return None
 
 
 @safe
