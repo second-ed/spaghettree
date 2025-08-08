@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 
 import libcst as cst
@@ -17,7 +16,8 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
         return cst.parse_module(code)
 
     def get_module_name(path: str) -> str:
-        return os.path.splitext(os.path.basename(path))[0]
+        # return os.path.splitext(os.path.basename(path))[0]
+        return path.split("src")[-1].replace("/", ".").removesuffix(".py").strip(".")
 
     def get_func_cst(parent_name: str, tree: cst.FunctionDef) -> FuncCST:
         cv = CallVisitor()
@@ -69,7 +69,7 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
     modified_modules = {}
 
-    for name, mod in modules.items():
+    for name, mod in tqdm(modules.items(), "resolving calls"):
         mod = deepcopy(mod)
 
         import_map = {
@@ -87,3 +87,34 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
         modified_modules[name] = mod
     return modified_modules
+
+
+@safe
+def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | ClassCST]:
+    entities: dict[str, FuncCST | ClassCST] = {}
+
+    for mod in modules.values():
+        for fn in mod.funcs:
+            entities[fn.name] = fn
+
+        for class_ in mod.classes:
+            entities[class_.name] = class_
+
+    return entities
+
+
+@safe
+def filter_non_native_calls(
+    entities: dict[str, FuncCST | ClassCST],
+) -> dict[str, FuncCST | ClassCST]:
+    modified_entities: dict[str, FuncCST | ClassCST] = {}
+    for name, ent in entities.items():
+        if isinstance(ent, FuncCST):
+            ent.calls = [call for call in ent.calls if call in entities]
+
+        if isinstance(ent, ClassCST):
+            for meth in ent.methods:
+                meth.calls = [call for call in meth.calls if call in entities]
+
+        modified_entities[name] = ent
+    return modified_entities

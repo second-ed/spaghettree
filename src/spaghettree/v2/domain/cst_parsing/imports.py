@@ -21,17 +21,13 @@ class ImportCST:
 
     def to_str(self) -> str:
         output: list[str] = []
-        match self.import_type:
-            case ImportType.FROM:
-                output.append(f"from {self.module} import")
-            case ImportType.IMPORT:
-                output.append(f"import {self.module}")
+        if self.import_type is ImportType.FROM:
+            output.append(f"from {self.module} import {self.name}")
+        elif self.import_type is ImportType.IMPORT:
+            output.append(f"import {self.module}")
 
         if self.name != self.as_name:
-            output.append(f"{self.name} as {self.as_name}")
-        elif self.name != self.module:
-            output.append(self.name)
-
+            output.append(f"as {self.as_name}")
         return " ".join(output)
 
 
