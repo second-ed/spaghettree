@@ -1,6 +1,5 @@
 import glob
 import subprocess
-import tempfile
 from pathlib import Path
 
 import attrs
@@ -38,18 +37,8 @@ class IOWrapper:
 
     @safe
     def write(self, modified_code: str, filepath: str, format_code: bool = True) -> None:
-        def format_code_str(code: str) -> str:
-            with tempfile.NamedTemporaryFile("w+", suffix=".py", delete=True) as tmp:
-                tmp_path = Path(tmp.name)
-                tmp.write(code)
-                tmp.flush()
-
-                subprocess.run(["ruff", "check", "--fix", str(tmp_path)], check=True)
-                subprocess.run(["ruff", "format", str(tmp_path)], check=True)
-                result = tmp_path.read_text()
-            return result
-
-        if format_code:
-            modified_code = format_code_str(modified_code)
         with open(filepath, "w") as f:
             f.write(modified_code)
+        if format_code:
+            subprocess.run(["ruff", "check", "--fix", str(filepath)], check=True)
+            subprocess.run(["ruff", "format", str(filepath)], check=True)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import libcst as cst
+import numpy as np
 from tqdm import tqdm
 
 from spaghettree.v2 import safe
@@ -131,3 +132,35 @@ def filter_non_native_calls(
         ent.resolve_native_imports()
         modified_entities[name] = ent
     return modified_entities
+
+
+@safe
+def create_call_tree(entities: dict[str, FuncCST | ClassCST]) -> dict[str, list[str]]:
+    call_tree: dict[str, list[str]] = {}
+
+    for k, v in entities.items():
+        if isinstance(v, FuncCST):
+            call_tree[k] = v.calls
+
+        if isinstance(v, ClassCST):
+            call_tree[k] = []
+            for meth in v.methods:
+                call_tree[k].extend(meth.calls)
+
+    return call_tree
+
+
+@safe
+def create_adj_mat(call_tree: dict[str, list[str]]) -> np.ndarray:
+    ent_idx = {node: i for i, node in enumerate(call_tree)}
+
+    n = len(ent_idx)
+    adj_mat = np.zeros((n, n), dtype=int)
+
+    for caller, called in call_tree.items():
+        for call in called:
+            src_idx = ent_idx[caller]
+            dst_idx = ent_idx[call]
+            adj_mat[src_idx, dst_idx] += 1
+
+    return adj_mat
