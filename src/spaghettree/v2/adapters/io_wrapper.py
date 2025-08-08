@@ -1,9 +1,9 @@
 import glob
+import subprocess
+import tempfile
 from pathlib import Path
 
 import attrs
-import black
-import isort
 
 from spaghettree.v2 import Ok, Result, safe
 
@@ -38,8 +38,16 @@ class IOWrapper:
 
     @safe
     def write(self, modified_code: str, filepath: str, format_code: bool = True) -> None:
-        def format_code_str(code_snippet: str) -> str:
-            return black.format_str(isort.code(code_snippet), mode=black.FileMode())
+        def format_code_str(code: str) -> str:
+            with tempfile.NamedTemporaryFile("w+", suffix=".py", delete=True) as tmp:
+                tmp_path = Path(tmp.name)
+                tmp.write(code)
+                tmp.flush()
+
+                subprocess.run(["ruff", "check", "--fix", str(tmp_path)], check=True)
+                subprocess.run(["ruff", "format", str(tmp_path)], check=True)
+                result = tmp_path.read_text()
+            return result
 
         if format_code:
             modified_code = format_code_str(modified_code)
