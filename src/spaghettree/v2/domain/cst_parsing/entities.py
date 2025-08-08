@@ -4,7 +4,7 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
-from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportVisitor
+from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportType, ImportVisitor
 
 
 @attrs.define
@@ -46,6 +46,15 @@ class ClassCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
     methods: list[FuncCST] = attrs.field(validator=[instance_of(list)])
+    imports: list[ImportCST] = attrs.field(default=None, repr=False)
+
+    def resolve_native_imports(self) -> None:
+        for method in self.methods:
+            for call in method.calls:
+                call_parts = call.split(".")
+                mod_name = ".".join(call_parts[:-1])
+                call_name = call_parts[-1]
+                self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
 
 
 @attrs.define
@@ -53,3 +62,11 @@ class FuncCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
     calls: list[str] = attrs.field(validator=[instance_of(list)])
+    imports: list[ImportCST] = attrs.field(default=None, repr=False)
+
+    def resolve_native_imports(self) -> None:
+        for call in self.calls:
+            call_parts = call.split(".")
+            mod_name = ".".join(call_parts[:-1])
+            call_name = call_parts[-1]
+            self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))

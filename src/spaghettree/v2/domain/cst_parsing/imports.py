@@ -12,7 +12,7 @@ class ImportType(Enum):
     IMPORT = auto()
 
 
-@attrs.define
+@attrs.define(frozen=True)
 class ImportCST:
     module: str = attrs.field(validator=[instance_of(str)])
     import_type: ImportType = attrs.field(validator=[instance_of(ImportType)])

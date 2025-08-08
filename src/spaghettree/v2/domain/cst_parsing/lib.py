@@ -10,13 +10,17 @@ from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST, Module
 from spaghettree.v2.domain.cst_parsing.visitors import CallVisitor
 
 
+def str_to_cst(code: str) -> cst.Module:
+    return cst.parse_module(code)
+
+
+def cst_to_str(node: cst.CSTNode) -> str:
+    return cst.Module([]).code_for_node(node)
+
+
 @safe
 def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
-    def str_to_cst(code: str) -> cst.Module:
-        return cst.parse_module(code)
-
     def get_module_name(path: str) -> str:
-        # return os.path.splitext(os.path.basename(path))[0]
         return path.split("src")[-1].replace("/", ".").removesuffix(".py").strip(".")
 
     def get_func_cst(parent_name: str, tree: cst.FunctionDef) -> FuncCST:
@@ -55,7 +59,7 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
     ) -> list[str]:
         resolved_calls: list[str] = []
         for call in calls:
-            if resolved_call := import_map.get(call.split(".")[0]):
+            if resolved_call := import_map.get(call.split(".")[-1]):
                 if resolved_call.split(".")[-1] != call:
                     common_removed = ".".join(resolved_call.split(".")[:-1])
                     resolved_calls.append(f"{common_removed}.{call}".strip("."))
@@ -67,6 +71,7 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
                 resolved_calls.append(call)
         return resolved_calls
 
+    modules = deepcopy(modules)
     modified_modules = {}
 
     for name, mod in tqdm(modules.items(), "resolving calls"):
@@ -77,13 +82,15 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
             for i in mod.imports
         }
         func_map = {fn.name.split(".")[-1]: fn.name for fn in mod.funcs}
+        cls_map = {cls.name.split(".")[-1]: cls.name for cls in mod.classes}
+        ent_map = {**func_map, **cls_map}
 
         for fn in mod.funcs:
-            fn.calls = resolve_calls(fn.calls, import_map, func_map)
+            fn.calls = resolve_calls(fn.calls, import_map, ent_map)
 
         for class_ in mod.classes:
             for fn in class_.methods:
-                fn.calls = resolve_calls(fn.calls, import_map, func_map)
+                fn.calls = resolve_calls(fn.calls, import_map, ent_map)
 
         modified_modules[name] = mod
     return modified_modules
@@ -91,13 +98,16 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
 @safe
 def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | ClassCST]:
+    modules = deepcopy(modules)
     entities: dict[str, FuncCST | ClassCST] = {}
 
     for mod in modules.values():
         for fn in mod.funcs:
+            fn.imports = mod.imports
             entities[fn.name] = fn
 
         for class_ in mod.classes:
+            class_.imports = mod.imports
             entities[class_.name] = class_
 
     return entities
@@ -107,7 +117,9 @@ def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | Class
 def filter_non_native_calls(
     entities: dict[str, FuncCST | ClassCST],
 ) -> dict[str, FuncCST | ClassCST]:
+    entities = deepcopy(entities)
     modified_entities: dict[str, FuncCST | ClassCST] = {}
+
     for name, ent in entities.items():
         if isinstance(ent, FuncCST):
             ent.calls = [call for call in ent.calls if call in entities]
@@ -116,5 +128,6 @@ def filter_non_native_calls(
             for meth in ent.methods:
                 meth.calls = [call for call in meth.calls if call in entities]
 
+        ent.resolve_native_imports()
         modified_entities[name] = ent
     return modified_entities
