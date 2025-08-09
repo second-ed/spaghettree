@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Collection, Self
+
 import attrs
 import libcst as cst
 from attrs.validators import instance_of
@@ -48,13 +50,19 @@ class ClassCST:
     methods: list[FuncCST] = attrs.field(validator=[instance_of(list)])
     imports: list[ImportCST] = attrs.field(default=None, repr=False)
 
-    def resolve_native_imports(self) -> None:
+    def filter_native_calls(self, entities: Collection[str]) -> Self:
+        for meth in self.methods:
+            meth.calls = [call for call in meth.calls if call in entities]
+        return self
+
+    def resolve_native_imports(self) -> Self:
         for method in self.methods:
             for call in method.calls:
                 call_parts = call.split(".")
                 mod_name = ".".join(call_parts[:-1])
                 call_name = call_parts[-1]
                 self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
+        return self
 
 
 @attrs.define
@@ -64,9 +72,14 @@ class FuncCST:
     calls: list[str] = attrs.field(validator=[instance_of(list)])
     imports: list[ImportCST] = attrs.field(default=None, repr=False)
 
-    def resolve_native_imports(self) -> None:
+    def filter_native_calls(self, entities: Collection[str]) -> Self:
+        self.calls = [call for call in self.calls if call in entities]
+        return self
+
+    def resolve_native_imports(self) -> Self:
         for call in self.calls:
             call_parts = call.split(".")
             mod_name = ".".join(call_parts[:-1])
             call_name = call_parts[-1]
             self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
+        return self
