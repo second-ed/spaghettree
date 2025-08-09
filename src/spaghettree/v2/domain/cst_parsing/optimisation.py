@@ -1,9 +1,11 @@
 import attrs
 import numpy as np
 
+from spaghettree.v2 import safe
 from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
 
 
+@safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
     valid_merges = get_merge_pairs(adj_mat)
 

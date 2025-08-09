@@ -1,0 +1,92 @@
+import os
+from collections import defaultdict
+
+from spaghettree.v2 import safe
+from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
+from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST
+from spaghettree.v2.domain.cst_parsing.lib import (
+    cst_to_str,
+)
+
+
+@safe
+def create_new_module_map(
+    adj_mat: AdjMat, entities: dict[str, FuncCST | ClassCST]
+) -> dict[int, list[FuncCST | ClassCST]]:
+    new_modules: defaultdict[int, list[FuncCST | ClassCST]] = defaultdict(list)
+
+    for i, module in enumerate(adj_mat.communities):
+        ent_name = adj_mat.node_map[i]
+        new_modules[module].append(entities[ent_name])
+
+    return dict(new_modules)
+
+
+@safe
+def infer_module_names(
+    new_modules: dict[int, list[FuncCST | ClassCST]],
+) -> dict[str, list[FuncCST | ClassCST]]:
+    renamed_modules: dict[str, list[FuncCST | ClassCST]] = {}
+
+    for idx, contents in new_modules.items():
+        if len(contents) > 1:
+            names = [".".join(ent.name.split(".")[:-1]) for ent in new_modules[idx]]
+            possible_module_names = sorted(
+                set([(name, names.count(name)) for name in names]), key=lambda x: x[1], reverse=True
+            )
+            for name, _ in possible_module_names:
+                if name not in renamed_modules:
+                    mod_name = name
+                    break
+            else:
+                mod_name = f"{possible_module_names[0][0]}.mod_overflow"
+        else:
+            mod_name = contents[0].name
+        renamed_modules[mod_name] = contents
+    return renamed_modules
+
+
+@safe
+def rename_overlapping_mod_names(
+    renamed_modules: dict[str, list[FuncCST | ClassCST]],
+) -> dict[str, list[FuncCST | ClassCST]]:
+    fixed_name_modules: dict[str, list[FuncCST | ClassCST]] = {}
+
+    for name, contents in renamed_modules.items():
+        name_parts = name.split(".")
+        dirname = ".".join(name_parts[:-1])
+
+        if dirname in renamed_modules:
+            mod_name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
+        else:
+            mod_name = name
+
+        fixed_name_modules[mod_name] = contents
+
+    return fixed_name_modules
+
+
+@safe
+def create_new_filepaths(
+    fixed_name_modules: dict[str, list[FuncCST | ClassCST]], src_root: str
+) -> dict[str, list[FuncCST | ClassCST]]:
+    filepath_modules: dict[str, list[FuncCST | ClassCST]] = {}
+    for name, contents in fixed_name_modules.items():
+        new_name = os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
+        filepath_modules[new_name] = contents
+
+    return filepath_modules
+
+
+@safe
+def convert_to_code_str(new_modules: dict[str, list[FuncCST | ClassCST]]) -> dict[str, str]:
+    def get_module_str(mod_contents: list[FuncCST | ClassCST]) -> str:
+        imports, code = [], []
+
+        for ent in mod_contents:
+            imports.extend([imp.to_str() for imp in ent.imports])
+            code.append(cst_to_str(ent.tree))
+
+        return "".join(sorted(set(imports))) + "".join(code)
+
+    return {k: get_module_str(v) for k, v in new_modules.items()}

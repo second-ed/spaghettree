@@ -28,7 +28,7 @@ class ImportCST:
 
         if self.name != self.as_name:
             output.append(f"as {self.as_name}")
-        return " ".join(output)
+        return " ".join(output) + "\n"
 
 
 @attrs.define
