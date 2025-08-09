@@ -170,3 +170,16 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
 
     adj_mat.communities = communities.tolist()
     return adj_mat
+
+
+def get_dwm(mat, communities) -> float:
+    out_degree = mat.sum(axis=0)
+    in_degree = mat.sum(axis=1)
+    total_edges = out_degree.sum()
+
+    communities = np.array(communities)
+    community_mat = communities[:, None] == communities[None, :]
+
+    expected_matrix = np.outer(out_degree, in_degree) / total_edges
+    modularity_matrix = (mat - expected_matrix) * community_mat
+    return modularity_matrix.sum() / total_edges
