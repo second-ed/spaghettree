@@ -3,9 +3,11 @@ from __future__ import annotations
 from copy import deepcopy
 
 import libcst as cst
+import numpy as np
 from tqdm import tqdm
 
 from spaghettree.v2 import safe
+from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
 from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST, ModuleCST
 from spaghettree.v2.domain.cst_parsing.visitors import CallVisitor
 
@@ -140,3 +142,31 @@ def create_call_tree(entities: dict[str, FuncCST | ClassCST]) -> dict[str, list[
                 call_tree[k].extend(meth.calls)
 
     return call_tree
+
+
+@safe
+def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
+    adj_mat = deepcopy(adj_mat)
+    matrix: np.ndarray = adj_mat.mat
+    communities: list[int] = adj_mat.communities.copy()
+
+    # make it so we don't weight by call count yet
+    adj_bin = (matrix > 0).astype(bool)
+    communities = np.array(communities, dtype=int)
+
+    changed = True
+    while changed:
+        changed = False
+
+        out_deg = adj_bin.sum(axis=1)
+        in_deg = adj_bin.sum(axis=0)
+
+        rows, cols = np.where((out_deg == 1)[:, None] & adj_bin & (in_deg == 1))
+
+        for a, b in zip(rows, cols):
+            if communities[b] != communities[a]:
+                communities[communities == communities[b]] = communities[a]
+                changed = True
+
+    adj_mat.communities = communities.tolist()
+    return adj_mat
