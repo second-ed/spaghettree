@@ -1,9 +1,11 @@
 import os
 from collections import defaultdict
+from copy import deepcopy
 
 from spaghettree.v2 import safe
 from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
 from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST
+from spaghettree.v2.domain.cst_parsing.imports import ImportCST
 from spaghettree.v2.domain.cst_parsing.lib import (
     cst_to_str,
 )
@@ -90,3 +92,42 @@ def convert_to_code_str(new_modules: dict[str, list[FuncCST | ClassCST]]) -> dic
         return "".join(sorted(set(imports))) + "".join(code)
 
     return {k: get_module_str(v) for k, v in new_modules.items()}
+
+
+@safe
+def remap_imports(
+    modules: dict[str, list[FuncCST | ClassCST]],
+) -> dict[str, list[FuncCST | ClassCST]]:
+    modules = deepcopy(modules)
+    entity_mod_map: dict[str, str] = {
+        ent.name: mod_name for mod_name, ents in modules.items() for ent in ents
+    }
+
+    for mod_name, ents in modules.items():
+        for ent in ents:
+            updated_imports: list[ImportCST] = []
+
+            for imp in ent.imports:
+                full_import = f"{imp.module}.{imp.name}"
+
+                if full_import in entity_mod_map:
+                    new_mod = entity_mod_map[full_import]
+
+                    if new_mod == mod_name:
+                        # same module after refactor: drop import
+                        continue
+
+                    updated_imports.append(
+                        ImportCST(
+                            module=new_mod,
+                            import_type=imp.import_type,
+                            name=imp.name,
+                            as_name=imp.as_name,
+                        )
+                    )
+                else:
+                    # no changes
+                    updated_imports.append(imp)
+
+            ent.imports = updated_imports
+    return modules

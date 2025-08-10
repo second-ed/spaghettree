@@ -17,6 +17,7 @@ from spaghettree.v2.domain.cst_parsing.processing import (
     create_new_filepaths,
     create_new_module_map,
     infer_module_names,
+    remap_imports,
     rename_overlapping_mod_names,
 )
 
@@ -41,6 +42,7 @@ def main(src_root: str, new_root: str) -> Result:
         .bind(partial(create_new_module_map, entities=entities))
         .bind(infer_module_names)
         .bind(rename_overlapping_mod_names)
+        .bind(remap_imports)
         .bind(convert_to_code_str)
         .bind(partial(create_new_filepaths, src_root=new_root))
         .bind(partial(io.write_files, ruff_root=new_root))
