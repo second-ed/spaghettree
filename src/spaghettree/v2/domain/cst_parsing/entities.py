@@ -6,6 +6,7 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
+from spaghettree.v2.domain.cst_parsing.globals import GlobalCST, GlobalVisitor
 from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportType, ImportVisitor
 
 
@@ -13,11 +14,12 @@ from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportType, Imp
 class ModuleCST:
     name: str = attrs.field(validator=instance_of(str))
     tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    imports: list[ImportCST] = attrs.field(default=None, repr=False)
-    func_trees: dict[tuple[str, str], cst.FunctionDef] = attrs.field(default=None, repr=False)
+    func_trees: dict[str, cst.FunctionDef] = attrs.field(default=None, repr=False)
     class_trees: dict[str, cst.ClassDef] = attrs.field(default=None, repr=False)
     funcs: list[FuncCST] = attrs.field(factory=list)
     classes: list[ClassCST] = attrs.field(factory=list)
+    global_vars: list[GlobalCST] = attrs.field(factory=list)
+    imports: list[ImportCST] = attrs.field(default=None, repr=False)
 
     def __attrs_post_init__(self):
         iv = ImportVisitor()
@@ -41,6 +43,22 @@ class ModuleCST:
             for node in self.tree.children
             if isinstance(node, cst.ClassDef)
         }
+
+        self.global_vars = [
+            GlobalCST(
+                name=f"{self.name}.{target.target.value if isinstance(target.target, cst.Name) else target.target.attr.value}",
+                tree=stmt,
+            )
+            for stmt in self.tree.body
+            if isinstance(stmt, cst.SimpleStatementLine)
+            for assign in stmt.body
+            if isinstance(assign, (cst.Assign, cst.AnnAssign))
+            for target in (assign.targets if isinstance(assign, cst.Assign) else [assign])
+            if isinstance(target.target if isinstance(assign, cst.Assign) else target, cst.Name)
+        ]
+        visitor = GlobalVisitor(self.name, self.global_vars)
+        self.tree.visit(visitor)
+        self.global_vars = [gbl for gbl in self.global_vars if not gbl.name.endswith(".__all__")]
 
 
 @attrs.define

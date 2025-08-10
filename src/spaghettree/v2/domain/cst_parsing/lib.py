@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from spaghettree.v2 import safe
 from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
-from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST, ModuleCST
+from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
 from spaghettree.v2.domain.cst_parsing.visitors import CallVisitor
 
 
@@ -30,7 +30,7 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
         tree.visit(cv)
         return FuncCST(f"{parent_name}.{tree.name.value}", tree, cv.calls)
 
-    modules = {}
+    modules: dict[str, ModuleCST] = {}
 
     for path, data in tqdm(src_code.items(), "creating objects"):
         tree = str_to_cst(data)
@@ -99,9 +99,9 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
 
 @safe
-def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | ClassCST]:
+def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | ClassCST | GlobalCST]:
     modules = deepcopy(modules)
-    entities: dict[str, FuncCST | ClassCST] = {}
+    entities: dict[str, FuncCST | ClassCST | GlobalCST] = {}
 
     for mod in modules.values():
         for fn in mod.funcs:
@@ -112,15 +112,18 @@ def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | Class
             class_.imports = mod.imports
             entities[class_.name] = class_
 
+        for gbl in mod.global_vars:
+            entities[gbl.name] = gbl
+
     return entities
 
 
 @safe
 def filter_non_native_calls(
-    entities: dict[str, FuncCST | ClassCST],
-) -> dict[str, FuncCST | ClassCST]:
+    entities: dict[str, FuncCST | ClassCST | GlobalCST],
+) -> dict[str, FuncCST | ClassCST | GlobalCST]:
     entities = deepcopy(entities)
-    modified_entities: dict[str, FuncCST | ClassCST] = {}
+    modified_entities: dict[str, FuncCST | ClassCST | GlobalCST] = {}
 
     for name, ent in entities.items():
         ent.filter_native_calls(entities).resolve_native_imports()
@@ -129,7 +132,7 @@ def filter_non_native_calls(
 
 
 @safe
-def create_call_tree(entities: dict[str, FuncCST | ClassCST]) -> dict[str, list[str]]:
+def create_call_tree(entities: dict[str, FuncCST | ClassCST | GlobalCST]) -> dict[str, list[str]]:
     call_tree: dict[str, list[str]] = {}
 
     for k, v in entities.items():
@@ -140,6 +143,9 @@ def create_call_tree(entities: dict[str, FuncCST | ClassCST]) -> dict[str, list[
             call_tree[k] = []
             for meth in v.methods:
                 call_tree[k].extend(meth.calls)
+
+        if isinstance(v, GlobalCST):
+            call_tree[k] = v.referenced
 
     return call_tree
 
