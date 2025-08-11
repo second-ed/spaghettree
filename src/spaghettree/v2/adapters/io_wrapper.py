@@ -46,7 +46,6 @@ class IOWrapper:
         if format_code:
             self._run_ruff(filepath)
 
-    @safe
     def write_files(self, src_code: dict[str, str], ruff_root: str | None = None):
         results, fails = {}, {}
 
