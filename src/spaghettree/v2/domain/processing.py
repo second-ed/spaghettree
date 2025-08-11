@@ -8,7 +8,7 @@ from spaghettree.v2.domain.adj_mat import AdjMat
 from spaghettree.v2.domain.entities import ClassCST, FuncCST
 from spaghettree.v2.domain.globals import GlobalCST
 from spaghettree.v2.domain.imports import ImportCST
-from spaghettree.v2.domain.lib import (
+from spaghettree.v2.domain.parsing import (
     cst_to_str,
 )
 
