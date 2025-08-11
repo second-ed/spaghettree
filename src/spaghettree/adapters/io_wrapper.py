@@ -5,7 +5,7 @@ from pathlib import Path
 
 import attrs
 
-from spaghettree.v2 import Err, Ok, Result, safe
+from spaghettree import Err, Ok, Result, safe
 
 
 @attrs.define

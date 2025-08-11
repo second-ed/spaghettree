@@ -3,8 +3,8 @@ from collections import defaultdict
 import attrs
 import numpy as np
 
-from spaghettree.v2 import safe
-from spaghettree.v2.domain.adj_mat import AdjMat
+from spaghettree import safe
+from spaghettree.domain.adj_mat import AdjMat
 
 
 @safe

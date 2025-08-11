@@ -5,7 +5,7 @@ from typing import Collection, Self
 import attrs
 import libcst as cst
 
-from spaghettree.v2.domain.imports import ImportCST
+from spaghettree.domain.imports import ImportCST
 
 
 @attrs.define(eq=True)

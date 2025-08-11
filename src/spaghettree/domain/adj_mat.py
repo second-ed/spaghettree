@@ -3,7 +3,7 @@ from typing import Self
 import attrs
 import numpy as np
 
-from spaghettree.v2 import safe
+from spaghettree import safe
 
 
 @attrs.define
