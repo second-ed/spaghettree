@@ -11,15 +11,10 @@ dependencies = [
     "attrs>=25.1.0",
     "black>=25.1.0",
     "isort>=6.0.1",
-    "joblib>=1.5.1",
     "libcst>=1.6.0",
     "matplotlib>=3.10.1",
     "networkx>=3.4.2",
-    "pandas>=2.2.3",
     "pydot>=3.0.4",
-    "returns>=0.24.0",
-    "scipy>=1.15.2",
-    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
 ]
 
