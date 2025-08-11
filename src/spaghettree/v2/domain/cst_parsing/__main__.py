@@ -11,7 +11,10 @@ from spaghettree.v2.domain.cst_parsing.lib import (
     pair_exclusive_calls,
     resolve_module_calls,
 )
-from spaghettree.v2.domain.cst_parsing.optimisation import optimise_communities
+from spaghettree.v2.domain.cst_parsing.optimisation import (
+    merge_single_entity_communities_if_no_gain_penalty,
+    optimise_communities,
+)
 from spaghettree.v2.domain.cst_parsing.processing import (
     convert_to_code_str,
     create_new_filepaths,
@@ -39,11 +42,21 @@ def main(src_root: str, new_root: str) -> Result:
         .bind(AdjMat.from_call_tree)
         .bind(pair_exclusive_calls)
         .bind(optimise_communities)
+        .bind(merge_single_entity_communities_if_no_gain_penalty)
         .bind(partial(create_new_module_map, entities=entities))
         .bind(infer_module_names)
         .bind(rename_overlapping_mod_names)
         .bind(remap_imports)
-        .bind(convert_to_code_str)
+        .bind(
+            partial(
+                convert_to_code_str,
+                type_priority={
+                    "GlobalCST": 0,
+                    "ClassCST": 1,
+                    "FuncCST": 2,
+                },
+            )
+        )
         .bind(partial(create_new_filepaths, src_root=new_root))
         .bind(partial(io.write_files, ruff_root=new_root))
     )
