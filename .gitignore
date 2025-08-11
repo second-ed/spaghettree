@@ -168,3 +168,4 @@ cython_debug/
 plain.txt
 
 results/
+.vscode/settings.json

@@ -11,3 +11,7 @@ def func_b():
 
 def func_c():
     return 2 * func_d()
+
+
+def isolated_func():
+    return 2
