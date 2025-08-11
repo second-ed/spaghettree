@@ -7,9 +7,9 @@ import numpy as np
 from tqdm import tqdm
 
 from spaghettree.v2 import safe
-from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
-from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
-from spaghettree.v2.domain.cst_parsing.visitors import CallVisitor
+from spaghettree.v2.domain.adj_mat import AdjMat
+from spaghettree.v2.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
+from spaghettree.v2.domain.visitors import CallVisitor
 
 
 def str_to_cst(code: str) -> cst.Module:

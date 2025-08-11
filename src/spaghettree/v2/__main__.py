@@ -2,8 +2,12 @@ from functools import partial
 
 from spaghettree.v2 import Result
 from spaghettree.v2.adapters.io_wrapper import IOWrapper
-from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
-from spaghettree.v2.domain.cst_parsing.lib import (
+from spaghettree.v2.domain.adj_mat import AdjMat
+from spaghettree.v2.domain.optimisation import (
+    merge_single_entity_communities_if_no_gain_penalty,
+    optimise_communities,
+)
+from spaghettree.v2.domain.parsing import (
     create_call_tree,
     create_module_cst_objs,
     extract_entities,
@@ -11,11 +15,7 @@ from spaghettree.v2.domain.cst_parsing.lib import (
     pair_exclusive_calls,
     resolve_module_calls,
 )
-from spaghettree.v2.domain.cst_parsing.optimisation import (
-    merge_single_entity_communities_if_no_gain_penalty,
-    optimise_communities,
-)
-from spaghettree.v2.domain.cst_parsing.processing import (
+from spaghettree.v2.domain.processing import (
     convert_to_code_str,
     create_new_filepaths,
     create_new_module_map,

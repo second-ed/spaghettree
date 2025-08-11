@@ -6,8 +6,8 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
-from spaghettree.v2.domain.cst_parsing.globals import GlobalCST, GlobalVisitor
-from spaghettree.v2.domain.cst_parsing.imports import ImportCST, ImportType, ImportVisitor
+from spaghettree.v2.domain.globals import GlobalCST, GlobalVisitor
+from spaghettree.v2.domain.imports import ImportCST, ImportType, ImportVisitor
 
 
 @attrs.define

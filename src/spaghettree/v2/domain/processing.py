@@ -4,11 +4,11 @@ from copy import deepcopy
 from functools import partial
 
 from spaghettree.v2 import safe
-from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
-from spaghettree.v2.domain.cst_parsing.entities import ClassCST, FuncCST
-from spaghettree.v2.domain.cst_parsing.globals import GlobalCST
-from spaghettree.v2.domain.cst_parsing.imports import ImportCST
-from spaghettree.v2.domain.cst_parsing.lib import (
+from spaghettree.v2.domain.adj_mat import AdjMat
+from spaghettree.v2.domain.entities import ClassCST, FuncCST
+from spaghettree.v2.domain.globals import GlobalCST
+from spaghettree.v2.domain.imports import ImportCST
+from spaghettree.v2.domain.lib import (
     cst_to_str,
 )
 

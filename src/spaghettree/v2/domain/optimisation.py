@@ -4,7 +4,7 @@ import attrs
 import numpy as np
 
 from spaghettree.v2 import safe
-from spaghettree.v2.domain.cst_parsing.adj_mat import AdjMat
+from spaghettree.v2.domain.adj_mat import AdjMat
 
 
 @safe
