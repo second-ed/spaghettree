@@ -11,6 +11,8 @@ from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
 from spaghettree.domain.visitors import CallVisitor
 
+EntityCST = FuncCST | ClassCST | GlobalCST
+
 
 def str_to_cst(code: str) -> cst.Module:
     return cst.parse_module(code)
@@ -99,9 +101,9 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
 
 @safe
-def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | ClassCST | GlobalCST]:
+def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, EntityCST]:
     modules = deepcopy(modules)
-    entities: dict[str, FuncCST | ClassCST | GlobalCST] = {}
+    entities: dict[str, EntityCST] = {}
 
     for mod in modules.values():
         for fn in mod.funcs:
@@ -120,10 +122,10 @@ def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, FuncCST | Class
 
 @safe
 def filter_non_native_calls(
-    entities: dict[str, FuncCST | ClassCST | GlobalCST],
-) -> dict[str, FuncCST | ClassCST | GlobalCST]:
+    entities: dict[str, EntityCST],
+) -> dict[str, EntityCST]:
     entities = deepcopy(entities)
-    modified_entities: dict[str, FuncCST | ClassCST | GlobalCST] = {}
+    modified_entities: dict[str, EntityCST] = {}
 
     for name, ent in entities.items():
         ent.filter_native_calls(entities).resolve_native_imports()
@@ -132,7 +134,7 @@ def filter_non_native_calls(
 
 
 @safe
-def create_call_tree(entities: dict[str, FuncCST | ClassCST | GlobalCST]) -> dict[str, list[str]]:
+def create_call_tree(entities: dict[str, EntityCST]) -> dict[str, list[str]]:
     call_tree: dict[str, list[str]] = {}
 
     for k, v in entities.items():
