@@ -5,7 +5,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Generic,
     Literal,
     ParamSpec,
     Self,
@@ -51,22 +50,21 @@ def make_type(
 
 
 T = TypeVar("T")
-E = TypeVar("E")
 U = TypeVar("U")
 P = ParamSpec("P")
 
 
 @attrs.define
-class Ok(Generic[T, E]):
-    inner: T = attrs.field(default=None)
+class Ok:
+    inner: Any = attrs.field(default=None)
 
     def is_ok(self) -> Literal[True]:
         return True
 
-    def map(self, func: Callable[[T], U]) -> Ok[U]:
+    def map(self, func: Callable[[T], U]) -> Ok:
         return Ok(func(self.inner))
 
-    def flatten(self) -> Ok[U]:
+    def flatten(self) -> Ok:
         inner: T = self.inner
         while isinstance(inner, Ok):
             inner = inner.inner
@@ -77,8 +75,8 @@ class Ok(Generic[T, E]):
 
 
 @attrs.define
-class Err(Generic[T, E]):
-    input_args: T = attrs.field(repr=False)
+class Err:
+    input_args: Any = attrs.field(repr=False)
     error: Exception | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(Exception)),
@@ -93,7 +91,7 @@ class Err(Generic[T, E]):
         if self.error:
             self.details = self._extract_details(self.error.__traceback__)
 
-    def _extract_details(self, tb: TracebackType) -> list[dict[str, Any]]:
+    def _extract_details(self, tb: TracebackType | None) -> list[dict[str, Any]]:
         trace_info = []
         while tb:
             frame = tb.tb_frame
