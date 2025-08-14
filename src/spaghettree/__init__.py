@@ -70,7 +70,7 @@ class Ok:
             inner = inner.inner
         return Ok(inner)
 
-    def and_then(self, func: Callable[[T], U]) -> Result:
+    def and_then(self, func: Callable[[T], Result]) -> Result:
         return func(self.inner)
 
 
@@ -115,7 +115,7 @@ class Err:
     def flatten(self) -> Self:
         return self
 
-    def and_then(self, _: Callable[[T], U]) -> Self:
+    def and_then(self, _: Callable[[T], Result]) -> Self:
         return self
 
 
