@@ -5,19 +5,15 @@ from functools import partial
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import ClassCST, FuncCST
-from spaghettree.domain.globals import GlobalCST
 from spaghettree.domain.imports import ImportCST
-from spaghettree.domain.parsing import (
-    cst_to_str,
-)
+from spaghettree.domain.parsing import EntityCST, cst_to_str
 
 
 @safe
 def create_new_module_map(
-    adj_mat: AdjMat, entities: dict[str, FuncCST | ClassCST | GlobalCST]
-) -> dict[int, list[FuncCST | ClassCST | GlobalCST]]:
-    new_modules: defaultdict[int, list[FuncCST | ClassCST | GlobalCST]] = defaultdict(list)
+    adj_mat: AdjMat, entities: dict[str, EntityCST]
+) -> dict[int, list[EntityCST]]:
+    new_modules: defaultdict[int, list[EntityCST]] = defaultdict(list)
 
     for i, module in enumerate(adj_mat.communities):
         ent_name = adj_mat.node_map[i]
@@ -28,9 +24,9 @@ def create_new_module_map(
 
 @safe
 def infer_module_names(
-    new_modules: dict[int, list[FuncCST | ClassCST | GlobalCST]],
-) -> dict[str, list[FuncCST | ClassCST | GlobalCST]]:
-    renamed_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]] = {}
+    new_modules: dict[int, list[EntityCST]],
+) -> dict[str, list[EntityCST]]:
+    renamed_modules: dict[str, list[EntityCST]] = {}
 
     for idx, contents in new_modules.items():
         if len(contents) > 1:
@@ -52,9 +48,9 @@ def infer_module_names(
 
 @safe
 def rename_overlapping_mod_names(
-    renamed_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]],
-) -> dict[str, list[FuncCST | ClassCST | GlobalCST]]:
-    fixed_name_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]] = {}
+    renamed_modules: dict[str, list[EntityCST]],
+) -> dict[str, list[EntityCST]]:
+    fixed_name_modules: dict[str, list[EntityCST]] = {}
 
     for name, contents in renamed_modules.items():
         name_parts = name.split(".")
@@ -72,9 +68,9 @@ def rename_overlapping_mod_names(
 
 @safe
 def create_new_filepaths(
-    fixed_name_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]], src_root: str
-) -> dict[str, list[FuncCST | ClassCST | GlobalCST]]:
-    filepath_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]] = {}
+    fixed_name_modules: dict[str, list[EntityCST]], src_root: str
+) -> dict[str, list[EntityCST]]:
+    filepath_modules: dict[str, list[EntityCST]] = {}
     for name, contents in fixed_name_modules.items():
         new_name = os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
         filepath_modules[new_name] = contents
@@ -84,9 +80,9 @@ def create_new_filepaths(
 
 @safe
 def convert_to_code_str(
-    new_modules: dict[str, list[FuncCST | ClassCST | GlobalCST]], type_priority: dict[str, int]
+    new_modules: dict[str, list[EntityCST]], type_priority: dict[str, int]
 ) -> dict[str, str]:
-    def get_module_str(mod_contents: list[FuncCST | ClassCST | GlobalCST]) -> str:
+    def get_module_str(mod_contents: list[EntityCST]) -> str:
         imports, code = [], []
 
         for ent in mod_contents:
@@ -96,8 +92,8 @@ def convert_to_code_str(
         return "".join(sorted(set(imports))) + "".join(code)
 
     def sort_by_priority(
-        contents: list[FuncCST | ClassCST | GlobalCST], type_priority: dict[str, int]
-    ) -> list[FuncCST | ClassCST | GlobalCST]:
+        contents: list[EntityCST], type_priority: dict[str, int]
+    ) -> list[EntityCST]:
         def sort_key(obj, type_priority: dict[str, int]):
             return (type_priority[obj.__class__.__name__], getattr(obj, "name", ""))
 
@@ -108,8 +104,8 @@ def convert_to_code_str(
 
 @safe
 def remap_imports(
-    modules: dict[str, list[FuncCST | ClassCST | GlobalCST]],
-) -> dict[str, list[FuncCST | ClassCST | GlobalCST]]:
+    modules: dict[str, list[EntityCST]],
+) -> dict[str, list[EntityCST]]:
     modules = deepcopy(modules)
     entity_mod_map: dict[str, str] = {
         ent.name: mod_name for mod_name, ents in modules.items() for ent in ents

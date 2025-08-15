@@ -29,25 +29,28 @@ def main(src_root: str, new_root: str) -> Result:
     io = IOWrapper()
     entities_res = (
         io.read_files(src_root)
-        .bind(create_module_cst_objs)
-        .bind(resolve_module_calls)
-        .bind(extract_entities)
-        .bind(filter_non_native_calls)
+        .and_then(create_module_cst_objs)
+        .and_then(resolve_module_calls)
+        .and_then(extract_entities)
+        .and_then(filter_non_native_calls)
     )
 
-    entities = entities_res.inner
+    if entities_res.is_ok():
+        entities = entities_res.inner
+    else:
+        raise entities_res.error
 
     return (
-        entities_res.bind(create_call_tree)
-        .bind(AdjMat.from_call_tree)
-        .bind(pair_exclusive_calls)
-        .bind(optimise_communities)
-        .bind(merge_single_entity_communities_if_no_gain_penalty)
-        .bind(partial(create_new_module_map, entities=entities))
-        .bind(infer_module_names)
-        .bind(rename_overlapping_mod_names)
-        .bind(remap_imports)
-        .bind(
+        entities_res.and_then(create_call_tree)
+        .and_then(AdjMat.from_call_tree)
+        .and_then(pair_exclusive_calls)
+        .and_then(optimise_communities)
+        .and_then(merge_single_entity_communities_if_no_gain_penalty)
+        .and_then(partial(create_new_module_map, entities=entities))
+        .and_then(infer_module_names)
+        .and_then(rename_overlapping_mod_names)
+        .and_then(remap_imports)
+        .and_then(
             partial(
                 convert_to_code_str,
                 type_priority={
@@ -57,6 +60,6 @@ def main(src_root: str, new_root: str) -> Result:
                 },
             )
         )
-        .bind(partial(create_new_filepaths, src_root=new_root))
-        .bind(partial(io.write_files, ruff_root=new_root))
+        .and_then(partial(create_new_filepaths, src_root=new_root))
+        .and_then(partial(io.write_files, ruff_root=new_root))
     )

@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Any, Callable, Literal, ParamSpec, Self, Sequence, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Literal,
+    ParamSpec,
+    Self,
+    Sequence,
+    TypeVar,
+)
 
 import attrs
 
@@ -42,46 +51,47 @@ def make_type(
 
 T = TypeVar("T")
 U = TypeVar("U")
+P = ParamSpec("P")
 
 
 @attrs.define
 class Ok:
-    inner = attrs.field(default=None)
+    inner: Any = attrs.field(default=None)
 
     def is_ok(self) -> Literal[True]:
         return True
 
-    def map(self, func: Callable[[T], U]) -> Ok[U]:
+    def map(self, func: Callable[[T], U]) -> Ok:
         return Ok(func(self.inner))
 
-    def flatten(self) -> Ok[U]:
-        inner = self.inner
+    def flatten(self) -> Ok:
+        inner: T = self.inner
         while isinstance(inner, Ok):
             inner = inner.inner
         return Ok(inner)
 
-    def bind(self, func: Callable[[T], U]) -> Result:
+    def and_then(self, func: Callable[[T], Result]) -> Result:
         return func(self.inner)
 
 
 @attrs.define
 class Err:
-    inner = attrs.field(repr=False)
+    input_args: Any = attrs.field(repr=False)
     error: Exception | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(Exception)),
     )
     err_type: BaseException = attrs.field(init=False, repr=False)
     err_msg: str = attrs.field(init=False, repr=False)
-    details: dict = attrs.field(init=False, repr=False)
+    details: list[dict[str, Any]] = attrs.field(init=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         self.err_type = type(self.error)
         self.err_msg = str(self.error)
         if self.error:
-            self.details = self.extract_details(self.error.__traceback__)
+            self.details = self._extract_details(self.error.__traceback__)
 
-    def extract_details(self, tb: TracebackType) -> list[dict[str, Any]]:
+    def _extract_details(self, tb: TracebackType | None) -> list[dict[str, Any]]:
         trace_info = []
         while tb:
             frame = tb.tb_frame
@@ -105,13 +115,11 @@ class Err:
     def flatten(self) -> Self:
         return self
 
-    def bind(self, _: Callable[[T], U]) -> Self:
+    def and_then(self, _: Callable[[T], Result]) -> Self:
         return self
 
 
 Result = Ok | Err
-
-P = ParamSpec("P")
 
 
 def safe(func: Callable[P, T]) -> Callable[P, Result]:
