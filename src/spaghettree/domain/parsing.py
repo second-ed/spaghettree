@@ -136,6 +136,7 @@ def create_call_tree(entities: dict[str, EntityCST]) -> dict[str, list[str]]:
     return {k: v.get_call_tree_entries() for k, v in entities.items()}
 
 
+
 @safe
 def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
     adj_mat = deepcopy(adj_mat)
