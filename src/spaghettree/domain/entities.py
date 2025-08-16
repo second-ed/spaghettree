@@ -68,6 +68,9 @@ class ClassCST:
     methods: list[FuncCST] = attrs.field(validator=[instance_of(list)])
     imports: list[ImportCST] = attrs.field(default=None, repr=False)
 
+    def get_call_tree_entries(self) -> list[str]:
+        return [call for meth in self.methods for call in meth.calls]
+
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         for meth in self.methods:
             meth.calls = [call for call in meth.calls if call in entities]
@@ -89,6 +92,9 @@ class FuncCST:
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
     calls: list[str] = attrs.field(validator=[instance_of(list)])
     imports: list[ImportCST] = attrs.field(default=None, repr=False)
+
+    def get_call_tree_entries(self) -> list[str]:
+        return self.calls
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         self.calls = [call for call in self.calls if call in entities]
