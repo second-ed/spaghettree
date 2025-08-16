@@ -15,9 +15,9 @@ def create_new_module_map(
 ) -> dict[int, list[EntityCST]]:
     new_modules: defaultdict[int, list[EntityCST]] = defaultdict(list)
 
-    for i, module in enumerate(adj_mat.communities):
+    for i, mod_name in enumerate(adj_mat.communities):
         ent_name = adj_mat.node_map[i]
-        new_modules[module].append(entities[ent_name])
+        new_modules[mod_name].append(entities[ent_name])
 
     return dict(new_modules)
 
@@ -70,12 +70,10 @@ def rename_overlapping_mod_names(
 def create_new_filepaths(
     fixed_name_modules: dict[str, list[EntityCST]], src_root: str
 ) -> dict[str, list[EntityCST]]:
-    filepath_modules: dict[str, list[EntityCST]] = {}
-    for name, contents in fixed_name_modules.items():
-        new_name = os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
-        filepath_modules[new_name] = contents
+    def to_filepath(src_root: str, name: str) -> str:
+        return os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
 
-    return filepath_modules
+    return {to_filepath(src_root, name): contents for name, contents in fixed_name_modules.items()}
 
 
 @safe

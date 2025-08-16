@@ -15,6 +15,9 @@ class GlobalCST:
     referenced: list[str] = attrs.field(factory=list)
     imports: list[ImportCST] = attrs.field(factory=list)
 
+    def get_call_tree_entries(self) -> list[str]:
+        return self.referenced
+
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         self.referenced = [ref for ref in self.referenced if ref in entities]
         return self

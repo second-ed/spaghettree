@@ -125,31 +125,16 @@ def filter_non_native_calls(
     entities: dict[str, EntityCST],
 ) -> dict[str, EntityCST]:
     entities = deepcopy(entities)
-    modified_entities: dict[str, EntityCST] = {}
-
-    for name, ent in entities.items():
-        ent.filter_native_calls(entities).resolve_native_imports()
-        modified_entities[name] = ent
-    return modified_entities
+    return {
+        name: ent.filter_native_calls(entities).resolve_native_imports()
+        for name, ent in entities.items()
+    }
 
 
 @safe
 def create_call_tree(entities: dict[str, EntityCST]) -> dict[str, list[str]]:
-    call_tree: dict[str, list[str]] = {}
+    return {k: v.get_call_tree_entries() for k, v in entities.items()}
 
-    for k, v in entities.items():
-        if isinstance(v, FuncCST):
-            call_tree[k] = v.calls
-
-        if isinstance(v, ClassCST):
-            call_tree[k] = []
-            for meth in v.methods:
-                call_tree[k].extend(meth.calls)
-
-        if isinstance(v, GlobalCST):
-            call_tree[k] = v.referenced
-
-    return call_tree
 
 
 @safe
@@ -160,7 +145,7 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
 
     # make it so we don't weight by call count yet
     adj_bin = (matrix > 0).astype(bool)
-    communities = np.array(communities, dtype=int)
+    communities: np.ndarray = np.array(communities, dtype=int)
 
     changed = True
     while changed:
