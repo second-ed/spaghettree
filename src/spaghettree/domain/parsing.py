@@ -133,8 +133,7 @@ def filter_non_native_calls(
 
 @safe
 def create_call_tree(entities: dict[str, EntityCST]) -> dict[str, list[str]]:
-    return {k: v.get_call_tree_entries() for k, v in entities.items()}
-
+    return {name: ent.get_call_tree_entries() for name, ent in entities.items()}
 
 
 @safe

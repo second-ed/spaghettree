@@ -16,7 +16,7 @@ class AdjMat:
     @safe
     def from_call_tree(cls, call_tree: dict[str, list[str]]) -> Self:
         ent_idx: dict[str, int] = {node: i for i, node in enumerate(call_tree)}
-        node_map: dict[int, str] = {v: k for k, v in ent_idx.items()}
+        node_map: dict[int, str] = {idx: ent_name for ent_name, idx in ent_idx.items()}
         n = len(ent_idx)
         adj_mat = np.zeros((n, n), dtype=int)
 

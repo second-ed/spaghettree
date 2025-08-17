@@ -97,7 +97,10 @@ def convert_to_code_str(
 
         return sorted(contents, key=partial(sort_key, type_priority=type_priority))
 
-    return {k: get_module_str(sort_by_priority(v, type_priority)) for k, v in new_modules.items()}
+    return {
+        mod_name: get_module_str(sort_by_priority(contents, type_priority))
+        for mod_name, contents in new_modules.items()
+    }
 
 
 @safe

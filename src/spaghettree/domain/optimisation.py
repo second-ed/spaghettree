@@ -27,8 +27,8 @@ def merge_single_entity_communities_if_no_gain_penalty(adj_mat: AdjMat) -> AdjMa
 
     grouped: defaultdict[int, list[tuple[int, str]]] = defaultdict(list)
 
-    for k, v in adj_mat.node_map.items():
-        grouped[communities[k]].append((k, v))
+    for idx, ent_name in adj_mat.node_map.items():
+        grouped[communities[idx]].append((idx, ent_name))
 
     updated, min_for_dir = {}, {}
 
