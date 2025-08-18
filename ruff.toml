@@ -2,8 +2,34 @@ line-length = 100
 indent-width = 4
 
 [lint]
-extend-select = ["I", "W"]
+select = ["ALL"]
 
+ignore = [
+  "TD",
+  "FIX",
+  "D",
+  "EM",
+  # Taken from https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+  "E114",
+  "E117",
+  "E501",
+  "G004",
+  "Q000",
+  "Q001",
+  "PTH",
+  "TRY003",
+]
+
+[lint.per-file-ignores]
+"test_*.py" = [
+    "S101",    # asserts allowed in tests...
+    "ARG",     # Unused function args -> fixtures nevertheless are functionally relevant...
+    "FBT",     # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
+    "PLR2004", # Magic value used in comparison, ...
+    "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "PT011",   # Don't care about exception messages
+    "ANN"      # Who typehints their tests?
+]
 [format]
 quote-style = "double"
 indent-style = "space"
