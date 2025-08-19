@@ -1,24 +1,28 @@
+from __future__ import annotations
+
 import glob
 import os
 import subprocess
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import attrs
 
 from spaghettree import Err, Ok, Result, safe
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 @attrs.define
 class IOWrapper:
     @safe
-    def list_files(self, root: str | Path, recursive: bool = True) -> list[str]:
+    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
         return glob.glob(f"{root}/**/**.py", recursive=recursive)
 
     @safe
     def read(self, path: str) -> str:
-        with open(path, "r") as f:
-            data = f.read()
-        return data
+        with open(path) as f:
+            return f.read()
 
     def read_files(self, root: str | Path) -> Result:
         paths_res = self.list_files(root)
@@ -39,14 +43,14 @@ class IOWrapper:
         return Ok(results)
 
     @safe
-    def write(self, modified_code: str, filepath: str, format_code: bool = True) -> None:
+    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w") as f:
             f.write(modified_code)
         if format_code:
             self._run_ruff(filepath)
 
-    def write_files(self, src_code: dict[str, str], ruff_root: str | None = None):
+    def write_files(self, src_code: dict[str, str], ruff_root: str | None = None) -> Result:
         results, fails = {}, {}
 
         for filepath, modified_code in src_code.items():
@@ -67,6 +71,6 @@ class IOWrapper:
             return Err(fails)
         return Ok(results)
 
-    def _run_ruff(self, path: str):
-        subprocess.run(["ruff", "check", "--fix", str(path)], check=True)
-        subprocess.run(["ruff", "format", str(path)], check=True)
+    def _run_ruff(self, path: str) -> None:
+        subprocess.run(["ruff", "check", "--fix", str(path)], check=True)  # noqa: S603, S607
+        subprocess.run(["ruff", "format", str(path)], check=True)  # noqa: S603, S607

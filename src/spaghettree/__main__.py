@@ -58,7 +58,7 @@ def main(src_root: str, new_root: str) -> Result:
                     "ClassCST": 1,
                     "FuncCST": 2,
                 },
-            )
+            ),
         )
         .and_then(partial(create_new_filepaths, src_root=new_root))
         .and_then(partial(io.write_files, ruff_root=new_root))

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Collection, Self
+from typing import TYPE_CHECKING, Self
 
 import attrs
 import libcst as cst
 
-from spaghettree.domain.imports import ImportCST
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from spaghettree.domain.imports import ImportCST
 
 
 @attrs.define(eq=True)
@@ -33,17 +36,17 @@ class GlobalVisitor(cst.CSTVisitor):
     module_globals: dict[str, GlobalCST] = attrs.field(default=None)
     current_func: str | None = attrs.field(default=None)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         self.module_globals = {gbl.name.split(".")[-1]: gbl for gbl in self.global_vars}
 
-    def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> None:  # noqa: N802
         self.current_func = node.name.value
 
-    def leave_FunctionDef(self, original_node: cst.FunctionDef) -> None:
+    def leave_FunctionDef(self, _: cst.FunctionDef) -> None:  # noqa: N802
         self.current_func = None
 
-    def visit_Name(self, node: cst.Name) -> None:
+    def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
         if self.current_func and node.value in self.module_globals:
             self.module_globals[node.value].referenced.append(
-                f"{self.module_name}.{self.current_func}"
+                f"{self.module_name}.{self.current_func}",
             )

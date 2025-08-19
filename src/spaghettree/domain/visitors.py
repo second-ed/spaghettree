@@ -8,7 +8,7 @@ import libcst as cst
 class CallVisitor(cst.CSTVisitor):
     calls: list[str] = attrs.field(factory=list)
 
-    def visit_Call(self, node: cst.Call) -> None:
+    def visit_Call(self, node: cst.Call) -> None:  # noqa: N802
         full_name = self._resolve_attr(node.func)
         if full_name:
             self.calls.append(full_name)

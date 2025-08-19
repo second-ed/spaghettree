@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 import libcst as cst
 import numpy as np
 from tqdm import tqdm
 
 from spaghettree import safe
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
 from spaghettree.domain.visitors import CallVisitor
+
+if TYPE_CHECKING:
+    from spaghettree.domain.adj_mat import AdjMat
+
 
 EntityCST = FuncCST | ClassCST | GlobalCST
 
@@ -38,7 +42,7 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
         tree = str_to_cst(data)
         module = ModuleCST(get_module_name(path), tree)
 
-        for name, tree in module.func_trees.items():
+        for tree in module.func_trees.values():
             func = get_func_cst(module.name, tree)
             module.funcs.append(func)
 
@@ -59,7 +63,9 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
 @safe
 def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
     def resolve_calls(
-        calls: list[str], import_map: dict[str, str], func_map: dict[str, str]
+        calls: list[str],
+        import_map: dict[str, str],
+        func_map: dict[str, str],
     ) -> list[str]:
         resolved_calls: list[str] = []
         for call in calls:
@@ -78,8 +84,8 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
     modules = deepcopy(modules)
     modified_modules = {}
 
-    for name, mod in tqdm(modules.items(), "resolving calls"):
-        mod = deepcopy(mod)
+    for name, mod_obj in tqdm(modules.items(), "resolving calls"):
+        mod = deepcopy(mod_obj)
 
         import_map = {
             i.as_name: f"{i.module}.{i.as_name}" if i.module != i.as_name else i.module

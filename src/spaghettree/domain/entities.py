@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Collection, Self
+from typing import TYPE_CHECKING, Self
 
 import attrs
 import libcst as cst
@@ -8,6 +8,9 @@ from attrs.validators import instance_of
 
 from spaghettree.domain.globals import GlobalCST, GlobalVisitor
 from spaghettree.domain.imports import ImportCST, ImportType, ImportVisitor
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
 
 
 @attrs.define
@@ -21,7 +24,7 @@ class ModuleCST:
     global_vars: list[GlobalCST] = attrs.field(factory=list)
     imports: list[ImportCST] = attrs.field(default=None, repr=False)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         iv = ImportVisitor()
         cst.Module(
             [
@@ -29,7 +32,7 @@ class ModuleCST:
                 for node in self.tree.children
                 if isinstance(node, cst.SimpleStatementLine)
                 and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
-            ]
+            ],
         ).visit(iv)
         self.imports = iv.imports
 

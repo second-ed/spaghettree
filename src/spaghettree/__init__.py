@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+from collections.abc import Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -8,7 +9,6 @@ from typing import (
     Literal,
     ParamSpec,
     Self,
-    Sequence,
     TypeVar,
 )
 
@@ -22,6 +22,7 @@ def make_type(
     name: str,
     validators: Callable | Sequence[Callable] | None = None,
     converters: Callable | Sequence[Callable] | None = None,
+    *,
     frozen: bool = True,
 ) -> type:
     def to_list(value: Callable | Sequence[Callable]) -> list:
@@ -45,7 +46,7 @@ def make_type(
                 "map": lambda self, fn: type(self)(fn(self.inner)),
                 "apply": lambda self, fn: fn(self.inner),
             },
-        )
+        ),
     )
 
 
@@ -60,15 +61,6 @@ class Ok:
 
     def is_ok(self) -> Literal[True]:
         return True
-
-    def map(self, func: Callable[[T], U]) -> Ok:
-        return Ok(func(self.inner))
-
-    def flatten(self) -> Ok:
-        inner: T = self.inner
-        while isinstance(inner, Ok):
-            inner = inner.inner
-        return Ok(inner)
 
     def and_then(self, func: Callable[[T], Result]) -> Result:
         return func(self.inner)
@@ -109,12 +101,6 @@ class Err:
     def is_ok(self) -> Literal[False]:
         return False
 
-    def map(self, _: Callable[[T], U]) -> Self:
-        return self
-
-    def flatten(self) -> Self:
-        return self
-
     def and_then(self, _: Callable[[T], Result]) -> Self:
         return self
 
@@ -124,7 +110,7 @@ Result = Ok | Err
 
 def safe(func: Callable[P, T]) -> Callable[P, Result]:
     @functools.wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result:  # noqa: ANN002 ANN003
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result:
         try:
             return Ok(func(*args, **kwargs))
         except Exception as e:  # noqa: BLE001
@@ -134,7 +120,7 @@ def safe(func: Callable[P, T]) -> Callable[P, Result]:
 
 
 __all__ = [
-    "Result",
-    "Ok",
     "Err",
+    "Ok",
+    "Result",
 ]
