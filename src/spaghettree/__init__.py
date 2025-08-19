@@ -24,6 +24,7 @@ def make_type(
     converters: Callable | Sequence[Callable] | None = None,
     *,
     frozen: bool = True,
+    eq: bool = True,
 ) -> type:
     def to_list(value: Callable | Sequence[Callable]) -> list:
         return list(value) if isinstance(value, Sequence) else [value] if value else []  # type: ignore[truthy-function]
@@ -35,7 +36,7 @@ def make_type(
     if converters:
         kwargs["converter"] = to_list(converters)
 
-    return attrs.define(frozen=frozen)(
+    return attrs.define(frozen=frozen, eq=eq)(
         type(
             name,
             (),

@@ -10,13 +10,11 @@ from spaghettree.domain.adj_mat import AdjMat
 @safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
     valid_merges = get_merge_pairs(adj_mat)
-    print(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")  # noqa: T201
 
     while valid_merges:
         to_merge = remove_overlapping_pairs(valid_merges)
         adj_mat.communities = apply_merges(adj_mat.communities, to_merge)
         valid_merges = get_merge_pairs(adj_mat)
-        print(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")  # noqa: T201
     return adj_mat
 
 
