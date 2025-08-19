@@ -18,6 +18,7 @@ ignore = [
   "Q001",
   "PTH",
   "TRY003",
+  "COM812",
 ]
 
 [lint.per-file-ignores]

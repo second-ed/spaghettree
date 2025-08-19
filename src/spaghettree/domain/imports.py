@@ -35,13 +35,13 @@ class ImportCST:
 class ImportVisitor(cst.CSTVisitor):
     imports: list[ImportCST] = attrs.field(factory=list)
 
-    def visit_Import(self, node: cst.Import) -> None:
+    def visit_Import(self, node: cst.Import) -> None:  # noqa: N802
         for alias in node.names:
             name = self._resolve_attr(alias.name)
             asname = alias.asname.name.value if alias.asname else name
             self._add_import(name, ImportType.IMPORT, name, asname)
 
-    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
+    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:  # noqa: N802
         module = self._resolve_attr(node.module)
         if module is None:
             return  # skip relative imports

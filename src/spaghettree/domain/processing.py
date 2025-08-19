@@ -11,7 +11,8 @@ from spaghettree.domain.parsing import EntityCST, cst_to_str
 
 @safe
 def create_new_module_map(
-    adj_mat: AdjMat, entities: dict[str, EntityCST]
+    adj_mat: AdjMat,
+    entities: dict[str, EntityCST],
 ) -> dict[int, list[EntityCST]]:
     new_modules: defaultdict[int, list[EntityCST]] = defaultdict(list)
 
@@ -32,7 +33,9 @@ def infer_module_names(
         if len(contents) > 1:
             names = [".".join(ent.name.split(".")[:-1]) for ent in new_modules[idx]]
             possible_module_names = sorted(
-                set([(name, names.count(name)) for name in names]), key=lambda x: x[1], reverse=True
+                {(name, names.count(name)) for name in names},
+                key=lambda x: x[1],
+                reverse=True,
             )
             for name, _ in possible_module_names:
                 if name not in renamed_modules:
@@ -68,7 +71,8 @@ def rename_overlapping_mod_names(
 
 @safe
 def create_new_filepaths(
-    fixed_name_modules: dict[str, list[EntityCST]], src_root: str
+    fixed_name_modules: dict[str, list[EntityCST]],
+    src_root: str,
 ) -> dict[str, list[EntityCST]]:
     def to_filepath(src_root: str, name: str) -> str:
         return os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
@@ -78,7 +82,8 @@ def create_new_filepaths(
 
 @safe
 def convert_to_code_str(
-    new_modules: dict[str, list[EntityCST]], type_priority: dict[str, int]
+    new_modules: dict[str, list[EntityCST]],
+    type_priority: dict[str, int],
 ) -> dict[str, str]:
     def get_module_str(mod_contents: list[EntityCST]) -> str:
         imports, code = [], []
@@ -90,9 +95,10 @@ def convert_to_code_str(
         return "".join(sorted(set(imports))) + "".join(code)
 
     def sort_by_priority(
-        contents: list[EntityCST], type_priority: dict[str, int]
+        contents: list[EntityCST],
+        type_priority: dict[str, int],
     ) -> list[EntityCST]:
-        def sort_key(obj, type_priority: dict[str, int]):
+        def sort_key(obj: EntityCST, type_priority: dict[str, int]) -> tuple[int, str]:
             return (type_priority[obj.__class__.__name__], getattr(obj, "name", ""))
 
         return sorted(contents, key=partial(sort_key, type_priority=type_priority))
@@ -132,7 +138,7 @@ def remap_imports(
                             import_type=imp.import_type,
                             name=imp.name,
                             as_name=imp.as_name,
-                        )
+                        ),
                     )
                 else:
                     # no changes
