@@ -16,6 +16,7 @@ from spaghettree.domain.parsing import (
     resolve_module_calls,
 )
 from spaghettree.domain.processing import (
+    add_empty_inits_if_needed,
     convert_to_code_str,
     create_new_filepaths,
     create_new_module_map,
@@ -61,5 +62,6 @@ def main(src_root: str, new_root: str) -> Result:
             ),
         )
         .and_then(partial(create_new_filepaths, src_root=new_root))
+        .and_then(add_empty_inits_if_needed)
         .and_then(partial(io.write_files, ruff_root=new_root))
     )

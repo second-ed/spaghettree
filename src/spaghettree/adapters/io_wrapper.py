@@ -48,7 +48,7 @@ class IOWrapper:
 
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w") as f:
-            f.write(modified_code)
+            f.write(format_code_str(modified_code))
         if format_code:
             self._run_ruff(filepath)
 
