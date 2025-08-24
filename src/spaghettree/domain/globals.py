@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from collections.abc import Collection
+from typing import Self
 
 import attrs
 import libcst as cst
 
-if TYPE_CHECKING:
-    from collections.abc import Collection
-
-    from spaghettree.domain.imports import ImportCST
+from spaghettree.domain.imports import ImportCST
 
 
 @attrs.define(eq=True)

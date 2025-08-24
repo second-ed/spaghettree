@@ -2905,6 +2905,8 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
+    { name = "black" },
+    { name = "isort" },
     { name = "libcst" },
     { name = "matplotlib" },
     { name = "networkx" },
@@ -2957,6 +2959,8 @@ research = [
 [package.metadata]
 requires-dist = [
     { name = "attrs", specifier = ">=25.1.0" },
+    { name = "black", specifier = ">=25.1.0" },
+    { name = "isort", specifier = ">=6.0.1" },
     { name = "libcst", specifier = ">=1.6.0" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "networkx", specifier = ">=3.4.2" },

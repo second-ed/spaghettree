@@ -3,14 +3,13 @@ from __future__ import annotations
 import glob
 import os
 import subprocess
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import attrs
+import black
+import isort
 
 from spaghettree import Err, Ok, Result, safe
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @attrs.define
@@ -44,6 +43,9 @@ class IOWrapper:
 
     @safe
     def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
+        def format_code_str(code: str) -> str:
+            return black.format_str(isort.code(code), mode=black.FileMode())
+
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w") as f:
             f.write(modified_code)
