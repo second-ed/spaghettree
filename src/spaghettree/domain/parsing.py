@@ -47,12 +47,9 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
             module.funcs.append(func)
 
         for name, tree in module.class_trees.items():
-            methods = []
-            for f in tree.body.children:
-                if isinstance(f, cst.FunctionDef):
-                    func = get_func_cst(name, f)
-                    methods.append(func)
-
+            methods = [
+                get_func_cst(name, f) for f in tree.body.children if isinstance(f, cst.FunctionDef)
+            ]
             c_obj = ClassCST(name, tree, methods)
             module.classes.append(c_obj)
 
@@ -92,14 +89,14 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
             for i in mod.imports
         }
         func_map = {fn.name.split(".")[-1]: fn.name for fn in mod.funcs}
-        cls_map = {cls.name.split(".")[-1]: cls.name for cls in mod.classes}
+        cls_map = {cls_.name.split(".")[-1]: cls_.name for cls_ in mod.classes}
         ent_map = {**func_map, **cls_map}
 
         for fn in mod.funcs:
             fn.calls = resolve_calls(fn.calls, import_map, ent_map)
 
-        for class_ in mod.classes:
-            for fn in class_.methods:
+        for cls_ in mod.classes:
+            for fn in cls_.methods:
                 fn.calls = resolve_calls(fn.calls, import_map, ent_map)
 
         modified_modules[name] = mod
@@ -116,9 +113,9 @@ def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, EntityCST]:
             fn.imports = mod.imports
             entities[fn.name] = fn
 
-        for class_ in mod.classes:
-            class_.imports = mod.imports
-            entities[class_.name] = class_
+        for cls_ in mod.classes:
+            cls_.imports = mod.imports
+            entities[cls_.name] = cls_
 
         for gbl in mod.global_vars:
             entities[gbl.name] = gbl
