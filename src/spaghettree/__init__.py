@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import functools
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Literal,
     ParamSpec,
     Self,
@@ -109,7 +108,7 @@ class Err:
 Result = Ok | Err
 
 
-def safe(func: Callable[P, T]) -> Callable[P, Result]:
+def safe[**P, T](func: Callable[P, T]) -> Callable[P, Result]:
     @functools.wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result:
         try:
