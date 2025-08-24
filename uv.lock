@@ -2908,7 +2908,6 @@ dependencies = [
     { name = "libcst" },
     { name = "matplotlib" },
     { name = "networkx" },
-    { name = "pre-commit" },
     { name = "pydot" },
     { name = "tqdm" },
 ]
@@ -2916,6 +2915,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
+    { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -2960,7 +2960,6 @@ requires-dist = [
     { name = "libcst", specifier = ">=1.6.0" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "networkx", specifier = ">=3.4.2" },
-    { name = "pre-commit", specifier = ">=4.1.0" },
     { name = "pydot", specifier = ">=3.0.4" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
@@ -2968,6 +2967,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "pre-commit", specifier = ">=4.1.0" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.9.9" },
