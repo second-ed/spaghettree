@@ -1,5 +1,5 @@
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 from copy import deepcopy
 from functools import partial
 
@@ -53,20 +53,25 @@ def infer_module_names(
 def rename_overlapping_mod_names(
     renamed_modules: dict[str, list[EntityCST]],
 ) -> dict[str, list[EntityCST]]:
-    fixed_name_modules: dict[str, list[EntityCST]] = {}
-
-    for name, contents in renamed_modules.items():
+    def rename_mod_name(name: str, renamed_modules: list[str]) -> str:
         name_parts = name.split(".")
         dirname = ".".join(name_parts[:-1])
 
+        dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
+        dirname_counts = Counter(dirnames)
+
+        if dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1:
+            return dirname
+
         if dirname in renamed_modules:
-            mod_name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
-        else:
-            mod_name = name
+            return ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
 
-        fixed_name_modules[mod_name] = contents
+        return name
 
-    return fixed_name_modules
+    mod_names = list(renamed_modules)
+    return {
+        rename_mod_name(name, mod_names): contents for name, contents in renamed_modules.items()
+    }
 
 
 @safe
