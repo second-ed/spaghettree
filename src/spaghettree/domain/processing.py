@@ -29,9 +29,9 @@ def infer_module_names(
 ) -> dict[str, list[EntityCST]]:
     renamed_modules: dict[str, list[EntityCST]] = {}
 
-    for idx, contents in new_modules.items():
+    for contents in new_modules.values():
         if len(contents) > 1:
-            names = [".".join(ent.name.split(".")[:-1]) for ent in new_modules[idx]]
+            names = [".".join(ent.name.split(".")[:-1]) for ent in contents]
             possible_module_names = sorted(
                 {(name, names.count(name)) for name in names},
                 key=lambda x: x[1],

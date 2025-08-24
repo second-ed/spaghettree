@@ -161,7 +161,7 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
 
         rows, cols = np.where((out_deg == 1)[:, None] & adj_bin & (in_deg == 1))
 
-        for a, b in zip(rows, cols):
+        for a, b in zip(rows, cols, strict=False):
             if communities[b] != communities[a]:
                 communities[communities == communities[b]] = communities[a]
                 changed = True

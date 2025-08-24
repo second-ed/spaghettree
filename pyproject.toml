@@ -12,6 +12,7 @@ dependencies = [
     "libcst>=1.6.0",
     "matplotlib>=3.10.1",
     "networkx>=3.4.2",
+    "pre-commit>=4.1.0",
     "pydot>=3.0.4",
     "tqdm>=4.67.1",
 ]
@@ -26,7 +27,6 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "ipykernel>=6.29.5",
-    "pre-commit>=4.1.0",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "ruff>=0.9.9",
