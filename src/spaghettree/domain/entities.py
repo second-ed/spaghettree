@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from collections.abc import Collection
+from typing import Self
 
 import attrs
 import libcst as cst
@@ -8,9 +9,6 @@ from attrs.validators import instance_of
 
 from spaghettree.domain.globals import GlobalCST, GlobalVisitor
 from spaghettree.domain.imports import ImportCST, ImportType, ImportVisitor
-
-if TYPE_CHECKING:
-    from collections.abc import Collection
 
 
 @attrs.define

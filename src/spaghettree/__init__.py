@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import functools
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from types import TracebackType
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     ParamSpec,
@@ -13,45 +13,7 @@ from typing import (
 
 import attrs
 
-if TYPE_CHECKING:
-    from types import TracebackType
-
-
-def make_type(
-    name: str,
-    validators: Callable | Sequence[Callable] | None = None,
-    converters: Callable | Sequence[Callable] | None = None,
-    *,
-    frozen: bool = True,
-    eq: bool = True,
-) -> type:
-    def to_list(value: Callable | Sequence[Callable]) -> list:
-        return list(value) if isinstance(value, Sequence) else [value] if value else []  # type: ignore[truthy-function]
-
-    kwargs = {}
-
-    if validators:
-        kwargs["validator"] = to_list(validators)
-    if converters:
-        kwargs["converter"] = to_list(converters)
-
-    return attrs.define(frozen=frozen, eq=eq)(
-        type(
-            name,
-            (),
-            {
-                "inner": attrs.field(**kwargs),  # type: ignore[call-overload]
-                "new": classmethod(lambda cls, val: cls(val)),
-                "clone": lambda self: type(self)(self.inner),
-                "map": lambda self, fn: type(self)(fn(self.inner)),
-                "apply": lambda self, fn: fn(self.inner),
-            },
-        ),
-    )
-
-
 T = TypeVar("T")
-U = TypeVar("U")
 P = ParamSpec("P")
 
 

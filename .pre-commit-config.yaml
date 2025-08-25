@@ -18,7 +18,7 @@ repos:
         types_or: [ python, pyi, jupyter ]
       - id: pytest
         name: pytest
-        entry: uv run pytest -vv --cov=src --cov-report term-missing
+        entry: uv run pytest -vv --cov=src --cov-report term-missing:skip-covered
         language: python
         pass_filenames: false
         always_run: true

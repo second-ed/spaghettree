@@ -5,6 +5,7 @@ indent-width = 4
 select = ["ALL"]
 
 ignore = [
+  "TC",
   "TD",
   "FIX",
   "D",

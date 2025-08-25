@@ -151,3 +151,17 @@ def remap_imports(
 
             ent.imports = updated_imports
     return modules
+
+
+@safe
+def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
+    modules_with_inits = {}
+
+    for path, contents in modules.items():
+        init_path = f"{os.path.dirname(path)}/__init__.py"
+
+        if init_path not in modules:
+            modules_with_inits[init_path] = ""
+        modules_with_inits[path] = contents
+
+    return modules_with_inits

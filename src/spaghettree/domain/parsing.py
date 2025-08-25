@@ -1,19 +1,15 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
 
 import libcst as cst
 import numpy as np
 from tqdm import tqdm
 
 from spaghettree import safe
+from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
 from spaghettree.domain.visitors import CallVisitor
-
-if TYPE_CHECKING:
-    from spaghettree.domain.adj_mat import AdjMat
-
 
 EntityCST = FuncCST | ClassCST | GlobalCST
 
@@ -42,16 +38,20 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
         tree = str_to_cst(data)
         module = ModuleCST(get_module_name(path), tree)
 
-        for tree in module.func_trees.values():
-            func = get_func_cst(module.name, tree)
-            module.funcs.append(func)
+        module.funcs = [get_func_cst(module.name, tree) for tree in module.func_trees.values()]
 
-        for name, tree in module.class_trees.items():
-            methods = [
-                get_func_cst(name, f) for f in tree.body.children if isinstance(f, cst.FunctionDef)
-            ]
-            c_obj = ClassCST(name, tree, methods)
-            module.classes.append(c_obj)
+        module.classes = [
+            ClassCST(
+                name,
+                tree,
+                [
+                    get_func_cst(name, f)
+                    for f in tree.body.children
+                    if isinstance(f, cst.FunctionDef)
+                ],
+            )
+            for name, tree in module.class_trees.items()
+        ]
 
         modules[module.name] = module
     return modules

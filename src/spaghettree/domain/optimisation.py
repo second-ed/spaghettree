@@ -81,8 +81,7 @@ def get_merge_pairs(adj_mat: AdjMat) -> list[PossibleMerge]:
 def remove_overlapping_pairs(pairs: list[PossibleMerge]) -> list[PossibleMerge]:
     pairs = sorted(pairs, key=lambda x: x.gain, reverse=True)
 
-    selected = []
-    seen = set()
+    selected, seen = [], set()
 
     for pair in pairs:
         if pair.c1 not in seen and pair.c2 not in seen:
