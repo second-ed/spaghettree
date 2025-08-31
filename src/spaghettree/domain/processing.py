@@ -128,15 +128,10 @@ def remap_imports(
             updated_imports: list[ImportCST] = []
 
             for imp in ent.imports:
-                full_import = f"{imp.module}.{imp.name}"
-
-                if full_import in entity_mod_map:
-                    new_mod = entity_mod_map[full_import]
-
-                    if new_mod == mod_name:
-                        # same module after refactor: drop import
-                        continue
-
+                new_mod = entity_mod_map.get(f"{imp.module}.{imp.name}")
+                if new_mod is None:
+                    updated_imports.append(imp)
+                elif new_mod != mod_name:
                     updated_imports.append(
                         ImportCST(
                             module=new_mod,
@@ -145,9 +140,6 @@ def remap_imports(
                             as_name=imp.as_name,
                         ),
                     )
-                else:
-                    # no changes
-                    updated_imports.append(imp)
 
             ent.imports = updated_imports
     return modules
