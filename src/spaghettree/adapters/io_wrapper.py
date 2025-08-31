@@ -8,6 +8,7 @@ from pathlib import Path
 import attrs
 import black
 import isort
+from ruff.__main__ import find_ruff_bin
 
 from spaghettree import Err, Ok, Result, safe
 
@@ -74,5 +75,5 @@ class IOWrapper:
         return Ok(results)
 
     def _run_ruff(self, path: str) -> None:
-        subprocess.run(["ruff", "check", "--fix", str(path)], check=True)  # noqa: S603, S607
-        subprocess.run(["ruff", "format", str(path)], check=True)  # noqa: S603, S607
+        subprocess.run([find_ruff_bin(), "check", "--fix", str(path)], check=True)  # noqa: S603
+        subprocess.run([find_ruff_bin(), "format", str(path)], check=True)  # noqa: S603
