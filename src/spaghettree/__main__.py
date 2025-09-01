@@ -1,7 +1,7 @@
 from functools import partial
 
 from spaghettree import Result
-from spaghettree.adapters.io_wrapper import IOWrapper
+from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.optimisation import (
     merge_single_entity_communities_if_no_gain_penalty,
@@ -28,6 +28,10 @@ from spaghettree.domain.processing import (
 
 def main(src_root: str, new_root: str) -> Result:
     io = IOWrapper()
+    return run_process(io, src_root, new_root)
+
+
+def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
     entities_res = (
         io.read_files(src_root)
         .and_then(create_module_cst_objs)
@@ -61,7 +65,7 @@ def main(src_root: str, new_root: str) -> Result:
                 },
             ),
         )
-        .and_then(partial(create_new_filepaths, src_root=new_root))
+        .and_then(partial(create_new_filepaths, src_root=new_root or src_root))
         .and_then(add_empty_inits_if_needed)
-        .and_then(partial(io.write_files, ruff_root=new_root))
+        .and_then(partial(io.write_files, ruff_root=new_root or src_root))
     )
