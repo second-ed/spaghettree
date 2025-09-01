@@ -75,6 +75,37 @@ def rename_overlapping_mod_names(
 
 
 @safe
+def remap_imports(
+    modules: dict[str, list[EntityCST]],
+) -> dict[str, list[EntityCST]]:
+    modules = deepcopy(modules)
+    entity_mod_map: dict[str, str] = {
+        ent.name: mod_name for mod_name, ents in modules.items() for ent in ents
+    }
+
+    for mod_name, ents in modules.items():
+        for ent in ents:
+            updated_imports: list[ImportCST] = []
+
+            for imp in ent.imports:
+                new_mod = entity_mod_map.get(f"{imp.module}.{imp.name}")
+                if new_mod is None:
+                    updated_imports.append(imp)
+                elif new_mod != mod_name:
+                    updated_imports.append(
+                        ImportCST(
+                            module=new_mod,
+                            import_type=imp.import_type,
+                            name=imp.name,
+                            as_name=imp.as_name,
+                        ),
+                    )
+
+            ent.imports = updated_imports
+    return modules
+
+
+@safe
 def create_new_filepaths(
     fixed_name_modules: dict[str, list[EntityCST]],
     src_root: str,
@@ -112,37 +143,6 @@ def convert_to_code_str(
         mod_name: get_module_str(sort_by_priority(contents, type_priority))
         for mod_name, contents in new_modules.items()
     }
-
-
-@safe
-def remap_imports(
-    modules: dict[str, list[EntityCST]],
-) -> dict[str, list[EntityCST]]:
-    modules = deepcopy(modules)
-    entity_mod_map: dict[str, str] = {
-        ent.name: mod_name for mod_name, ents in modules.items() for ent in ents
-    }
-
-    for mod_name, ents in modules.items():
-        for ent in ents:
-            updated_imports: list[ImportCST] = []
-
-            for imp in ent.imports:
-                new_mod = entity_mod_map.get(f"{imp.module}.{imp.name}")
-                if new_mod is None:
-                    updated_imports.append(imp)
-                elif new_mod != mod_name:
-                    updated_imports.append(
-                        ImportCST(
-                            module=new_mod,
-                            import_type=imp.import_type,
-                            name=imp.name,
-                            as_name=imp.as_name,
-                        ),
-                    )
-
-            ent.imports = updated_imports
-    return modules
 
 
 @safe
