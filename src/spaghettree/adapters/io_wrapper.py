@@ -99,8 +99,12 @@ class FakeIOWrapper:
     files: dict = attrs.field(factory=dict)
 
     @safe
-    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:  # noqa: ARG002
-        return [f for f in self.files if f.startswith(root) and f.endswith(".py")]
+    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
+        if recursive:
+            return [f for f in self.files if f.startswith(root) and f.endswith(".py")]
+        return [
+            f for f in self.files if f.removeprefix(root).lstrip("/").split("/")[0].endswith(".py")
+        ]
 
     @safe
     def read(self, path: str) -> str:
@@ -125,18 +129,15 @@ class FakeIOWrapper:
         return Ok(results)
 
     @safe
-    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:  # noqa: ARG002
-        self.files[filepath] = format_code_str(modified_code)
+    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
+        self.files[filepath] = format_code_str(modified_code) if format_code else modified_code
 
     def write_files(self, src_code: dict[str, str], ruff_root: str | None = None) -> Result:
         results, fails = {}, {}
 
         for filepath, modified_code in src_code.items():
             if ruff_root is not None:
-                # format all at the end instead
-                res = self.write(modified_code, filepath, format_code=False)
-            else:
-                res = self.write(modified_code, filepath, format_code=True)
+                res = self.write(modified_code, filepath)
 
             if res.is_ok():
                 results[filepath] = res.inner
