@@ -13,49 +13,45 @@ def test_main():
 
 
 STARTING_FILES = {
-    "some/path/to/mock_package/src/mock_package/module_a.py": "".join(
-        [
-            "from mock_package.module_b import func_d  # noqa: INP001\n",
-            "\n",
-            "\n",
-            "def func_a():  # noqa: ANN201\n",
-            "    return 1 + func_b()\n",
-            "\n",
-            "\n",
-            "def func_b():  # noqa: ANN201\n",
-            "    return 1\n",
-            "\n",
-            "\n",
-            "def func_c():  # noqa: ANN201\n",
-            "    return 2 * func_d()\n",
-            "\n",
-            "\n",
-            "def isolated_func():  # noqa: ANN201\n",
-            "    return 2\n",
-        ]
+    "some/path/to/mock_package/src/mock_package/module_a.py": (
+        "from mock_package.module_b import func_d  # noqa: INP001\n"
+        "\n"
+        "\n"
+        "def func_a():  # noqa: ANN201\n"
+        "    return 1 + func_b()\n"
+        "\n"
+        "\n"
+        "def func_b():  # noqa: ANN201\n"
+        "    return 1\n"
+        "\n"
+        "\n"
+        "def func_c():  # noqa: ANN201\n"
+        "    return 2 * func_d()\n"
+        "\n"
+        "\n"
+        "def isolated_func():  # noqa: ANN201\n"
+        "    return 2\n"
     ),
-    "some/path/to/mock_package/src/mock_package/module_b.py": "".join(
-        [
-            "def func_e(a: int, b: int) -> int:  # noqa: INP001\n",
-            "    return a + b + func_d()\n",
-            "\n",
-            "\n",
-            "def func_d():  # noqa: ANN201\n",
-            "    return -2\n",
-            "\n",
-            "\n",
-            "class ClassA:\n",
-            "    def method_a(self):  # noqa: ANN201\n",
-            "        return func_d() + func_d()\n",
-            "\n",
-        ]
+    "some/path/to/mock_package/src/mock_package/module_b.py": (
+        "def func_e(a: int, b: int) -> int:  # noqa: INP001\n"
+        "    return a + b + func_d()\n"
+        "\n"
+        "\n"
+        "def func_d():  # noqa: ANN201\n"
+        "    return -2\n"
+        "\n"
+        "\n"
+        "class ClassA:\n"
+        "    def method_a(self):  # noqa: ANN201\n"
+        "        return func_d() + func_d()\n"
+        "\n"
     ),
 }
 
 
 @pytest.mark.parametrize(
-    "files, src_root, expected_result",
-    (
+    ("files", "src_root", "expected_result"),
+    [
         pytest.param(
             STARTING_FILES,
             "some/path/to/mock_package/src/mock_package",
@@ -102,7 +98,7 @@ STARTING_FILES = {
                 ),
             },
         ),
-    ),
+    ],
 )
 def test_run_process(files, src_root, expected_result):
     io = FakeIOWrapper(files)
