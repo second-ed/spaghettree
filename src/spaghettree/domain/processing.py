@@ -1,7 +1,6 @@
 import os
 from collections import Counter, defaultdict
 from copy import deepcopy
-from functools import partial
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
@@ -119,7 +118,7 @@ def create_new_filepaths(
 @safe
 def convert_to_code_str(
     new_modules: dict[str, list[EntityCST]],
-    type_priority: dict[str, int],
+    order_map: dict[str, int],
 ) -> dict[str, str]:
     def get_module_str(mod_contents: list[EntityCST]) -> str:
         imports, code = [], []
@@ -130,17 +129,8 @@ def convert_to_code_str(
 
         return "".join(sorted(set(imports))) + "".join(code)
 
-    def sort_by_priority(
-        contents: list[EntityCST],
-        type_priority: dict[str, int],
-    ) -> list[EntityCST]:
-        def sort_key(obj: EntityCST, type_priority: dict[str, int]) -> tuple[int, str]:
-            return (type_priority[obj.__class__.__name__], getattr(obj, "name", ""))
-
-        return sorted(contents, key=partial(sort_key, type_priority=type_priority))
-
     return {
-        mod_name: get_module_str(sort_by_priority(contents, type_priority))
+        mod_name: get_module_str(sorted(contents, key=lambda x: order_map[x.name.split(".")[-1]]))
         for mod_name, contents in new_modules.items()
     }
 

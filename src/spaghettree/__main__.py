@@ -58,11 +58,7 @@ def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
         .and_then(
             partial(
                 convert_to_code_str,
-                type_priority={
-                    "GlobalCST": 0,
-                    "ClassCST": 1,
-                    "FuncCST": 2,
-                },
+                order_map={ent.split(".")[-1]: idx for idx, ent in enumerate(entities)},
             ),
         )
         .and_then(partial(create_new_filepaths, src_root=new_root or src_root))
