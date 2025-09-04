@@ -12,6 +12,7 @@ from spaghettree.domain.parsing import (
     create_module_cst_objs,
     extract_entities,
     filter_non_native_calls,
+    get_location_map,
     pair_exclusive_calls,
     resolve_module_calls,
 )
@@ -32,18 +33,25 @@ def main(src_root: str, new_root: str) -> Result:
 
 
 def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
+    src_code = io.read_files(src_root)
+
     entities_res = (
-        io.read_files(src_root)
-        .and_then(create_module_cst_objs)
+        src_code.and_then(create_module_cst_objs)
         .and_then(resolve_module_calls)
         .and_then(extract_entities)
         .and_then(filter_non_native_calls)
     )
 
-    if entities_res.is_ok():
-        entities = entities_res.inner
-    else:
+    if not entities_res.is_ok():
         raise entities_res.error
+
+    entities = entities_res.inner
+    location_map_res = src_code.and_then(get_location_map)
+
+    if not location_map_res.is_ok():
+        raise location_map_res.error
+
+    location_map = location_map_res.inner
 
     return (
         entities_res.and_then(create_call_tree)
@@ -58,7 +66,7 @@ def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
         .and_then(
             partial(
                 convert_to_code_str,
-                order_map={ent.split(".")[-1]: idx for idx, ent in enumerate(entities)},
+                order_map=location_map,
             ),
         )
         .and_then(partial(create_new_filepaths, src_root=new_root or src_root))
