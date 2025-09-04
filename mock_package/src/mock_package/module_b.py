@@ -1,5 +1,8 @@
-def func_e(a: int, b: int) -> int:  # noqa: INP001
-    return a + b + func_d()
+CONSTANT = 0
+
+
+def func_e(a: int, b: int) -> int:
+    return a + b + func_d() + CONSTANT
 
 
 def func_d():  # noqa: ANN201
