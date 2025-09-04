@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import itertools
 from copy import deepcopy
 
+import attrs
 import libcst as cst
 import numpy as np
 from tqdm import tqdm
@@ -55,6 +57,72 @@ def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
 
         modules[module.name] = module
     return modules
+
+
+@attrs.define(frozen=True, eq=True, order=True)
+class EntityLocation:
+    path: str = attrs.field()
+    name: str = attrs.field(eq=False)
+    line_no: int = attrs.field()
+
+
+@safe
+def get_location_map(src_code: dict[str, str]) -> dict[str, EntityLocation]:
+    def get_line_nos(path: str, source: str) -> list[EntityLocation]:
+        tree = cst.metadata.MetadataWrapper(cst.parse_module(source))
+        result = []
+
+        class Visitor(cst.CSTVisitor):
+            METADATA_DEPENDENCIES = (cst.metadata.PositionProvider,)
+
+            def __init__(self) -> None:
+                super().__init__()
+                self.depth = 0
+
+            def visit_IndentedBlock(self, _: cst.IndentedBlock) -> bool | None:  # noqa: N802
+                self.depth += 1
+
+            def leave_IndentedBlock(self, _: cst.IndentedBlock) -> bool | None:  # noqa: N802
+                self.depth -= 1
+
+            def visit_ClassDef(self, node: cst.ClassDef) -> None:  # noqa: N802
+                result.append(
+                    EntityLocation(
+                        path=path,
+                        name=node.name.value,
+                        line_no=self.get_metadata(cst.metadata.PositionProvider, node).start.line,
+                    )
+                )
+
+            def visit_FunctionDef(self, node: cst.FunctionDef) -> None:  # noqa: N802
+                result.append(
+                    EntityLocation(
+                        path=path,
+                        name=node.name.value,
+                        line_no=self.get_metadata(cst.metadata.PositionProvider, node).start.line,
+                    )
+                )
+
+            def visit_Assign(self, node: cst.Assign) -> None:  # noqa: N802
+                for target in node.targets:
+                    if isinstance(target.target, cst.Name) and self.depth == 0:
+                        result.append(  # noqa: PERF401
+                            EntityLocation(
+                                path=path,
+                                name=target.target.value,
+                                line_no=self.get_metadata(
+                                    cst.metadata.PositionProvider, target.target
+                                ).start.line,
+                            )
+                        )
+
+        tree.visit(Visitor())
+        return result
+
+    locations = list(
+        itertools.chain.from_iterable([get_line_nos(path, code) for path, code in src_code.items()])
+    )
+    return {ent.name: ent for ent in locations}
 
 
 @safe
