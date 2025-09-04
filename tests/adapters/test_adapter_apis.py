@@ -3,8 +3,7 @@ from collections.abc import Callable
 
 import pytest
 
-from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
-from src.spaghettree.adapters.io_wrapper import FakeIOWrapper
+from spaghettree.adapters.io_wrapper import FakeIOWrapper, IOProtocol, IOWrapper
 
 
 @pytest.mark.parametrize(

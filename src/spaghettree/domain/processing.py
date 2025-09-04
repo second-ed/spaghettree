@@ -107,12 +107,12 @@ def remap_imports(
 @safe
 def create_new_filepaths(
     fixed_name_modules: dict[str, list[EntityCST]],
-    src_root: str,
+    new_root: str,
 ) -> dict[str, list[EntityCST]]:
-    def to_filepath(src_root: str, name: str) -> str:
-        return os.path.join(os.path.dirname(src_root), name.replace(".", "/") + ".py")
+    def to_filepath(new_root: str, name: str) -> str:
+        return os.path.join(new_root, name.replace(".", "/") + ".py").lower()
 
-    return {to_filepath(src_root, name): contents for name, contents in fixed_name_modules.items()}
+    return {to_filepath(new_root, name): contents for name, contents in fixed_name_modules.items()}
 
 
 @safe

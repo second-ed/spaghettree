@@ -69,7 +69,7 @@ def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
                 order_map=location_map,
             ),
         )
-        .and_then(partial(create_new_filepaths, src_root=new_root or src_root))
+        .and_then(partial(create_new_filepaths, new_root=new_root or src_root))
         .and_then(add_empty_inits_if_needed)
         .and_then(partial(io.write_files, ruff_root=new_root or src_root))
     )
