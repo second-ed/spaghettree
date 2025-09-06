@@ -35,7 +35,7 @@ class IOProtocol(Protocol):
 class IOWrapper:
     @safe
     def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
-        return glob.glob(f"{root}/**/**.py", recursive=recursive)
+        return sorted(glob.glob(f"{root}/**/**.py", recursive=recursive))
 
     @safe
     def read(self, path: str) -> str:
@@ -101,10 +101,14 @@ class FakeIOWrapper:
     @safe
     def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
         if recursive:
-            return [f for f in self.files if f.startswith(root) and f.endswith(".py")]
-        return [
-            f for f in self.files if f.removeprefix(root).lstrip("/").split("/")[0].endswith(".py")
-        ]
+            return sorted([f for f in self.files if f.startswith(root) and f.endswith(".py")])
+        return sorted(
+            [
+                f
+                for f in self.files
+                if f.removeprefix(root).lstrip("/").split("/")[0].endswith(".py")
+            ]
+        )
 
     @safe
     def read(self, path: str) -> str:
