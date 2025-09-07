@@ -32,6 +32,7 @@ class GlobalVisitor(cst.CSTVisitor):
     module_name: str
     global_vars: list[GlobalCST]
     module_globals: dict[str, GlobalCST] = attrs.field(default=None)
+    current_class: str | None = attrs.field(default=None)
     current_func: str | None = attrs.field(default=None)
 
     def __attrs_post_init__(self) -> None:
@@ -43,8 +44,14 @@ class GlobalVisitor(cst.CSTVisitor):
     def leave_FunctionDef(self, _: cst.FunctionDef) -> None:  # noqa: N802
         self.current_func = None
 
+    def visit_ClassDef(self, node: cst.ClassDef) -> None:  # noqa: N802
+        self.current_class = node.name.value
+
+    def leave_ClassDef(self, _: cst.ClassDef) -> None:  # noqa: N802
+        self.current_class = None
+
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
         if self.current_func and node.value in self.module_globals:
             self.module_globals[node.value].referenced.append(
-                f"{self.module_name}.{self.current_func}"
+                f"{self.module_name}.{'.'.join(elem for elem in [self.current_class, self.current_func] if elem is not None)}"
             )

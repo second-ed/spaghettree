@@ -113,7 +113,7 @@ def test_main(src_root):
                     "from case_3.mod_b import func_a\n\n\nclass A:  # noqa: INP001\n    pass\n"
                 ),
             },
-            id="",
+            id="ensure adds init and combines based on global typedef",
         ),
     ],
     indirect=["fixture_get_subset_files"],
