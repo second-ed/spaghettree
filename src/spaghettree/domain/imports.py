@@ -14,7 +14,7 @@ class ImportType(Enum):
 
 @attrs.define(frozen=True)
 class ImportCST:
-    module: str = attrs.field(validator=[instance_of(str)])
+    module: str = attrs.field(validator=[instance_of(str)], converter=str.lower)
     import_type: ImportType = attrs.field(validator=[instance_of(ImportType)])
     name: str = attrs.field(validator=[instance_of(str)])
     as_name: str = attrs.field(validator=[instance_of(str)])

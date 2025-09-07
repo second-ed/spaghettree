@@ -25,6 +25,7 @@ from spaghettree.domain.processing import (
     remap_imports,
     rename_overlapping_mod_names,
 )
+from spaghettree.logger import logger
 
 
 def main(src_root: str, new_root: str) -> Result:
@@ -33,6 +34,7 @@ def main(src_root: str, new_root: str) -> Result:
 
 
 def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
+    logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
     src_code = io.read_files(src_root)
 
     entities_res = (

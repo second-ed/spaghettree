@@ -5,17 +5,20 @@ import numpy as np
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
+from spaghettree.logger import logger
 
 
 @safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
     valid_merges = get_merge_pairs(adj_mat)
-    print(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")  # noqa: T201
+    logger.debug(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")
+
     while valid_merges:
         to_merge = remove_overlapping_pairs(valid_merges)
         adj_mat.communities = apply_merges(adj_mat.communities, to_merge)
         valid_merges = get_merge_pairs(adj_mat)
-    print(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")  # noqa: T201
+
+    logger.debug(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")
     return adj_mat
 
 
@@ -75,6 +78,8 @@ def get_merge_pairs(adj_mat: AdjMat) -> list[PossibleMerge]:
             gain = score - base_score
             if gain > 0:
                 merge_scores.append(PossibleMerge(c1, c2, gain))
+
+    logger.debug(f"{merge_scores = }")
     return merge_scores
 
 
@@ -88,6 +93,8 @@ def remove_overlapping_pairs(pairs: list[PossibleMerge]) -> list[PossibleMerge]:
             selected.append(pair)
             seen.add(pair.c1)
             seen.add(pair.c2)
+
+    logger.debug(f"{selected = }")
     return selected
 
 

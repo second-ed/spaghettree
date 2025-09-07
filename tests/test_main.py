@@ -84,6 +84,37 @@ def test_main(src_root):
             },
             id="identify isolated function, handle GlobalCST ClassCST objects",
         ),
+        pytest.param(
+            "mock_data/mock_case_3/src/case_3",
+            {
+                "result/mock_data/mock_case_3/src/case_3/case_3/__init__.py": "",
+                "result/mock_data/mock_case_3/src/case_3/case_3/mod_a.py": (
+                    "from case_3.mod_b_a import A\n"
+                    "\n"
+                    "CONSTANT = 3_000\n"
+                    "\n"
+                    "\n"
+                    "class B:\n"
+                    "    def method_a(self) -> int:\n"
+                    "        return CONSTANT\n"
+                    "\n"
+                    "\n"
+                    "C = A | B\n"
+                ),
+                "result/mock_data/mock_case_3/src/case_3/case_3/mod_b.py": (
+                    "def func_a() -> int:\n"
+                    "    return 0\n"
+                    "\n"
+                    "\n"
+                    "def func_b() -> int:\n"
+                    "    return func_a() + func_a()\n"
+                ),
+                "result/mock_data/mock_case_3/src/case_3/case_3/mod_b_a.py": (
+                    "from case_3.mod_b import func_a\n\n\nclass A:  # noqa: INP001\n    pass\n"
+                ),
+            },
+            id="",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )

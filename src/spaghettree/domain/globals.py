@@ -46,5 +46,5 @@ class GlobalVisitor(cst.CSTVisitor):
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
         if self.current_func and node.value in self.module_globals:
             self.module_globals[node.value].referenced.append(
-                f"{self.module_name}.{self.current_func}",
+                f"{self.module_name}.{self.current_func}"
             )

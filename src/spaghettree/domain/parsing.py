@@ -12,6 +12,7 @@ from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
 from spaghettree.domain.visitors import CallVisitor, LocationVisitor
+from spaghettree.logger import logger
 
 EntityCST = FuncCST | ClassCST | GlobalCST
 
@@ -128,6 +129,7 @@ def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
 
 @safe
 def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, EntityCST]:
+    logger.debug(f"{modules = }")
     modules = deepcopy(modules)
     entities: dict[str, EntityCST] = {}
 
@@ -150,6 +152,7 @@ def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, EntityCST]:
 def filter_non_native_calls(
     entities: dict[str, EntityCST],
 ) -> dict[str, EntityCST]:
+    logger.debug(f"{entities = }")
     entities = deepcopy(entities)
     return {
         name: ent.filter_native_calls(entities).resolve_native_imports()
@@ -159,6 +162,7 @@ def filter_non_native_calls(
 
 @safe
 def create_call_tree(entities: dict[str, EntityCST]) -> dict[str, list[str]]:
+    logger.debug(f"{entities = }")
     return {name: ent.get_call_tree_entries() for name, ent in entities.items()}
 
 
