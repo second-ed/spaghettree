@@ -6,6 +6,7 @@ from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.imports import ImportCST
 from spaghettree.domain.parsing import EntityCST, cst_to_str
+from spaghettree.logger import logger
 
 
 @safe
@@ -65,6 +66,7 @@ def rename_overlapping_mod_names(
         if dirname in renamed_modules:
             return ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
 
+        logger.debug(f"{name = }")
         return name
 
     mod_names = list(renamed_modules)
@@ -99,8 +101,8 @@ def remap_imports(
                             as_name=imp.as_name,
                         ),
                     )
-
             ent.imports = updated_imports
+            logger.debug(f"{ent = }")
     return modules
 
 
