@@ -61,3 +61,42 @@ class SomeOtherClass:
 ```
 
 - Lastly when the entities are all written to their new module location, `ruff` is called on the files to fix any formatting, because of how ruff is set up, it means it would respect the users own `ruff.toml` so would include or exclude rules they were interested in.
+
+# Repo map
+```
+├── .github
+│   └── workflows
+│       └── ci_tests.yaml
+├── src
+│   └── spaghettree
+│       ├── adapters
+│       │   ├── __init__.py
+│       │   └── io_wrapper.py
+│       ├── domain
+│       │   ├── __init__.py
+│       │   ├── adj_mat.py
+│       │   ├── entities.py
+│       │   ├── globals.py
+│       │   ├── imports.py
+│       │   ├── optimisation.py
+│       │   ├── parsing.py
+│       │   ├── processing.py
+│       │   └── visitors.py
+│       ├── logger
+│       │   └── __init__.py
+│       ├── __init__.py
+│       └── __main__.py
+├── tests
+│   ├── adapters
+│   │   ├── __init__.py
+│   │   └── test_adapter_apis.py
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_main.py
+├── .pre-commit-config.yaml
+├── README.md
+├── pyproject.toml
+├── ruff.toml
+└── uv.lock
+::
+```

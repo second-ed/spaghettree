@@ -22,3 +22,20 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
+      - id: repo-map
+        name: repo_map
+        entry: uv run -m repo_mapper
+        language: system
+        pass_filenames: false
+        args:
+          - --repo-root
+          - .
+          - --readme-path
+          - ./README.md
+          - --gitignore-path
+          - ./.gitignore
+          - --allowed-exts
+          - py,md,yaml,toml,lock
+          - --ignore-dirs
+          - .venv,target,.git,mock_data
+          # - --ignore-hidden
