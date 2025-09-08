@@ -78,6 +78,7 @@ class SomeOtherClass:
 │       │   ├── entities.py
 │       │   ├── globals.py
 │       │   ├── imports.py
+│       │   ├── one_pass_visitor.py
 │       │   ├── optimisation.py
 │       │   ├── parsing.py
 │       │   ├── processing.py
