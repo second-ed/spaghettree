@@ -2633,6 +2633,20 @@ wheels = [
 ]
 
 [[package]]
+name = "repo-mapper-rs"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/97/88/7025225dc64f08218a15e1f36a3da694f0b513b88a04132fca356f60ba67/repo_mapper_rs-0.3.0.tar.gz", hash = "sha256:c319087a78930977a53a4322c58c90cd1c016fc2bb2a6b2b097efd2c2cf71297", size = 23703, upload-time = "2025-08-13T20:28:39.251Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/5e/b82d2a4235fd0c7bc75cf04fd688f80f39b52c485443f6aabafa8ffd1049/repo_mapper_rs-0.3.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:354504aef5d2eeefffc50a267146a6a0120ec35b37864772a5ef6c594a15ad70", size = 776755, upload-time = "2025-08-13T20:28:27.803Z" },
+    { url = "https://files.pythonhosted.org/packages/48/e8/5af0af9be629fad4ed76747346e815c707baa1b243d387d7fd79b064c2d6/repo_mapper_rs-0.3.0-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:7cd2373714a0901c53d7d85cb657a020e385d13c0781bcc7b5cd4dfc490969d0", size = 922475, upload-time = "2025-08-13T20:28:29.116Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/ad/a3de567a59cf3f4cce6b52b9ef8ae289a39502b9e71d4242cff16a4754db/repo_mapper_rs-0.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:e961b3a4b17d615a3ac0b9e55308c3fe51ad0159ee97217ee145d5e2439a2ca0", size = 788757, upload-time = "2025-08-13T20:28:31.22Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/45/200104e672f43d263b15b1107314d999ebf7145bea148f0cd102c289480f/repo_mapper_rs-0.3.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:80588563197422068cbb5b0c3cb23811f7dc4fc04ab03d5bcada2fe19c010700", size = 776607, upload-time = "2025-08-13T20:28:32.835Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/72/9fafdee20f496a8cc71b622c7c3dbbc9231423e7f4e0a0f43218f78b7fc6/repo_mapper_rs-0.3.0-cp313-cp313-manylinux_2_34_x86_64.whl", hash = "sha256:e73c9335348aac980e7f25f44d4ba1be87b065855151411a0402cb720c564b61", size = 921899, upload-time = "2025-08-13T20:28:35.907Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/14/dedd1b243fdc2a16b291d9b3a664ee593bff997f1dcb5eaffedf5b776ade/repo_mapper_rs-0.3.0-cp313-cp313-win_amd64.whl", hash = "sha256:c0815eff543c46a051b93247e98bad42213333d47415367b4d0716b4a01e88ef", size = 787923, upload-time = "2025-08-13T20:28:37.508Z" },
+]
+
+[[package]]
 name = "requests"
 version = "2.32.5"
 source = { registry = "https://pypi.org/simple" }
@@ -2889,6 +2903,7 @@ dependencies = [
     { name = "libcst" },
     { name = "numpy" },
     { name = "python-dotenv" },
+    { name = "repo-mapper-rs" },
     { name = "tqdm" },
 ]
 
@@ -2942,6 +2957,7 @@ requires-dist = [
     { name = "libcst", specifier = ">=1.6.0" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "repo-mapper-rs", specifier = ">=0.3.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
