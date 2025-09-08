@@ -20,7 +20,7 @@ class ModuleCST:
     funcs: list[FuncCST] = attrs.field(factory=list)
     classes: list[ClassCST] = attrs.field(factory=list)
     global_vars: list[GlobalCST] = attrs.field(factory=list)
-    imports: list[ImportCST] = attrs.field(default=None, repr=False)
+    imports: list[ImportCST] = attrs.field(factory=list)
 
     def __attrs_post_init__(self) -> None:
         iv = ImportVisitor()
@@ -66,8 +66,8 @@ class ModuleCST:
 class ClassCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
-    methods: list[FuncCST] = attrs.field(validator=[instance_of(list)])
-    imports: list[ImportCST] = attrs.field(default=None, repr=False)
+    methods: list[FuncCST] = attrs.field(factory=list, validator=[instance_of(list)])
+    imports: list[ImportCST] = attrs.field(factory=list)
 
     def get_call_tree_entries(self) -> list[str]:
         return [call for meth in self.methods for call in meth.calls]
@@ -91,8 +91,8 @@ class ClassCST:
 class FuncCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
-    calls: list[str] = attrs.field(validator=[instance_of(list)])
-    imports: list[ImportCST] = attrs.field(default=None, repr=False)
+    calls: list[str] = attrs.field(factory=list, validator=[instance_of(list)])
+    imports: list[ImportCST] = attrs.field(factory=list)
 
     def get_call_tree_entries(self) -> list[str]:
         return self.calls
