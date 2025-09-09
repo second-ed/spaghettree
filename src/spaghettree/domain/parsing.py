@@ -53,8 +53,8 @@ def extract_entities_and_locations(
             ent.resolve_calls(import_map, ent_map)
             ent.imports = visitor.imports
 
-    logger.debug({f"{entities = }"})
-    logger.debug({f"{locations = }"})
+    logger.debug(f"{entities = }")
+    logger.debug(f"{locations = }")
     return entities, locations
 
 
