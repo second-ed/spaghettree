@@ -7,59 +7,7 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
-from spaghettree.domain.globals import GlobalCST, GlobalVisitor
-from spaghettree.domain.imports import ImportCST, ImportType, ImportVisitor
-
-
-@attrs.define
-class ModuleCST:
-    name: str = attrs.field(validator=instance_of(str))
-    tree: cst.Module = attrs.field(validator=[instance_of(cst.Module)], repr=False)
-    func_trees: dict[str, cst.FunctionDef] = attrs.field(default=None, repr=False)
-    class_trees: dict[str, cst.ClassDef] = attrs.field(default=None, repr=False)
-    funcs: list[FuncCST] = attrs.field(factory=list)
-    classes: list[ClassCST] = attrs.field(factory=list)
-    global_vars: list[GlobalCST] = attrs.field(factory=list)
-    imports: list[ImportCST] = attrs.field(factory=list)
-
-    def __attrs_post_init__(self) -> None:
-        iv = ImportVisitor()
-        cst.Module(
-            [
-                node
-                for node in self.tree.children
-                if isinstance(node, cst.SimpleStatementLine)
-                and isinstance(node.body[0], (cst.ImportFrom, cst.Import))
-            ],
-        ).visit(iv)
-        self.imports = iv.imports
-
-        self.func_trees = {
-            f"{self.name}.{node.name.value}": node
-            for node in self.tree.children
-            if isinstance(node, cst.FunctionDef)
-        }
-        self.class_trees = {
-            f"{self.name}.{node.name.value}": node
-            for node in self.tree.children
-            if isinstance(node, cst.ClassDef)
-        }
-
-        self.global_vars = [
-            GlobalCST(
-                name=f"{self.name}.{target.target.value if isinstance(target.target, cst.Name) else target.target.attr.value}",
-                tree=stmt,
-            )
-            for stmt in self.tree.body
-            if isinstance(stmt, cst.SimpleStatementLine)
-            for assign in stmt.body
-            if isinstance(assign, (cst.Assign, cst.AnnAssign))
-            for target in (assign.targets if isinstance(assign, cst.Assign) else [assign])
-            if isinstance(target.target if isinstance(assign, cst.Assign) else target, cst.Name)
-        ]
-        visitor = GlobalVisitor(self.name, self.global_vars)
-        self.tree.visit(visitor)
-        self.global_vars = [gbl for gbl in self.global_vars if not gbl.name.endswith(".__all__")]
+from spaghettree.domain.imports import ImportCST, ImportType
 
 
 @attrs.define
@@ -71,6 +19,11 @@ class ClassCST:
 
     def get_call_tree_entries(self) -> list[str]:
         return [call for meth in self.methods for call in meth.calls]
+
+    def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self:
+        for meth in self.methods:
+            meth.resolve_calls(import_map, ent_map)
+        return self
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         for meth in self.methods:
@@ -97,6 +50,10 @@ class FuncCST:
     def get_call_tree_entries(self) -> list[str]:
         return self.calls
 
+    def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self:
+        self.calls = resolve_calls(self.calls, import_map, ent_map)
+        return self
+
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         self.calls = [call for call in self.calls if call in entities]
         return self
@@ -108,3 +65,45 @@ class FuncCST:
             call_name = call_parts[-1]
             self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
+
+
+@attrs.define(eq=True)
+class GlobalCST:
+    name: str = attrs.field()
+    tree: cst.SimpleStatementLine = attrs.field(repr=False)
+    referenced: list[str] = attrs.field(factory=list)
+    imports: list[ImportCST] = attrs.field(factory=list)
+
+    def get_call_tree_entries(self) -> list[str]:
+        return self.referenced
+
+    def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self:
+        self.referenced = resolve_calls(self.referenced, import_map, ent_map)
+        return self
+
+    def filter_native_calls(self, entities: Collection[str]) -> Self:
+        self.referenced = [ref for ref in self.referenced if ref in entities]
+        return self
+
+    def resolve_native_imports(self) -> Self:
+        return self
+
+
+def resolve_calls(
+    calls: list[str],
+    import_map: dict[str, str],
+    ent_map: dict[str, str],
+) -> list[str]:
+    resolved_calls: list[str] = []
+    for call in calls:
+        if resolved_call := import_map.get(call.split(".")[-1]):
+            if resolved_call.split(".")[-1] != call:
+                common_removed = ".".join(resolved_call.split(".")[:-1])
+                resolved_calls.append(f"{common_removed}.{call}".strip("."))
+            else:
+                resolved_calls.append(resolved_call)
+        elif resolved_call := ent_map.get(call.split(".")[0]):
+            resolved_calls.append(resolved_call)
+        else:
+            resolved_calls.append(call)
+    return resolved_calls

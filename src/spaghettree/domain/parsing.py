@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import itertools
+import os
 from copy import deepcopy
 
-import attrs
 import libcst as cst
 import numpy as np
 from tqdm import tqdm
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ModuleCST
-from spaghettree.domain.visitors import CallVisitor, LocationVisitor
+from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST
+from spaghettree.domain.visitors import EntityLocation, OnePassVisitor
 from spaghettree.logger import logger
 
 EntityCST = FuncCST | ClassCST | GlobalCST
@@ -26,126 +25,37 @@ def cst_to_str(node: cst.CSTNode) -> str:
 
 
 @safe
-def create_module_cst_objs(src_code: dict[str, str]) -> dict[str, ModuleCST]:
-    def get_module_name(path: str) -> str:
-        return path.split("src")[-1].replace("/", ".").removesuffix(".py").strip(".")
+def extract_entities_and_locations(
+    src_code: dict[str, str], root: str
+) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
+    def get_module_name(path: str, root: str) -> str:
+        return os.path.splitext(path.removeprefix(root))[0].replace("/", ".").strip(".")
 
-    def get_func_cst(parent_name: str, tree: cst.FunctionDef) -> FuncCST:
-        cv = CallVisitor()
-        tree.visit(cv)
-        return FuncCST(f"{parent_name}.{tree.name.value}", tree, cv.calls)
-
-    modules: dict[str, ModuleCST] = {}
+    entities: dict[str, EntityCST] = {}
+    locations: dict[str, EntityLocation] = {}
 
     for path, data in tqdm(src_code.items(), "creating objects"):
-        tree = str_to_cst(data)
-        module = ModuleCST(get_module_name(path), tree)
-
-        module.funcs = [get_func_cst(module.name, tree) for tree in module.func_trees.values()]
-
-        module.classes = [
-            ClassCST(
-                name,
-                tree,
-                [
-                    get_func_cst(name, f)
-                    for f in tree.body.children
-                    if isinstance(f, cst.FunctionDef)
-                ],
-            )
-            for name, tree in module.class_trees.items()
-        ]
-
-        modules[module.name] = module
-    return modules
-
-
-@attrs.define(frozen=True, eq=True, order=True)
-class EntityLocation:
-    path: str = attrs.field()
-    name: str = attrs.field(eq=False)
-    line_no: int = attrs.field()
-
-
-@safe
-def get_location_map(src_code: dict[str, str]) -> dict[str, EntityLocation]:
-    def get_line_nos(path: str, source: str) -> list[EntityLocation]:
-        tree = cst.metadata.MetadataWrapper(cst.parse_module(source))
-        visitor = LocationVisitor(path)
+        tree = cst.metadata.MetadataWrapper(str_to_cst(data))
+        module_name = get_module_name(path, root)
+        visitor = OnePassVisitor(module_name)
         tree.visit(visitor)
-        return visitor.results
 
-    locations = list(
-        itertools.chain.from_iterable([get_line_nos(path, code) for path, code in src_code.items()])
-    )
-    return {ent.name: ent for ent in locations}
-
-
-@safe
-def resolve_module_calls(modules: dict[str, ModuleCST]) -> dict[str, ModuleCST]:
-    def resolve_calls(
-        calls: list[str],
-        import_map: dict[str, str],
-        func_map: dict[str, str],
-    ) -> list[str]:
-        resolved_calls: list[str] = []
-        for call in calls:
-            if resolved_call := import_map.get(call.split(".")[-1]):
-                if resolved_call.split(".")[-1] != call:
-                    common_removed = ".".join(resolved_call.split(".")[:-1])
-                    resolved_calls.append(f"{common_removed}.{call}".strip("."))
-                else:
-                    resolved_calls.append(resolved_call)
-            elif resolved_call := func_map.get(call.split(".")[0]):
-                resolved_calls.append(resolved_call)
-            else:
-                resolved_calls.append(call)
-        return resolved_calls
-
-    modules = deepcopy(modules)
-    modified_modules = {}
-
-    for name, mod_obj in tqdm(modules.items(), "resolving calls"):
-        mod = deepcopy(mod_obj)
+        entities.update(visitor.entities)
+        locations.update(visitor.locations)
 
         import_map = {
             i.as_name: f"{i.module}.{i.as_name}" if i.module != i.as_name else i.module
-            for i in mod.imports
+            for i in visitor.imports
         }
-        func_map = {fn.name.split(".")[-1]: fn.name for fn in mod.funcs}
-        cls_map = {cls_.name.split(".")[-1]: cls_.name for cls_ in mod.classes}
-        ent_map = {**func_map, **cls_map}
+        ent_map = {ent.name.split(".")[-1]: ent.name for ent in entities.values()}
 
-        for fn in mod.funcs:
-            fn.calls = resolve_calls(fn.calls, import_map, ent_map)
+        for ent in entities.values():
+            ent.resolve_calls(import_map, ent_map)
+            ent.imports = visitor.imports
 
-        for cls_ in mod.classes:
-            for fn in cls_.methods:
-                fn.calls = resolve_calls(fn.calls, import_map, ent_map)
-
-        modified_modules[name] = mod
-    return modified_modules
-
-
-@safe
-def extract_entities(modules: dict[str, ModuleCST]) -> dict[str, EntityCST]:
-    logger.debug(f"{modules = }")
-    modules = deepcopy(modules)
-    entities: dict[str, EntityCST] = {}
-
-    for mod in modules.values():
-        for fn in mod.funcs:
-            fn.imports = mod.imports
-            entities[fn.name] = fn
-
-        for cls_ in mod.classes:
-            cls_.imports = mod.imports
-            entities[cls_.name] = cls_
-
-        for gbl in mod.global_vars:
-            entities[gbl.name] = gbl
-
-    return entities
+    logger.debug({f"{entities = }"})
+    logger.debug({f"{locations = }"})
+    return entities, locations
 
 
 @safe

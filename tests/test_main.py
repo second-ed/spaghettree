@@ -44,8 +44,8 @@ def test_main(src_root):
         pytest.param(
             "mock_data/mock_case_2/src/case_2",
             {
-                "result/mock_data/mock_case_2/src/case_2/case_2/__init__.py": "",
-                "result/mock_data/mock_case_2/src/case_2/case_2/mod_a.py": "from case_2.mod_b import func_d\n"
+                "result/mock_data/mock_case_2/src/case_2/__init__.py": "",
+                "result/mock_data/mock_case_2/src/case_2/mod_a.py": "from case_2.mod_b import func_d\n"
                 "\n"
                 "\n"
                 "def func_a() -> int:\n"
@@ -54,13 +54,13 @@ def test_main(src_root):
                 "\n"
                 "def func_b() -> int:\n"
                 "    return 1\n",
-                "result/mock_data/mock_case_2/src/case_2/case_2/mod_a_isolated_func.py": "from case_2.mod_a import func_b\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_a_isolated_func.py": "from case_2.mod_a import func_b\n"
                 "from case_2.mod_b import func_d\n"
                 "\n"
                 "\n"
                 "def isolated_func() -> int:\n"
                 "    return 5\n",
-                "result/mock_data/mock_case_2/src/case_2/case_2/mod_b.py": "from case_2.mod_a import func_b\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_b.py": "from case_2.mod_a import func_b\n"
                 "\n"
                 "\n"
                 "def func_c() -> int:\n"
@@ -74,7 +74,7 @@ def test_main(src_root):
                 "class ClassA:\n"
                 "    def method_a(self) -> int:\n"
                 "        return func_d() + func_d()\n",
-                "result/mock_data/mock_case_2/src/case_2/case_2/mod_b_mod_overflow.py": "from case_2.mod_b import func_d\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_b_mod_overflow.py": "from case_2.mod_b import func_d\n"
                 "\n"
                 "CONSTANT = 0\n"
                 "\n"
@@ -87,8 +87,8 @@ def test_main(src_root):
         pytest.param(
             "mock_data/mock_case_3/src/case_3",
             {
-                "result/mock_data/mock_case_3/src/case_3/case_3/__init__.py": "",
-                "result/mock_data/mock_case_3/src/case_3/case_3/mod_a.py": (
+                "result/mock_data/mock_case_3/src/case_3/__init__.py": "",
+                "result/mock_data/mock_case_3/src/case_3/mod_a.py": (
                     "from case_3.mod_b_a import A\n"
                     "\n"
                     "CONSTANT = 3_000\n"
@@ -101,7 +101,7 @@ def test_main(src_root):
                     "\n"
                     "C = A | B\n"
                 ),
-                "result/mock_data/mock_case_3/src/case_3/case_3/mod_b.py": (
+                "result/mock_data/mock_case_3/src/case_3/mod_b.py": (
                     "def func_a() -> int:\n"
                     "    return 0\n"
                     "\n"
@@ -109,7 +109,7 @@ def test_main(src_root):
                     "def func_b() -> int:\n"
                     "    return func_a() + func_a()\n"
                 ),
-                "result/mock_data/mock_case_3/src/case_3/case_3/mod_b_a.py": (
+                "result/mock_data/mock_case_3/src/case_3/mod_b_a.py": (
                     "from case_3.mod_b import func_a\n\n\nclass A:  # noqa: INP001\n    pass\n"
                 ),
             },

@@ -76,9 +76,7 @@ class SomeOtherClass:
 │       │   ├── __init__.py
 │       │   ├── adj_mat.py
 │       │   ├── entities.py
-│       │   ├── globals.py
 │       │   ├── imports.py
-│       │   ├── one_pass_visitor.py
 │       │   ├── optimisation.py
 │       │   ├── parsing.py
 │       │   ├── processing.py

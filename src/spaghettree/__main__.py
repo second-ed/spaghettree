@@ -9,12 +9,9 @@ from spaghettree.domain.optimisation import (
 )
 from spaghettree.domain.parsing import (
     create_call_tree,
-    create_module_cst_objs,
-    extract_entities,
+    extract_entities_and_locations,
     filter_non_native_calls,
-    get_location_map,
     pair_exclusive_calls,
-    resolve_module_calls,
 )
 from spaghettree.domain.processing import (
     add_empty_inits_if_needed,
@@ -35,25 +32,21 @@ def main(src_root: str, new_root: str) -> Result:
 
 def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
-    src_code = io.read_files(src_root)
-
-    entities_res = (
-        src_code.and_then(create_module_cst_objs)
-        .and_then(resolve_module_calls)
-        .and_then(extract_entities)
-        .and_then(filter_non_native_calls)
+    ent_and_locs_res = io.read_files(src_root).and_then(
+        partial(extract_entities_and_locations, root=src_root)
     )
+
+    if not ent_and_locs_res.is_ok():
+        raise ent_and_locs_res.error
+
+    entities, location_map = ent_and_locs_res.inner
+
+    entities_res = filter_non_native_calls(entities)
 
     if not entities_res.is_ok():
         raise entities_res.error
 
     entities = entities_res.inner
-    location_map_res = src_code.and_then(get_location_map)
-
-    if not location_map_res.is_ok():
-        raise location_map_res.error
-
-    location_map = location_map_res.inner
 
     return (
         entities_res.and_then(create_call_tree)
