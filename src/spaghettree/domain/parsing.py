@@ -29,7 +29,11 @@ def extract_entities_and_locations(
     src_code: dict[str, str], root: str
 ) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
     def get_module_name(path: str, root: str) -> str:
-        return os.path.splitext(path.removeprefix(root))[0].replace("/", ".").strip(".")
+        return (
+            os.path.splitext(path.removeprefix(os.path.dirname(root)))[0]
+            .replace("/", ".")
+            .strip(".")
+        )
 
     entities: dict[str, EntityCST] = {}
     locations: dict[str, EntityLocation] = {}

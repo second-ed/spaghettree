@@ -112,7 +112,7 @@ def create_new_filepaths(
     new_root: str,
 ) -> dict[str, list[EntityCST]]:
     def to_filepath(new_root: str, name: str) -> str:
-        return os.path.join(new_root, name.replace(".", "/") + ".py").lower()
+        return os.path.join(os.path.dirname(new_root), name.replace(".", "/") + ".py").lower()
 
     return {to_filepath(new_root, name): contents for name, contents in fixed_name_modules.items()}
 

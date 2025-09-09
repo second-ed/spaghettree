@@ -10,13 +10,13 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
 
 @pytest.mark.parametrize(
     ("src_root"),
-    [pytest.param("./mock_data/mock_case_1/src", id="Should run E2E without any errs")],
+    [pytest.param("./mock_data/mock_case_1/src/case_1", id="Should run E2E without any errs")],
 )
 def test_main(src_root):
     try:
-        tmp = str(Path("./tmp_test_src_dir").absolute())
+        tmp = str(Path("./tmp_test").absolute())
         os.makedirs(tmp, exist_ok=True)
-        res = main(src_root, tmp)
+        res = main(src_root, f"{tmp}/src/case_1")
         assert res.is_ok()
 
     finally:
