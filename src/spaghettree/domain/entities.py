@@ -39,6 +39,12 @@ class ClassCST:
                 self.imports.add(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
 
+    def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
+        self.imports = {
+            imp for meth in self.methods for imp in imports if imp.as_name in meth.calls
+        }
+        return self
+
 
 @attrs.define
 class FuncCST:
@@ -66,6 +72,10 @@ class FuncCST:
             self.imports.add(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
 
+    def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
+        self.imports = {imp for imp in imports if imp.as_name in self.calls}
+        return self
+
 
 @attrs.define(eq=True)
 class GlobalCST:
@@ -86,6 +96,9 @@ class GlobalCST:
         return self
 
     def resolve_native_imports(self) -> Self:
+        return self
+
+    def add_referenced_imports(self, _: set[ImportCST]) -> Self:
         return self
 
 

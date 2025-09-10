@@ -44,6 +44,9 @@ def extract_entities_and_locations(
         visitor = OnePassVisitor(module_name)
         tree.visit(visitor)
 
+        entities.update(visitor.entities)
+        locations.update(visitor.locations)
+
         import_map = {
             i.as_name: f"{i.module}.{i.as_name}" if i.module != i.as_name else i.module
             for i in visitor.imports
@@ -51,11 +54,7 @@ def extract_entities_and_locations(
         ent_map = {ent.name.split(".")[-1]: ent.name for ent in entities.values()}
 
         for ent in visitor.entities.values():
-            ent.resolve_calls(import_map, ent_map)
-            ent.imports = visitor.imports
-
-        entities.update(visitor.entities)
-        locations.update(visitor.locations)
+            ent.resolve_calls(import_map, ent_map).add_referenced_imports(visitor.imports)
 
         logger.debug(f"{visitor.entities = }")
         logger.debug(f"{visitor.imports = }")
