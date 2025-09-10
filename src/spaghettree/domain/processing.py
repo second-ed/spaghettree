@@ -139,7 +139,7 @@ def convert_to_code_str(
             imports.extend([imp.to_str() for imp in ent.imports])
             code.append(cst_to_str(ent.tree))
 
-        return "".join(sorted(set(imports))) + "\n" + "".join(code)
+        return "".join(sorted(set(imports))) + "".join(code)
 
     logger.debug(f"{new_modules = }")
     logger.debug(f"{order_map = }")
