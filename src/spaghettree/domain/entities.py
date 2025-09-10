@@ -36,9 +36,7 @@ class ClassCST:
                 call_parts = call.split(".")
                 mod_name = ".".join(call_parts[:-1])
                 call_name = call_parts[-1]
-                import_ = ImportCST(mod_name, ImportType.FROM, call_name, call_name)
-                method.imports.append(import_)
-                self.imports.append(import_)
+                self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
 
 

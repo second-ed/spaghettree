@@ -67,15 +67,13 @@ def rename_overlapping_mod_names(
 
         if dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1:
             name = dirname
-            logger.debug(f"{name = }")
         elif dirname in renamed_modules:
             name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
-            logger.debug(f"{name = }")
 
         if "." not in name:
             name = f"{root}.{name}"
         logger.debug(f"{name = }")
-        return name
+        return name.lower()
 
     mod_names = list(renamed_modules)
     logger.debug(f"{renamed_modules = }")
@@ -122,7 +120,7 @@ def create_new_filepaths(
     new_root: str,
 ) -> dict[str, list[EntityCST]]:
     def to_filepath(new_root: str, name: str) -> str:
-        return os.path.join(os.path.dirname(new_root), name.replace(".", "/") + ".py").lower()
+        return os.path.join(os.path.dirname(new_root), name.replace(".", "/") + ".py")
 
     logger.debug(f"{fixed_name_modules = }")
 
