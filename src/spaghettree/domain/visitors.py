@@ -27,7 +27,7 @@ class OnePassVisitor(MetadataBase):
     depth: int = attrs.field(default=0)
     entities: dict = attrs.field(factory=dict)
     locations: dict = attrs.field(factory=dict)
-    imports: list[ImportCST] = attrs.field(factory=list)
+    imports: set[ImportCST] = attrs.field(factory=set)
 
     def visit_Import(self, node: cst.Import) -> None:  # noqa: N802
         for alias in node.names:
@@ -135,7 +135,7 @@ class OnePassVisitor(MetadataBase):
         return None
 
     def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
-        self.imports.append(ImportCST(key, import_type, name, as_name))
+        self.imports.add(ImportCST(key, import_type, name, as_name))
 
     def _record_location(self, node: cst.CSTNode, name: str) -> None:
         self.locations[name] = EntityLocation(

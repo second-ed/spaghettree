@@ -1,11 +1,13 @@
-from case_3.mod_b import A  # noqa: INP001
-
-CONSTANT = 3_000
+import math  # noqa: INP001
 
 
-class B:
-    def method_a(self) -> int:
-        return CONSTANT
+class A:
+    pass
 
 
-C = A | B
+def func_a() -> int:
+    return math.ceil(0.5)
+
+
+def func_b() -> int:
+    return func_a() + func_a()

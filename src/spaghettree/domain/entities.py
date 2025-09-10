@@ -15,7 +15,7 @@ class ClassCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
     methods: list[FuncCST] = attrs.field(factory=list, validator=[instance_of(list)])
-    imports: list[ImportCST] = attrs.field(factory=list)
+    imports: set[ImportCST] = attrs.field(factory=set)
 
     def get_call_tree_entries(self) -> list[str]:
         return [call for meth in self.methods for call in meth.calls]
@@ -36,7 +36,7 @@ class ClassCST:
                 call_parts = call.split(".")
                 mod_name = ".".join(call_parts[:-1])
                 call_name = call_parts[-1]
-                self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
+                self.imports.add(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
 
 
@@ -45,7 +45,7 @@ class FuncCST:
     name: str = attrs.field(validator=[instance_of(str)])
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
     calls: list[str] = attrs.field(factory=list, validator=[instance_of(list)])
-    imports: list[ImportCST] = attrs.field(factory=list)
+    imports: set[ImportCST] = attrs.field(factory=set)
 
     def get_call_tree_entries(self) -> list[str]:
         return self.calls
@@ -63,7 +63,7 @@ class FuncCST:
             call_parts = call.split(".")
             mod_name = ".".join(call_parts[:-1])
             call_name = call_parts[-1]
-            self.imports.append(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
+            self.imports.add(ImportCST(mod_name, ImportType.FROM, call_name, call_name))
         return self
 
 
@@ -72,7 +72,7 @@ class GlobalCST:
     name: str = attrs.field()
     tree: cst.SimpleStatementLine = attrs.field(repr=False)
     referenced: list[str] = attrs.field(factory=list)
-    imports: list[ImportCST] = attrs.field(factory=list)
+    imports: set[ImportCST] = attrs.field(factory=set)
 
     def get_call_tree_entries(self) -> list[str]:
         return self.referenced
