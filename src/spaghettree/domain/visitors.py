@@ -120,6 +120,17 @@ class OnePassVisitor(MetadataBase):
             self.entities[current_scope].calls.append(self._resolve_attr(node.func))
 
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
+        if self.current_func:
+            if self.current_class:
+                if (
+                    node.value
+                    not in self.entities[self._get_current_class_scope()].methods[-1].calls
+                ):
+                    self.entities[self._get_current_class_scope()].methods[-1].calls.append(
+                        node.value
+                    )
+            elif node.value not in self.entities[self._get_current_scope()].calls:
+                self.entities[self._get_current_scope()].calls.append(node.value)
         if self.current_global:
             self.entities[self._get_current_scope()].referenced.append(node.value)
 

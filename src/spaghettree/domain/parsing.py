@@ -9,11 +9,9 @@ from tqdm import tqdm
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST
+from spaghettree.domain.entities import EntityCST
 from spaghettree.domain.visitors import EntityLocation, OnePassVisitor
 from spaghettree.logger import logger
-
-EntityCST = FuncCST | ClassCST | GlobalCST
 
 
 def str_to_cst(code: str) -> cst.Module:

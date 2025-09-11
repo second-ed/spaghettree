@@ -1,13 +1,26 @@
 from __future__ import annotations
 
 from collections.abc import Collection
-from typing import Self
+from typing import Protocol, Self, runtime_checkable
 
 import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
 from spaghettree.domain.imports import ImportCST, ImportType
+
+
+@runtime_checkable
+class EntityCST(Protocol):
+    def get_call_tree_entries(self) -> list[str]: ...
+
+    def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self: ...
+
+    def filter_native_calls(self, entities: Collection[str]) -> Self: ...
+
+    def resolve_native_imports(self) -> Self: ...
+
+    def add_referenced_imports(self, imports: set[ImportCST]) -> Self: ...
 
 
 @attrs.define
@@ -27,7 +40,7 @@ class ClassCST:
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         for meth in self.methods:
-            meth.calls = [call for call in meth.calls if call in entities]
+            meth.calls = [call for call in meth.calls if call in entities and meth != self.name]
         return self
 
     def resolve_native_imports(self) -> Self:
@@ -61,7 +74,7 @@ class FuncCST:
         return self
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
-        self.calls = [call for call in self.calls if call in entities]
+        self.calls = [call for call in self.calls if call in entities and call != self.name]
         return self
 
     def resolve_native_imports(self) -> Self:
@@ -92,7 +105,7 @@ class GlobalCST:
         return self
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
-        self.referenced = [ref for ref in self.referenced if ref in entities]
+        self.referenced = [ref for ref in self.referenced if ref in entities and ref != self.name]
         return self
 
     def resolve_native_imports(self) -> Self:

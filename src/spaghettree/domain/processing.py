@@ -94,14 +94,14 @@ def remap_imports(
 
     for mod_name, ents in modules.items():
         for ent in ents:
-            updated_imports: list[ImportCST] = []
+            updated_imports: set[ImportCST] = set()
 
             for imp in ent.imports:
                 new_mod = entity_mod_map.get(f"{imp.module}.{imp.name}")
                 if new_mod is None:
-                    updated_imports.append(imp)
+                    updated_imports.add(imp)
                 elif new_mod != mod_name:
-                    updated_imports.append(
+                    updated_imports.add(
                         ImportCST(
                             module=new_mod,
                             import_type=imp.import_type,
