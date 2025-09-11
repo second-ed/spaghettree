@@ -76,7 +76,6 @@ class SomeOtherClass:
 │       │   ├── __init__.py
 │       │   ├── adj_mat.py
 │       │   ├── entities.py
-│       │   ├── globals.py
 │       │   ├── imports.py
 │       │   ├── optimisation.py
 │       │   ├── parsing.py
@@ -90,6 +89,9 @@ class SomeOtherClass:
 │   ├── adapters
 │   │   ├── __init__.py
 │   │   └── test_adapter_apis.py
+│   ├── domain
+│   │   ├── __init__.py
+│   │   └── test_entities.py
 │   ├── __init__.py
 │   ├── conftest.py
 │   └── test_main.py

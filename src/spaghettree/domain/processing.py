@@ -27,6 +27,8 @@ def create_new_module_map(
 def infer_module_names(
     new_modules: dict[int, list[EntityCST]],
 ) -> dict[str, list[EntityCST]]:
+    logger.debug(f"{new_modules = }")
+
     renamed_modules: dict[str, list[EntityCST]] = {}
 
     for contents in new_modules.values():
@@ -46,6 +48,8 @@ def infer_module_names(
         else:
             mod_name = contents[0].name
         renamed_modules[mod_name] = contents
+
+    logger.debug(f"{renamed_modules = }")
     return renamed_modules
 
 
@@ -55,21 +59,25 @@ def rename_overlapping_mod_names(
 ) -> dict[str, list[EntityCST]]:
     def rename_mod_name(name: str, renamed_modules: list[str]) -> str:
         name_parts = name.split(".")
+        root = name_parts[0]
         dirname = ".".join(name_parts[:-1])
 
         dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
         dirname_counts = Counter(dirnames)
 
         if dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1:
-            return dirname
+            name = dirname
+        elif dirname in renamed_modules:
+            name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
 
-        if dirname in renamed_modules:
-            return ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
-
+        if "." not in name:
+            name = f"{root}.{name}"
         logger.debug(f"{name = }")
-        return name
+        return name.lower()
 
     mod_names = list(renamed_modules)
+    logger.debug(f"{renamed_modules = }")
+    logger.debug(f"{mod_names = }")
     return {
         rename_mod_name(name, mod_names): contents for name, contents in renamed_modules.items()
     }
@@ -86,14 +94,14 @@ def remap_imports(
 
     for mod_name, ents in modules.items():
         for ent in ents:
-            updated_imports: list[ImportCST] = []
+            updated_imports: set[ImportCST] = set()
 
             for imp in ent.imports:
                 new_mod = entity_mod_map.get(f"{imp.module}.{imp.name}")
                 if new_mod is None:
-                    updated_imports.append(imp)
+                    updated_imports.add(imp)
                 elif new_mod != mod_name:
-                    updated_imports.append(
+                    updated_imports.add(
                         ImportCST(
                             module=new_mod,
                             import_type=imp.import_type,
@@ -112,7 +120,9 @@ def create_new_filepaths(
     new_root: str,
 ) -> dict[str, list[EntityCST]]:
     def to_filepath(new_root: str, name: str) -> str:
-        return os.path.join(new_root, name.replace(".", "/") + ".py").lower()
+        return os.path.join(os.path.dirname(new_root), name.replace(".", "/") + ".py")
+
+    logger.debug(f"{fixed_name_modules = }")
 
     return {to_filepath(new_root, name): contents for name, contents in fixed_name_modules.items()}
 
@@ -130,6 +140,9 @@ def convert_to_code_str(
             code.append(cst_to_str(ent.tree))
 
         return "".join(sorted(set(imports))) + "".join(code)
+
+    logger.debug(f"{new_modules = }")
+    logger.debug(f"{order_map = }")
 
     return {
         mod_name: get_module_str(sorted(contents, key=lambda x: order_map[x.name.split(".")[-1]]))
