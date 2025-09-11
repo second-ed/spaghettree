@@ -111,7 +111,8 @@ class GlobalCST:
     def resolve_native_imports(self) -> Self:
         return self
 
-    def add_referenced_imports(self, _: set[ImportCST]) -> Self:
+    def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
+        self.imports = {imp for imp in imports if imp.as_name in self.referenced}
         return self
 
 
