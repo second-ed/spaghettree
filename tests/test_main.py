@@ -71,25 +71,31 @@ def test_main(src_root):
             "mock_data/mock_case_3/src/case_3",
             {
                 "result/mock_data/mock_case_3/src/case_3/__init__.py": "",
-                "result/mock_data/mock_case_3/src/case_3/mod_a.py": "def func_a() -> int:\n"
+                "result/mock_data/mock_case_3/src/case_3/mod_a.py": "from case_3.mod_b import B\n"
+                "\n"
+                "\n"
+                "class A:\n"
+                "    pass\n"
+                "\n"
+                "\n"
+                "C = A | B\n",
+                "result/mock_data/mock_case_3/src/case_3/mod_a_mod_overflow.py": "import math\n"
+                "\n"
+                "\n"
+                "def func_a() -> int:\n"
                 "    return math.ceil(0.5)\n"
                 "\n"
                 "\n"
                 "def func_b() -> int:\n"
                 "    return func_a() + func_a()\n",
-                "result/mock_data/mock_case_3/src/case_3/mod_b.py": "class A:\n"
-                "    pass\n"
+                "result/mock_data/mock_case_3/src/case_3/mod_b.py": "CONSTANT = 3_000\n"
                 "\n"
                 "\n"
                 "class B:\n"
                 "    def method_a(self) -> int:\n"
-                "        return CONSTANT\n"
-                "\n"
-                "\n"
-                "C = A | B\n",
-                "result/mock_data/mock_case_3/src/case_3/mod_b_constant.py": "CONSTANT = 3_000\n",
+                "        return CONSTANT\n",
             },
-            id="ensure adds init and combines based on global typedef",
+            id="ensure adds init and combines based on global typedef and all imports are correct",
         ),
     ],
     indirect=["fixture_get_subset_files"],

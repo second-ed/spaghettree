@@ -109,6 +109,11 @@ class GlobalCST:
         return self
 
     def resolve_native_imports(self) -> Self:
+        for ref in self.referenced:
+            ref_parts = ref.split(".")
+            mod_name = ".".join(ref_parts[:-1])
+            ref_name = ref_parts[-1]
+            self.imports.add(ImportCST(mod_name, ImportType.FROM, ref_name, ref_name))
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
