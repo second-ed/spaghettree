@@ -119,7 +119,6 @@ def test_main(src_root):
                 "        return CONSTANT\n",
             },
             id="ensure doesn't confuse two constants",
-            marks=pytest.mark.skip,
         ),
     ],
     indirect=["fixture_get_subset_files"],

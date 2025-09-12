@@ -53,7 +53,10 @@ class ClassCST:
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
         self.imports = {
-            imp for meth in self.methods for imp in imports if imp.as_name in meth.calls
+            imp
+            for meth in self.methods
+            for imp in imports
+            if imp.as_name in meth.calls or f"{imp.module}.{imp.as_name}" in meth.calls
         }
         return self
 
@@ -85,7 +88,11 @@ class FuncCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
-        self.imports = {imp for imp in imports if imp.as_name in self.calls}
+        self.imports = {
+            imp
+            for imp in imports
+            if imp.as_name in self.calls or f"{imp.module}.{imp.as_name}" in self.calls
+        }
         return self
 
 
@@ -153,7 +160,7 @@ def resolve_calls(
     for call in calls:
         call_parts = call.split(".")
 
-        if resolved_call := import_map.get(call_parts[-1]):
+        if resolved_call := import_map.get(call_parts[0]):
             resolved_call_parts = resolved_call.split(".")
             if resolved_call_parts[-1] != call:
                 common_removed = ".".join(resolved_call_parts[:-1])
