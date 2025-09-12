@@ -19,6 +19,7 @@ def optimise_communities(adj_mat: AdjMat) -> AdjMat:
         valid_merges = get_merge_pairs(adj_mat)
 
     logger.debug(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")
+    logger.debug(f"{adj_mat.communities = }")
     return adj_mat
 
 
