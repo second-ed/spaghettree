@@ -35,10 +35,10 @@ def infer_module_names(
         if len(contents) > 1:
             names = [".".join(ent.name.split(".")[:-1]) for ent in contents]
             possible_module_names = sorted(
-                {(name, names.count(name)) for name in names},
-                key=lambda x: x[1],
-                reverse=True,
+                {(name, names.count(name)) for name in names}, key=lambda x: (-x[1], x[0])
             )
+            logger.debug(f"{possible_module_names = }")
+
             for name, _ in possible_module_names:
                 if name not in renamed_modules:
                     mod_name = name

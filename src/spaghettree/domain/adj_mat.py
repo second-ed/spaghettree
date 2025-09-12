@@ -4,6 +4,7 @@ import attrs
 import numpy as np
 
 from spaghettree import safe
+from spaghettree.logger import logger
 
 
 @attrs.define
@@ -15,6 +16,7 @@ class AdjMat:
     @classmethod
     @safe
     def from_call_tree(cls, call_tree: dict[str, list[str]]) -> Self:
+        logger.debug(f"{call_tree = }")
         ent_idx: dict[str, int] = {node: i for i, node in enumerate(call_tree)}
         node_map: dict[int, str] = {idx: ent_name for ent_name, idx in ent_idx.items()}
         n = len(ent_idx)
