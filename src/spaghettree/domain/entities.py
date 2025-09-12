@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Collection
+from enum import Enum, auto
 from typing import Protocol, Self, runtime_checkable
 
 import attrs
 import libcst as cst
 from attrs.validators import instance_of
-
-from spaghettree.domain.imports import ImportCST, ImportType
 
 
 @runtime_checkable
@@ -54,7 +53,10 @@ class ClassCST:
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
         self.imports = {
-            imp for meth in self.methods for imp in imports if imp.as_name in meth.calls
+            imp
+            for meth in self.methods
+            for imp in imports
+            if imp.as_name in meth.calls or f"{imp.module}.{imp.as_name}" in meth.calls
         }
         return self
 
@@ -86,7 +88,11 @@ class FuncCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
-        self.imports = {imp for imp in imports if imp.as_name in self.calls}
+        self.imports = {
+            imp
+            for imp in imports
+            if imp.as_name in self.calls or f"{imp.module}.{imp.as_name}" in self.calls
+        }
         return self
 
 
@@ -121,6 +127,30 @@ class GlobalCST:
         return self
 
 
+class ImportType(Enum):
+    FROM = auto()
+    IMPORT = auto()
+
+
+@attrs.define(frozen=True)
+class ImportCST:
+    module: str = attrs.field(validator=[instance_of(str)], converter=str.lower)
+    import_type: ImportType = attrs.field(validator=[instance_of(ImportType)])
+    name: str = attrs.field(validator=[instance_of(str)])
+    as_name: str = attrs.field(validator=[instance_of(str)])
+
+    def to_str(self) -> str:
+        output: list[str] = []
+        if self.import_type is ImportType.FROM:
+            output.append(f"from {self.module} import {self.name}")
+        elif self.import_type is ImportType.IMPORT:
+            output.append(f"import {self.module}")
+
+        if self.name != self.as_name:
+            output.append(f"as {self.as_name}")
+        return " ".join(output) + "\n"
+
+
 def resolve_calls(
     calls: list[str],
     import_map: dict[str, str],
@@ -128,13 +158,16 @@ def resolve_calls(
 ) -> list[str]:
     resolved_calls: list[str] = []
     for call in calls:
-        if resolved_call := import_map.get(call.split(".")[-1]):
-            if resolved_call.split(".")[-1] != call:
-                common_removed = ".".join(resolved_call.split(".")[:-1])
+        call_parts = call.split(".")
+
+        if resolved_call := import_map.get(call_parts[0]):
+            resolved_call_parts = resolved_call.split(".")
+            if resolved_call_parts[-1] != call:
+                common_removed = ".".join(resolved_call_parts[:-1])
                 resolved_calls.append(f"{common_removed}.{call}".strip("."))
             else:
                 resolved_calls.append(resolved_call)
-        elif resolved_call := ent_map.get(call.split(".")[0]):
+        elif resolved_call := ent_map.get(call_parts[0]):
             resolved_calls.append(resolved_call)
         else:
             resolved_calls.append(call)

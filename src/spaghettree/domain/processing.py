@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from spaghettree import safe
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.imports import ImportCST
+from spaghettree.domain.entities import ImportCST
 from spaghettree.domain.parsing import EntityCST, cst_to_str
 from spaghettree.logger import logger
 

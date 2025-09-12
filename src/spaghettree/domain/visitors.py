@@ -3,8 +3,7 @@ from __future__ import annotations
 import attrs
 import libcst as cst
 
-from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST
-from spaghettree.domain.imports import ImportCST, ImportType
+from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
 
 
 @attrs.define(frozen=True, eq=True, order=True)

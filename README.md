@@ -76,7 +76,6 @@ class SomeOtherClass:
 │       │   ├── __init__.py
 │       │   ├── adj_mat.py
 │       │   ├── entities.py
-│       │   ├── imports.py
 │       │   ├── optimisation.py
 │       │   ├── parsing.py
 │       │   ├── processing.py
@@ -95,7 +94,8 @@ class SomeOtherClass:
 │   │   └── test_processing.py
 │   ├── __init__.py
 │   ├── conftest.py
-│   └── test_main.py
+│   ├── test_main.py
+│   └── test_result.py
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── pyproject.toml

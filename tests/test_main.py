@@ -97,6 +97,29 @@ def test_main(src_root):
             },
             id="ensure adds init and combines based on global typedef and all imports are correct",
         ),
+        pytest.param(
+            "mock_data/mock_case_4/src/case_4",
+            {
+                "result/mock_data/mock_case_4/src/case_4/__init__.py": "",
+                "result/mock_data/mock_case_4/src/case_4/mod_a.py": "import math as mt\n\n\n"
+                "def func_a() -> int:\n"
+                "    return mt.ceil(CONSTANT)\n"
+                "\n"
+                "\n"
+                "def func_b() -> int:\n"
+                "    return func_a() + func_a()\n"
+                "\n"
+                "\n"
+                "CONSTANT: float = 1_000.99\n",
+                "result/mock_data/mock_case_4/src/case_4/mod_b.py": "CONSTANT = 3_000\n"
+                "\n"
+                "\n"
+                "class B:\n"
+                "    def method_a(self) -> int:\n"
+                "        return CONSTANT\n",
+            },
+            id="ensure doesn't confuse two constants",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )

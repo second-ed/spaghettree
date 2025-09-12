@@ -3,8 +3,7 @@ from functools import partial
 import pytest
 
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST
-from spaghettree.domain.imports import ImportCST, ImportType
+from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
 from spaghettree.domain.processing import (
     add_empty_inits_if_needed,
     convert_to_code_str,
@@ -98,10 +97,7 @@ CASE_3_LOC_MAP = {
 }
 CASE_3_EXPECTED_RESULT = {
     "some/src/root/case_3/__init__.py": "",
-    "some/src/root/case_3/mod_a.py": "from case_3.mod_b import B\n"
-    "class A:\n"
-    "    pass\n"
-    "C = A | B\n",
+    "some/src/root/case_3/mod_a.py": "from case_3.mod_b import B\nclass A:\n    pass\nC = A | B\n",
     "some/src/root/case_3/mod_a_mod_overflow.py": "import math\n"
     "def func_a() -> int:\n"
     "    return math.ceil(0.5)\n"
