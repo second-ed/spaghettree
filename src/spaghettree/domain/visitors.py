@@ -66,7 +66,8 @@ class OnePassVisitor(MetadataBase):
             if not isinstance(target.target, cst.Name):
                 return
             self.current_global = target.target.value
-            self.entities[self._get_current_scope()] = GlobalCST(self._get_current_scope(), node)
+            scope = self._get_current_scope()
+            self.entities[scope] = GlobalCST(scope, node)
             self._record_location(node, self.current_global)
 
     def leave_Assign(self, _: cst.Assign) -> None:  # noqa: N802
@@ -75,7 +76,8 @@ class OnePassVisitor(MetadataBase):
     def visit_AnnAssign(self, node: cst.AnnAssign) -> None:  # noqa: N802
         if self.depth == 0 and isinstance(node.target, cst.Name):
             self.current_global = node.target.value
-            self.entities[self._get_current_scope()] = GlobalCST(self._get_current_scope(), node)
+            scope = self._get_current_scope()
+            self.entities[scope] = GlobalCST(scope, node)
             self._record_location(node, self.current_global)
 
     def leave_AnnAssign(self, _: cst.AnnAssign) -> None:  # noqa: N802
@@ -84,8 +86,8 @@ class OnePassVisitor(MetadataBase):
     def visit_ClassDef(self, node: cst.ClassDef) -> None:  # noqa: N802
         if self.depth == 0:
             self.current_class = node.name.value
-            current_scope = self._get_current_scope()
-            self.entities[current_scope] = ClassCST(current_scope, node)
+            scope = self._get_current_scope()
+            self.entities[scope] = ClassCST(scope, node)
             self._record_location(node, node.name.value)
 
     def leave_ClassDef(self, _: cst.ClassDef) -> None:  # noqa: N802
@@ -96,54 +98,56 @@ class OnePassVisitor(MetadataBase):
         if self.depth == 0 or self.current_class:
             self.current_func = node.name.value
 
-        current_scope = self._get_current_scope()
-        func_cst = FuncCST(current_scope, node)
+        scope = self._get_current_scope()
+        func_cst = FuncCST(scope, node)
 
         if self.current_class:
-            self.entities[self._get_current_class_scope()].methods.append(func_cst)
+            self.entities[scope].methods.append(func_cst)
         elif self.depth == 0:
             self._record_location(node, node.name.value)
-            self.entities[current_scope] = func_cst
+            self.entities[scope] = func_cst
 
     def leave_FunctionDef(self, _: cst.FunctionDef) -> None:  # noqa: N802
         if self.current_class or self.depth == 0:
             self.current_func = ""
 
     def visit_Call(self, node: cst.Call) -> None:  # noqa: N802
-        current_scope = self._get_current_scope()
+        scope = self._get_current_scope()
+
         if self.current_class and self.current_func:
             # add the calls to the last added method
-            self.entities[self._get_current_class_scope()].methods[-1].calls.append(
-                self._resolve_attr(node.func)
-            )
+            self.entities[scope].methods[-1].calls.append(self._resolve_attr(node.func))
         elif self.current_func:
-            self.entities[current_scope].calls.append(self._resolve_attr(node.func))
+            self.entities[scope].calls.append(self._resolve_attr(node.func))
 
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
+        scope = self._get_current_scope()
+
+        # class attributes/attrs/dataclasses etc before the first method
+        if self.current_class or self.current_func:
+            for imp in self.imports:
+                if imp.as_name == node.value:
+                    self.entities[scope].imports.add(imp)
+
+        # methods/funcs exist
         if self.current_func:
             if self.current_class:
-                if (
-                    node.value
-                    not in self.entities[self._get_current_class_scope()].methods[-1].calls
-                ):
-                    self.entities[self._get_current_class_scope()].methods[-1].calls.append(
-                        node.value
-                    )
-            elif node.value not in self.entities[self._get_current_scope()].calls:
-                self.entities[self._get_current_scope()].calls.append(node.value)
+                if node.value not in self.entities[scope].methods[-1].calls:
+                    self.entities[scope].methods[-1].calls.append(node.value)
+            elif node.value not in self.entities[scope].calls:
+                self.entities[scope].calls.append(node.value)
         if self.current_global:
-            self.entities[self._get_current_scope()].referenced.append(node.value)
+            self.entities[scope].referenced.append(node.value)
 
     def _get_current_scope(self) -> str:
         ent = ".".join(
             elem for elem in [self.current_class, self.current_func, self.current_global] if elem
         )
-        return f"{self.module_name}.{ent}"
-
-    def _get_current_class_scope(self) -> str | None:
-        if self.current_class:
-            return f"{self.module_name}.{self.current_class}"
-        return None
+        return (
+            f"{self.module_name}.{self.current_class}"
+            if self.current_class
+            else f"{self.module_name}.{ent}"
+        )
 
     def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
         self.imports.add(ImportCST(key, import_type, name, as_name))

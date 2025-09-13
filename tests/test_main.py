@@ -122,8 +122,19 @@ def test_main(src_root):
         ),
         pytest.param(
             "mock_data/mock_case_5/src/case_5",
-            {},
-            id="ensure ignores empty module",
+            {
+                "result/mock_data/mock_case_5/src/case_5/__init__.py": "",
+                "result/mock_data/mock_case_5/src/case_5/mod_a.py": "import attrs\n"
+                "\n"
+                "\n"
+                "@attrs.define\n"
+                "class SomeClass:\n"
+                "    name: str = attrs.field()\n"
+                "\n"
+                "    def method_a(self) -> str:\n"
+                "        return self.name.upper()\n",
+            },
+            id="ensure ignores empty module, ensure retains decorator or class level imports",
         ),
     ],
     indirect=["fixture_get_subset_files"],

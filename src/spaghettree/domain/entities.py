@@ -52,13 +52,10 @@ class ClassCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
-        self.imports = {
-            imp
-            for meth in self.methods
-            for imp in imports
-            if imp.as_name in meth.calls or f"{imp.module}.{imp.as_name}" in meth.calls
-        }
-        return self
+        for imp in imports:
+            for meth in self.methods:
+                if imp.as_name in meth.calls or f"{imp.module}.{imp.as_name}" in meth.calls:
+                    self.imports.add(imp)
 
 
 @attrs.define
@@ -88,11 +85,9 @@ class FuncCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
-        self.imports = {
-            imp
-            for imp in imports
-            if imp.as_name in self.calls or f"{imp.module}.{imp.as_name}" in self.calls
-        }
+        for imp in imports:
+            if imp.as_name in self.calls or f"{imp.module}.{imp.as_name}" in self.calls:
+                self.imports.add(imp)
         return self
 
 
@@ -123,7 +118,9 @@ class GlobalCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
-        self.imports = {imp for imp in imports if imp.as_name in self.referenced}
+        for imp in imports:
+            if imp.as_name in self.referenced:
+                self.imports.add(imp)
         return self
 
 
