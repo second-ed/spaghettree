@@ -9,3 +9,5 @@ def test_safe():
     res = raises()
     assert not res.is_ok()
     assert list(res.details[0].keys()) == ["file", "func", "line_no", "locals"]
+    # make sure Err.and_then => Err
+    assert res.and_then(lambda x: x) == res

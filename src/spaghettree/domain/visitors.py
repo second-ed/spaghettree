@@ -37,7 +37,8 @@ class OnePassVisitor(MetadataBase):
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:  # noqa: N802
         module = self._resolve_attr(node.module)
         if module is None:
-            return  # skip relative imports
+            # skip relative imports
+            return
 
         if isinstance(node.names, cst.ImportStar):
             self._add_import(module, ImportType.FROM, "*", "*")
