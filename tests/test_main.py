@@ -120,6 +120,11 @@ def test_main(src_root):
             },
             id="ensure doesn't confuse two constants",
         ),
+        pytest.param(
+            "mock_data/mock_case_5/src/case_5",
+            {},
+            id="ensure ignores empty module",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )

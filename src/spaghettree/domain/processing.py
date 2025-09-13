@@ -87,6 +87,8 @@ def rename_overlapping_mod_names(
 def remap_imports(
     modules: dict[str, list[EntityCST]],
 ) -> dict[str, list[EntityCST]]:
+    logger.debug(f"{modules = }")
+
     modules = deepcopy(modules)
     entity_mod_map: dict[str, str] = {
         ent.name: mod_name for mod_name, ents in modules.items() for ent in ents
@@ -119,10 +121,10 @@ def create_new_filepaths(
     fixed_name_modules: dict[str, list[EntityCST]],
     new_root: str,
 ) -> dict[str, list[EntityCST]]:
+    logger.debug(f"{fixed_name_modules = }")
+
     def to_filepath(new_root: str, name: str) -> str:
         return os.path.join(os.path.dirname(new_root), name.replace(".", "/") + ".py")
-
-    logger.debug(f"{fixed_name_modules = }")
 
     return {to_filepath(new_root, name): contents for name, contents in fixed_name_modules.items()}
 
@@ -132,6 +134,9 @@ def convert_to_code_str(
     new_modules: dict[str, list[EntityCST]],
     order_map: dict[str, int],
 ) -> dict[str, str]:
+    logger.debug(f"{new_modules = }")
+    logger.debug(f"{order_map = }")
+
     def get_module_str(mod_contents: list[EntityCST]) -> str:
         imports, code = [], []
 
@@ -141,9 +146,6 @@ def convert_to_code_str(
 
         return "".join(sorted(set(imports))) + "".join(code)
 
-    logger.debug(f"{new_modules = }")
-    logger.debug(f"{order_map = }")
-
     return {
         mod_name: get_module_str(sorted(contents, key=lambda x: order_map[x.name.split(".")[-1]]))
         for mod_name, contents in new_modules.items()
@@ -152,6 +154,8 @@ def convert_to_code_str(
 
 @safe
 def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
+    logger.debug(f"{modules = }")
+
     modules_with_inits = {}
 
     for path, contents in modules.items():
@@ -159,6 +163,11 @@ def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
 
         if init_path not in modules:
             modules_with_inits[init_path] = ""
+
+        if not contents.strip() and os.path.basename(path) != "__init__.py":
+            logger.debug(f"Skipping {path = } {contents = }")
+            # skip empty files
+            continue
         modules_with_inits[path] = contents
 
     return modules_with_inits
