@@ -55,7 +55,7 @@ def extract_entities_and_locations(
         logger.debug(f"{ent_map = }")
 
         for ent in visitor.entities.values():
-            ent.resolve_calls(import_map, ent_map).add_referenced_imports(visitor.imports)
+            ent.resolve_calls(import_map, ent_map)  # .add_referenced_imports(visitor.imports)
 
         logger.debug(f"{visitor.entities = }")
         logger.debug(f"{visitor.imports = }")

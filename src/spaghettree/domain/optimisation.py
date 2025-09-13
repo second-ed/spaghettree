@@ -112,6 +112,9 @@ def get_dwm(mat: np.ndarray, communities: list[int]) -> float:
     in_degree = mat.sum(axis=1)
     total_edges = out_degree.sum()
 
+    if total_edges == 0:
+        return 0
+
     communities = np.array(communities)
     community_mat = communities[:, None] == communities[None, :]
 

@@ -120,19 +120,24 @@ class OnePassVisitor(MetadataBase):
             self.entities[current_scope].calls.append(self._resolve_attr(node.func))
 
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
+        # class attributes/attrs/dataclasses etc before the first method
+
+        scope = self._get_current_class_scope() if self.current_class else self._get_current_scope()
+
+        if self.current_class or self.current_func:
+            for imp in self.imports:
+                if imp.as_name == node.value:
+                    self.entities[scope].imports.add(imp)
+
+        # methods/funcs exist
         if self.current_func:
             if self.current_class:
-                if (
-                    node.value
-                    not in self.entities[self._get_current_class_scope()].methods[-1].calls
-                ):
-                    self.entities[self._get_current_class_scope()].methods[-1].calls.append(
-                        node.value
-                    )
-            elif node.value not in self.entities[self._get_current_scope()].calls:
-                self.entities[self._get_current_scope()].calls.append(node.value)
+                if node.value not in self.entities[scope].methods[-1].calls:
+                    self.entities[scope].methods[-1].calls.append(node.value)
+            elif node.value not in self.entities[scope].calls:
+                self.entities[scope].calls.append(node.value)
         if self.current_global:
-            self.entities[self._get_current_scope()].referenced.append(node.value)
+            self.entities[scope].referenced.append(node.value)
 
     def _get_current_scope(self) -> str:
         ent = ".".join(
