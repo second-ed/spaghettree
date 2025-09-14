@@ -44,7 +44,9 @@ def test_main(src_root):
         pytest.param(
             "mock_data/mock_case_2/src/case_2",
             {
-                "result/mock_data/mock_case_2/src/case_2/__init__.py": "",
+                "result/mock_data/mock_case_2/src/case_2/__init__.py": "from case_2.mod_a import func_a, func_b\n"
+                "from case_2.mod_a_isolated_func import isolated_func\nfrom case_2.mod_b import ClassA, func_c, func_d\n\n"
+                '__all__: list[str] = ["ClassA", "func_a", "func_b", "func_c", "func_d", "isolated_func"]\n',
                 "result/mock_data/mock_case_2/src/case_2/mod_a.py": "def func_a() -> int:\n"
                 "    return 0 + func_b()\n"
                 "\n"
@@ -65,7 +67,7 @@ def test_main(src_root):
                 "    def method_a(self) -> int:\n"
                 "        return func_d() + func_d()\n",
             },
-            id="identify isolated function, handle ClassCST objects",
+            id="identify isolated function, handle ClassCST objects, retain `__all__`",
         ),
         pytest.param(
             "mock_data/mock_case_3/src/case_3",
