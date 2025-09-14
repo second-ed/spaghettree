@@ -118,6 +118,10 @@ class GlobalCST:
         return self
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
+        if self.name.endswith(".__all__"):
+            self.imports.update(imports)
+            return self
+
         for imp in imports:
             if imp.as_name in self.referenced:
                 self.imports.add(imp)
