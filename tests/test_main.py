@@ -138,6 +138,29 @@ def test_main(src_root):
             },
             id="ensure ignores empty module, ensure retains decorator or class level imports",
         ),
+        pytest.param(
+            "mock_data/mock_case_6/src/case_6",
+            {
+                "result/mock_data/mock_case_6/src/case_6/__init__.py": "",
+                "result/mock_data/mock_case_6/src/case_6/case_6.py": "import math\n"
+                "\n"
+                "PI: float = math.pi\n"
+                "\n"
+                "\n"
+                "class Circle:\n"
+                "    def __init__(self, radius: float) -> None:\n"
+                "        self.radius = radius\n"
+                "\n"
+                "    def calc_area(self) -> float:\n"
+                "        return PI * self.radius * self.radius\n",
+                "result/mock_data/mock_case_6/src/case_6/mod_b.py": "from case_6.case_6 import PI\n"
+                "\n"
+                "\n"
+                "def calculate_circumference(radius: float) -> float:\n"
+                "    return 2 * PI * radius\n",
+            },
+            id="ensure combines modules when theres a global that imports from another package",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
