@@ -102,7 +102,7 @@ class OnePassVisitor(MetadataBase):
         func_cst = FuncCST(scope, node)
 
         if self.current_class:
-            self.entities[scope].methods.append(func_cst)
+            self.entities[self._get_current_class_scope()].methods.append(func_cst)
         elif self.depth == 0:
             self._record_location(node, node.name.value)
             self.entities[scope] = func_cst
@@ -116,12 +116,14 @@ class OnePassVisitor(MetadataBase):
 
         if self.current_class and self.current_func:
             # add the calls to the last added method
-            self.entities[scope].methods[-1].calls.append(self._resolve_attr(node.func))
+            self.entities[self._get_current_class_scope()].methods[-1].calls.append(
+                self._resolve_attr(node.func)
+            )
         elif self.current_func:
             self.entities[scope].calls.append(self._resolve_attr(node.func))
 
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
-        scope = self._get_current_scope()
+        scope = self._get_current_class_scope() if self.current_class else self._get_current_scope()
 
         # class attributes/attrs/dataclasses etc before the first method
         if self.current_class or self.current_func:
@@ -132,10 +134,14 @@ class OnePassVisitor(MetadataBase):
         # methods/funcs exist
         if self.current_func:
             if self.current_class:
-                if node.value not in self.entities[scope].methods[-1].calls:
-                    self.entities[scope].methods[-1].calls.append(node.value)
+                cls_scope = self._get_current_class_scope()
+
+                if node.value not in self.entities[cls_scope].methods[-1].calls:
+                    self.entities[cls_scope].methods[-1].calls.append(node.value)
+
             elif node.value not in self.entities[scope].calls:
                 self.entities[scope].calls.append(node.value)
+
         if self.current_global:
             self.entities[scope].referenced.append(node.value)
 
@@ -143,11 +149,10 @@ class OnePassVisitor(MetadataBase):
         ent = ".".join(
             elem for elem in [self.current_class, self.current_func, self.current_global] if elem
         )
-        return (
-            f"{self.module_name}.{self.current_class}"
-            if self.current_class
-            else f"{self.module_name}.{ent}"
-        )
+        return f"{self.module_name}.{ent}"
+
+    def _get_current_class_scope(self) -> str:
+        return f"{self.module_name}.{self.current_class}"
 
     def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
         self.imports.add(ImportCST(key, import_type, name, as_name))
