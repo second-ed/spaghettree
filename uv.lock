@@ -2903,7 +2903,6 @@ dependencies = [
     { name = "libcst" },
     { name = "numpy" },
     { name = "python-dotenv" },
-    { name = "repo-mapper-rs" },
     { name = "tqdm" },
 ]
 
@@ -2913,6 +2912,7 @@ dev = [
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "repo-mapper-rs" },
     { name = "ruff" },
     { name = "ty" },
 ]
@@ -2957,7 +2957,6 @@ requires-dist = [
     { name = "libcst", specifier = ">=1.6.0" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
-    { name = "repo-mapper-rs", specifier = ">=0.3.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
@@ -2967,6 +2966,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.1.0" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "repo-mapper-rs", specifier = ">=0.3.0" },
     { name = "ruff", specifier = ">=0.9.9" },
     { name = "ty", specifier = ">=0.0.1a18" },
 ]

@@ -27,6 +27,9 @@ class Ok:
     def and_then(self, func: Callable[[T], Result]) -> Result:
         return func(self.inner)
 
+    def unwrap(self) -> T:
+        return self.inner
+
 
 @attrs.define
 class Err:
@@ -65,6 +68,9 @@ class Err:
 
     def and_then(self, _: Callable[[T], Result]) -> Self:
         return self
+
+    def unwrap(self) -> None:
+        raise self.error
 
 
 Result = Ok | Err
