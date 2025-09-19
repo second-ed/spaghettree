@@ -34,7 +34,6 @@ def extract_entities_and_locations(
     def get_module_name(path: str, root: str) -> str:
         return os.path.splitext(path.removeprefix(root))[0].replace("/", ".").strip(".")
 
-    logger.debug(f"{list(src_code.keys()) = }")
     common_prefix = find_common_prefix(src_code.keys())
     logger.debug(f"{common_prefix = }")
 

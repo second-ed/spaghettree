@@ -12,7 +12,6 @@ import isort
 from ruff.__main__ import find_ruff_bin
 
 from spaghettree import Err, Ok, Result, safe
-from spaghettree.logger import logger
 
 
 @runtime_checkable
@@ -36,6 +35,7 @@ class IOProtocol(Protocol):
 class IOWrapper:
     @safe
     def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
+        root = os.path.abspath(str(root))
         return sorted(glob.glob(f"{root}/**/**.py", recursive=recursive))
 
     @safe
@@ -51,16 +51,14 @@ class IOWrapper:
 
         results, fails = {}, {}
         for path in paths:
-            abs_path = os.path.abspath(path)
-            res = self.read(abs_path)
+            res = self.read(path)
             if res.is_ok():
-                results[abs_path] = res.inner
+                results[path] = res.inner
             else:
-                fails[abs_path] = res
+                fails[path] = res
 
         if fails:
             return Err(fails)
-        logger.debug(f"{list(results.keys()) = }")
         return Ok(results)
 
     @safe
@@ -133,7 +131,6 @@ class FakeIOWrapper:
 
         if fails:
             return Err(fails)
-        logger.debug(f"{list(results.keys()) = }")
         return Ok(results)
 
     @safe
