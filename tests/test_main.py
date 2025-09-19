@@ -16,7 +16,7 @@ def test_main(src_root):
     try:
         tmp = str(Path("./tmp_test").absolute())
         os.makedirs(tmp, exist_ok=True)
-        res = main(src_root, f"{tmp}/src/case_1")
+        res = main(src_root, new_root=f"{tmp}/src/case_1")
         assert res.is_ok()
 
     finally:
@@ -167,5 +167,108 @@ def test_main(src_root):
 def test_run_process(fixture_get_subset_files, expected_result):
     name, files = fixture_get_subset_files
     io = FakeIOWrapper(files)
-    run_process(io, name, f"result/{name}")
+    run_process(io, name, new_root=f"result/{name}")
     assert {k: v for k, v in io.files.items() if k.startswith("result/")} == expected_result
+
+
+@pytest.mark.parametrize(
+    ("fixture_get_subset_files", "expected_result"),
+    [
+        pytest.param(
+            "mock_data/mock_case_1/src/case_1",
+            {
+                "case_1.mod_a.func_a": [],
+                "case_1.mod_b.func_b": [
+                    "case_1.mod_a.func_a",
+                    "case_1.mod_a.func_a",
+                ],
+            },
+            id="ensure identifies the correct call tree for case_1",
+        ),
+        pytest.param(
+            "mock_data/mock_case_2/src/case_2",
+            {
+                "case_2.__init__.__all__": [],
+                "case_2.mod_a.func_a": [
+                    "case_2.mod_a.func_b",
+                ],
+                "case_2.mod_a.func_b": [],
+                "case_2.mod_a.func_c": [
+                    "case_2.mod_b.func_d",
+                ],
+                "case_2.mod_a.isolated_func": [],
+                "case_2.mod_b.ClassA": [
+                    "case_2.mod_b.func_d",
+                    "case_2.mod_b.func_d",
+                ],
+                "case_2.mod_b.func_d": [],
+            },
+            id="ensure identifies the correct call tree for case_2",
+        ),
+        pytest.param(
+            "mock_data/mock_case_3/src/case_3",
+            {
+                "case_3.mod_a.A": [],
+                "case_3.mod_a.func_a": [],
+                "case_3.mod_a.func_b": [
+                    "case_3.mod_a.func_a",
+                    "case_3.mod_a.func_a",
+                ],
+                "case_3.mod_b.B": [
+                    "case_3.mod_b.CONSTANT",
+                ],
+                "case_3.mod_b.C": [
+                    "case_3.mod_a.A",
+                    "case_3.mod_b.B",
+                ],
+                "case_3.mod_b.CONSTANT": [],
+            },
+            id="ensure identifies the correct call tree for case_3",
+        ),
+        pytest.param(
+            "mock_data/mock_case_4/src/case_4",
+            {
+                "case_4.mod_a.CONSTANT": [],
+                "case_4.mod_a.func_a": [
+                    "case_4.mod_a.CONSTANT",
+                ],
+                "case_4.mod_a.func_b": [
+                    "case_4.mod_a.func_a",
+                    "case_4.mod_a.func_a",
+                ],
+                "case_4.mod_b.B": [
+                    "case_4.mod_b.CONSTANT",
+                ],
+                "case_4.mod_b.CONSTANT": [],
+            },
+            id="ensure identifies the correct call tree for case_4",
+        ),
+        pytest.param(
+            "mock_data/mock_case_5/src/case_5",
+            {
+                "case_5.mod_a.SomeClass": [],
+            },
+            id="ensure identifies the correct call tree for case_5",
+        ),
+        pytest.param(
+            "mock_data/mock_case_6/src/case_6",
+            {
+                "case_6.mod_a.Circle": [
+                    "case_6.mod_a.PI",
+                ],
+                "case_6.mod_a.PI": [],
+                "case_6.mod_b.calculate_circumference": [
+                    "case_6.mod_a.PI",
+                ],
+            },
+            id="ensure identifies the correct call tree for case_6",
+        ),
+    ],
+    indirect=["fixture_get_subset_files"],
+)
+def test_run_process_return_call_tree(fixture_get_subset_files, expected_result):
+    name, files = fixture_get_subset_files
+    io = FakeIOWrapper(files)
+    res = run_process(io, name, optimise_src_code=False)
+    assert res.is_ok()
+    assert res.inner == expected_result

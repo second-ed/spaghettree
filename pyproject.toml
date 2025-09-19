@@ -14,7 +14,6 @@ dependencies = [
     "libcst>=1.6.0",
     "numpy>=2.3.2",
     "python-dotenv>=1.1.1",
-    "repo-mapper-rs>=0.3.0",
     "tqdm>=4.67.1",
 ]
 
@@ -31,6 +30,7 @@ dev = [
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
+    "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.9",
     "ty>=0.0.1a18",
 ]

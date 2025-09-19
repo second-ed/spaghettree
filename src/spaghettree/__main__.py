@@ -1,8 +1,9 @@
 from functools import partial
 
-from spaghettree import Result
+from spaghettree import Ok, Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
 from spaghettree.domain.adj_mat import AdjMat
+from spaghettree.domain.entities import EntityCST
 from spaghettree.domain.optimisation import (
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
@@ -22,35 +23,50 @@ from spaghettree.domain.processing import (
     remap_imports,
     rename_overlapping_mod_names,
 )
+from spaghettree.domain.visitors import EntityLocation
 from spaghettree.logger import logger
 
 
-def main(src_root: str, new_root: str) -> Result:
+def main(src_root: str, *, new_root: str = "", optimise_src_code: bool = True) -> Result:
     io = IOWrapper()
-    return run_process(io, src_root, new_root)
+    return run_process(io, src_root, new_root=new_root, optimise_src_code=optimise_src_code)
 
 
-def run_process(io: IOProtocol, src_root: str, new_root: str) -> Result:
+def run_process(
+    io: IOProtocol, src_root: str, *, new_root: str = "", optimise_src_code: bool = True
+) -> Result:
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
-    ent_and_locs_res = io.read_files(src_root).and_then(
-        partial(extract_entities_and_locations, root=src_root)
-    )
+    src_code = io.read_files(src_root).unwrap()
 
-    if not ent_and_locs_res.is_ok():
-        raise ent_and_locs_res.error
-
-    entities, location_map = ent_and_locs_res.inner
-
+    ent_and_locs_res = extract_entities_and_locations(src_code, src_root)
+    entities, location_map = ent_and_locs_res.unwrap()
     entities_res = filter_non_native_calls(entities)
+    entities = entities_res.unwrap()
+    call_tree = entities_res.and_then(create_call_tree).unwrap()
 
-    if not entities_res.is_ok():
-        raise entities_res.error
+    if optimise_src_code:
+        return optimise_entity_positions(
+            io=io,
+            entities=entities,
+            location_map=location_map,
+            call_tree=call_tree,
+            src_root=src_root,
+            new_root=new_root,
+        )
 
-    entities = entities_res.inner
+    return Ok(call_tree)
 
+
+def optimise_entity_positions(  # noqa: PLR0913
+    io: IOProtocol,
+    entities: dict[str, EntityCST],
+    location_map: dict[str, EntityLocation],
+    call_tree: dict[str, list[str]],
+    src_root: str,
+    new_root: str,
+) -> Result:
     return (
-        entities_res.and_then(create_call_tree)
-        .and_then(AdjMat.from_call_tree)
+        AdjMat.from_call_tree(call_tree)
         .and_then(pair_exclusive_calls)
         .and_then(optimise_communities)
         .and_then(merge_single_entity_communities_if_no_gain_penalty)
