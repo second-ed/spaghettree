@@ -21,4 +21,4 @@ def fixture_get_subset_files(
     request: pytest.FixtureRequest, fixture_get_files: types.MappingProxyType[str, str]
 ) -> tuple[str, dict[str, str]]:
     case_name = request.param
-    return case_name, {k: v for k, v in fixture_get_files.items() if k.startswith(case_name)}
+    return case_name, {k: v for k, v in fixture_get_files.items() if case_name in k}

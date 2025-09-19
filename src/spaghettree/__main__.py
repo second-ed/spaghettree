@@ -38,7 +38,7 @@ def run_process(
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
     src_code = io.read_files(src_root).unwrap()
 
-    ent_and_locs_res = extract_entities_and_locations(src_code, src_root)
+    ent_and_locs_res = extract_entities_and_locations(src_code)
     entities, location_map = ent_and_locs_res.unwrap()
     entities_res = filter_non_native_calls(entities)
     entities = entities_res.unwrap()

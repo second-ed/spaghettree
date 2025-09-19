@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 from copy import deepcopy
 
 import libcst as cst
@@ -24,21 +25,25 @@ def cst_to_str(node: cst.CSTNode) -> str:
 
 @safe
 def extract_entities_and_locations(
-    src_code: dict[str, str], root: str
+    src_code: dict[str, str],
 ) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
+    def find_common_prefix(paths: list[str]) -> str:
+        logger.debug(f"{paths = }")
+        return str(pathlib.Path(os.path.commonpath(paths)).parent)
+
     def get_module_name(path: str, root: str) -> str:
-        return (
-            os.path.splitext(path.removeprefix(os.path.dirname(root)))[0]
-            .replace("/", ".")
-            .strip(".")
-        )
+        return os.path.splitext(path.removeprefix(root))[0].replace("/", ".").strip(".")
+
+    logger.debug(f"{list(src_code.keys()) = }")
+    common_prefix = find_common_prefix(src_code.keys())
+    logger.debug(f"{common_prefix = }")
 
     entities: dict[str, EntityCST] = {}
     locations: dict[str, EntityLocation] = {}
 
     for path, data in tqdm(src_code.items(), "creating objects"):
         tree = cst.metadata.MetadataWrapper(str_to_cst(data))
-        module_name = get_module_name(path, root)
+        module_name = get_module_name(path, common_prefix)
         visitor = OnePassVisitor(module_name)
         tree.visit(visitor)
 
