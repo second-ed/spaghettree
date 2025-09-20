@@ -16,7 +16,7 @@ def test_main(src_root):
     try:
         tmp = str(Path("./tmp_test").absolute())
         os.makedirs(tmp, exist_ok=True)
-        res = main(src_root, new_root=f"{tmp}/src/case_1")
+        res = main(src_root, new_root=f"{tmp}/src/case_1", optimise_src_code=True)
         assert res.is_ok()
 
     finally:
@@ -176,11 +176,11 @@ def test_main(src_root):
                 "class FreeClass:\n"
                 "    def some_other_method(self, a: int, b: int) -> int:\n"
                 "        return a * b\n",
-                "result/mock_data/mock_case_7/src/case_7/mod_protocol_mod_overflow.py": "from abc import ABC, abstractmethod\n"
+                "result/mock_data/mock_case_7/src/case_7/mod_protocol_mod_overflow.py": "import abc\n"
                 "\n"
                 "\n"
-                "class Base(ABC):\n"
-                "    @abstractmethod\n"
+                "class Base(abc.ABC):\n"
+                "    @abc.abstractmethod\n"
                 "    def some_method(self, a: str) -> str:\n"
                 "        pass\n"
                 "\n"
@@ -197,7 +197,7 @@ def test_main(src_root):
 def test_run_process(fixture_get_subset_files, expected_result):
     name, files = fixture_get_subset_files
     io = FakeIOWrapper(files)
-    run_process(io, name, new_root=f"result/{name}")
+    run_process(io, name, new_root=f"result/{name}", optimise_src_code=True)
     assert {k: v for k, v in io.files.items() if k.startswith("result/")} == expected_result
 
 

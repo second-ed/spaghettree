@@ -1,3 +1,32 @@
+# Spaghettree
+Software complexity directly affects the maintainability of modern codebases.
+Most of the software lifecycle is spent maintaining production systems. High complexity leads to harder maintenance, slower feature delivery, and longer onboarding for new engineers.
+
+### What this tool does
+
+This is a prototype tool for simplifying structural complexity of a codebase. It works by optimising the call-graph and is intended for integration as a CI/CD pipeline stage.
+
+### Why bother?
+This tool hopes to:
+- Help manage and limit complexity growth during development.
+
+- Complements traditional linters and formatters by addressing architectural issues.
+
+- And also:
+    - reduce technical debt
+    - lower maintenance costs
+    - speed up engineer onboarding
+
+
+# Args
+| Argument           | Type                  | Required | Default | Description                                          |
+| ------------------ | --------------------- | -------- | ------- | ---------------------------------------------------- |
+| positional src_root      | `str`                 | ✅       |  | Path to the root of the repository to scan           |
+| `--new-root`    | `str`                 | ❌       | `''` | Optional new root path for output (default: empty, meaning same as src_root if optimisation is enabled).        |
+| `--optimise-src-code`  | Flag (no value)       | ❌       |  | Enable optimisation of the source code. |
+
+
+
 # How it works
 - All `py` files in the given directory are read in as strings
 - Each of those strings are parsed into `libcst` CST objects
