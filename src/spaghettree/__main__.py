@@ -1,4 +1,6 @@
+import argparse
 from functools import partial
+from pprint import pprint
 
 from spaghettree import Ok, Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
@@ -95,3 +97,29 @@ def optimise_entity_positions(  # noqa: PLR0913
         .and_then(add_empty_inits_if_needed)
         .and_then(partial(io.write_files, ruff_root=new_root or src_root))
     )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process source code from a given root, with optional relocation and optimisation."
+    )
+
+    parser.add_argument("src_root", type=str, help="Path to the source root directory.")
+    parser.add_argument(
+        "--new-root",
+        dest="new_root",
+        type=str,
+        default="",
+        help="Optional new root path for output (default: empty, meaning same as src_root if optimisation is enabled).",
+    )
+    parser.add_argument(
+        "--optimise-src-code",
+        dest="optimise_src_code",
+        action="store_true",
+        help="Enable optimisation of the source code.",
+    )
+
+    args = parser.parse_args()
+    res = main(args.src_root, new_root=args.new_root, optimise_src_code=args.optimise_src_code)
+    call_tree = res.unwrap()
+    pprint(call_tree)  # noqa: T203
