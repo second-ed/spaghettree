@@ -1,6 +1,6 @@
 import argparse
 from functools import partial
-from pprint import pprint
+from pprint import pformat
 
 from spaghettree import Ok, Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
@@ -38,9 +38,6 @@ def main(src_root: str, *, new_root: str = "", optimise_src_code: bool = False) 
 def run_process(
     io: IOProtocol, src_root: str, *, new_root: str = "", optimise_src_code: bool = False
 ) -> Result:
-    def yellow(inp_str: str) -> str:
-        return f"\033[33m{inp_str}\033[0m"
-
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
     src_code = io.read_files(src_root).unwrap()
 
@@ -99,6 +96,14 @@ def optimise_entity_positions(  # noqa: PLR0913
     )
 
 
+def yellow(inp_str: str) -> str:
+    return f"\033[33m{inp_str}\033[0m"
+
+
+def cyan(inp_str: str) -> str:
+    return f"\033[36m{inp_str}\033[0m"
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Process source code from a given root, with optional relocation and optimisation."
@@ -122,4 +127,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     res = main(args.src_root, new_root=args.new_root, optimise_src_code=args.optimise_src_code)
     call_tree = res.unwrap()
-    pprint(call_tree)  # noqa: T203
+    print(cyan(pformat(call_tree)))  # noqa: T201
