@@ -28,18 +28,25 @@ class ClassCST:
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
     methods: list[FuncCST] = attrs.field(factory=list, validator=[instance_of(list)])
     imports: set[ImportCST] = attrs.field(factory=set)
+    bases: list[str] = attrs.field(factory=list)
 
     def get_call_tree_entries(self) -> list[str]:
         return [call for meth in self.methods for call in meth.calls]
 
     def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self:
+        # piggyback here to get the subclass relationships
+        self.bases = resolve_calls(self.bases, import_map, ent_map)
+
         for meth in self.methods:
             meth.resolve_calls(import_map, ent_map)
         return self
 
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         for meth in self.methods:
-            meth.calls = [call for call in meth.calls if call in entities and meth != self.name]
+            bases_and_calls = self.bases + meth.calls
+            meth.calls = [
+                call for call in bases_and_calls if call in entities and meth != self.name
+            ]
         return self
 
     def resolve_native_imports(self) -> Self:
