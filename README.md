@@ -18,6 +18,9 @@ This tool hopes to:
     - speed up engineer onboarding
 
 
+### Notes
+As this is a prototype and not ready for production use, the defaults are set to just report the current structures directed weighted modularity and the current call tree for the repo as it stands.
+
 # Args
 | Argument           | Type                  | Required | Default | Description                                          |
 | ------------------ | --------------------- | -------- | ------- | ---------------------------------------------------- |
@@ -95,7 +98,8 @@ class SomeOtherClass:
 ```
 ├── .github
 │   └── workflows
-│       └── ci_tests.yaml
+│       ├── ci_tests.yaml
+│       └── publish.yaml
 ├── src
 │   └── spaghettree
 │       ├── adapters
