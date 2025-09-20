@@ -161,6 +161,36 @@ def test_main(src_root):
             },
             id="ensure combines modules when theres a global that imports from another package",
         ),
+        pytest.param(
+            "mock_data/mock_case_7/src/case_7",
+            {
+                "result/mock_data/mock_case_7/src/case_7/__init__.py": "",
+                "result/mock_data/mock_case_7/src/case_7/case_7.py": "from typing import Protocol, runtime_checkable\n"
+                "\n"
+                "\n"
+                "@runtime_checkable\n"
+                "class MockProtocol(Protocol):\n"
+                "    def some_method(self, a: str) -> str: ...\n"
+                "\n"
+                "\n"
+                "class FreeClass:\n"
+                "    def some_other_method(self, a: int, b: int) -> int:\n"
+                "        return a * b\n",
+                "result/mock_data/mock_case_7/src/case_7/mod_protocol_mod_overflow.py": "from abc import ABC, abstractmethod\n"
+                "\n"
+                "\n"
+                "class Base(ABC):\n"
+                "    @abstractmethod\n"
+                "    def some_method(self, a: str) -> str:\n"
+                "        pass\n"
+                "\n"
+                "\n"
+                "class Child(Base):\n"
+                "    def some_method(self, a: str) -> str:\n"
+                "        return a.upper()\n",
+            },
+            id="ensure can capture inheritance hierarchies",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
@@ -262,6 +292,16 @@ def test_run_process(fixture_get_subset_files, expected_result):
                 ],
             },
             id="ensure identifies the correct call tree for case_6",
+        ),
+        pytest.param(
+            "mock_data/mock_case_7/src/case_7",
+            {
+                "case_7.mod_protocol.MockProtocol": [],
+                "case_7.mod_protocol.Base": [],
+                "case_7.mod_protocol.Child": ["case_7.mod_protocol.Base"],
+                "case_7.mod_protocol.FreeClass": [],
+            },
+            id="ensure identifies the correct call tree for case_7",
         ),
     ],
     indirect=["fixture_get_subset_files"],
