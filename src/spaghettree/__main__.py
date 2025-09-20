@@ -5,6 +5,7 @@ from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST
 from spaghettree.domain.optimisation import (
+    get_dwm,
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
 )
@@ -27,14 +28,17 @@ from spaghettree.domain.visitors import EntityLocation
 from spaghettree.logger import logger
 
 
-def main(src_root: str, *, new_root: str = "", optimise_src_code: bool = True) -> Result:
+def main(src_root: str, *, new_root: str = "", optimise_src_code: bool = False) -> Result:
     io = IOWrapper()
     return run_process(io, src_root, new_root=new_root, optimise_src_code=optimise_src_code)
 
 
 def run_process(
-    io: IOProtocol, src_root: str, *, new_root: str = "", optimise_src_code: bool = True
+    io: IOProtocol, src_root: str, *, new_root: str = "", optimise_src_code: bool = False
 ) -> Result:
+    def yellow(inp_str: str) -> str:
+        return f"\033[33m{inp_str}\033[0m"
+
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
     src_code = io.read_files(src_root).unwrap()
 
@@ -53,6 +57,13 @@ def run_process(
             src_root=src_root,
             new_root=new_root,
         )
+
+    adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
+    print(  # noqa: T201
+        yellow(
+            f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
+        )
+    )
 
     return Ok(call_tree)
 
