@@ -87,7 +87,7 @@ class OnePassVisitor(MetadataBase):
         if self.depth == 0:
             self.current_class = node.name.value
             scope = self._get_current_scope()
-            bases = [arg.value.value for arg in node.bases if node.bases]
+            bases = [self._resolve_attr(arg.value) for arg in node.bases if node.bases]
             self.entities[scope] = ClassCST(scope, node, bases=bases)
             self._record_location(node, node.name.value)
 

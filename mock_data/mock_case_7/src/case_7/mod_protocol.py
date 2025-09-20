@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+import abc
 from typing import Protocol, runtime_checkable
 
 
@@ -7,8 +7,8 @@ class MockProtocol(Protocol):
     def some_method(self, a: str) -> str: ...
 
 
-class Base(ABC):
-    @abstractmethod
+class Base(abc.ABC):
+    @abc.abstractmethod
     def some_method(self, a: str) -> str:
         pass
 
