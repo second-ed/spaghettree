@@ -124,6 +124,7 @@ class SomeOtherClass:
 │   ├── domain
 │   │   ├── __init__.py
 │   │   ├── test_entities.py
+│   │   ├── test_optimisation.py
 │   │   └── test_processing.py
 │   ├── __init__.py
 │   ├── conftest.py
