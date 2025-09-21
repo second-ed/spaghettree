@@ -4,6 +4,7 @@ import pytest
 
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
+from spaghettree.domain.parsing import str_to_cst
 from spaghettree.domain.processing import (
     add_empty_inits_if_needed,
     convert_to_code_str,
@@ -14,7 +15,6 @@ from spaghettree.domain.processing import (
     rename_overlapping_mod_names,
 )
 from spaghettree.domain.visitors import EntityLocation
-from src.spaghettree.domain.parsing import str_to_cst
 
 CASE_3_CALL_TREE = {
     "case_3.mod_a.A": [],

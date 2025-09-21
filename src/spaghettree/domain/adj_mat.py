@@ -12,6 +12,7 @@ class AdjMat:
     mat: np.ndarray = attrs.field()
     node_map: dict[int, str] = attrs.field()
     communities: list[int] = attrs.field()
+    comm_map: dict[int, str] = attrs.field(factory=dict)
 
     @classmethod
     @safe
@@ -38,7 +39,7 @@ class AdjMat:
 
         adj_mat = AdjMat._create_adj_map(call_tree, ent_idx)
 
-        return cls(adj_mat, node_map, communities)
+        return cls(adj_mat, node_map, communities, comm_map={v: k for k, v in mod_map.items()})
 
     @staticmethod
     def _create_adj_map(call_tree: dict[str, list[str]], ent_idx: dict[str, int]) -> np.ndarray:

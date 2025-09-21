@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 import attrs
 import numpy as np
@@ -121,3 +122,66 @@ def get_dwm(mat: np.ndarray, communities: list[int]) -> float:
     expected_matrix = np.outer(out_degree, in_degree) / total_edges
     modularity_matrix = (mat - expected_matrix) * community_mat
     return modularity_matrix.sum() / total_edges
+
+
+@attrs.define(eq=True, frozen=True)
+class SuggestedMerge:
+    entity: str = attrs.field()
+    target_community: str = attrs.field()
+    gain: float = attrs.field(converter=float)
+
+    def display(self) -> None:
+        print(  # noqa: T201
+            cyan(f"{self.entity}"),
+            yellow("->"),
+            cyan(f"{self.target_community}"),
+            green(f"+{self.gain:.3f}"),
+        )
+
+
+@safe
+def get_top_suggested_merges(adj_mat: AdjMat, top_n: int = 5) -> list[SuggestedMerge]:
+    adj_mat = deepcopy(adj_mat)
+    matrix: np.ndarray = adj_mat.mat
+    communities: list[int] = adj_mat.communities.copy()
+    comm_choices: set[int] = set(communities)
+
+    starting_score = get_dwm(matrix, communities)
+
+    suggested_merges = []
+
+    for idx, comm in enumerate(communities):
+        best_choice, best_score = None, starting_score
+
+        for choice in comm_choices:
+            if comm == choice:
+                continue
+            new_comms = communities.copy()
+            new_comms[idx] = choice
+            score = get_dwm(matrix, new_comms)
+
+            if score > best_score:
+                best_choice, best_score = choice, score
+
+        if best_choice is not None:
+            suggested_merges.append(
+                SuggestedMerge(
+                    adj_mat.node_map.get(idx),
+                    adj_mat.comm_map.get(best_choice),
+                    best_score - starting_score,
+                )
+            )
+
+    return sorted(suggested_merges, key=lambda x: -x.gain)[:top_n]
+
+
+def yellow(inp_str: str) -> str:
+    return f"\033[33m{inp_str}\033[0m"
+
+
+def cyan(inp_str: str) -> str:
+    return f"\033[36m{inp_str}\033[0m"
+
+
+def green(inp_str: str) -> str:
+    return f"\033[32m{inp_str}\033[0m"
