@@ -324,6 +324,18 @@ def test_run_process(fixture_get_subset_files, expected_result):
             },
             id="ensure identifies the correct call tree for case_7",
         ),
+        pytest.param(
+            "mock_data/mock_case_8/src/case_8",
+            {
+                "case_8.logger.__init__.logger": [],
+                "case_8.mod_a.func_a": [],
+                "case_8.mod_b.func_b": [
+                    "case_8.mod_a.func_a",
+                    "case_8.mod_a.func_a",
+                ],
+            },
+            id="ensure identifies the correct call tree for case_8",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
