@@ -107,10 +107,8 @@ def rename_overlapping_mod_names(
         dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
         dirname_counts = Counter(dirnames)
 
-        if (
-            (basename == "__all__" and dirname.endswith(".__init__"))
-            or (basename == "logger" and dirname.endswith(".__init__"))
-            or (dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1)
+        if (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
+            dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1
         ):
             name = dirname
         elif dirname in renamed_modules:
