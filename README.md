@@ -1,4 +1,4 @@
-# Spaghettree
+# spaghettree
 Software complexity directly affects the maintainability of modern codebases.
 Most of the software lifecycle is spent maintaining production systems. High complexity leads to harder maintenance, slower feature delivery, and longer onboarding for new engineers.
 
@@ -20,6 +20,51 @@ This tool hopes to:
 
 ### Notes
 As this is a prototype and not ready for production use, the defaults are set to just report the current structures directed weighted modularity and the current call tree for the repo as it stands.
+
+# Installation
+```shell
+pip install spaghettree
+```
+Or
+```shell
+uv add spaghettree
+```
+
+### Example usage:
+```shell
+uv run -m spaghettree "path/to/src_code"
+```
+
+This will calculate the directed weighted modularity (DWM) of the codebase, and make up to 5 suggestions for improvements for the structure of the code.
+
+The output looks like this
+```shell
+spaghettree.domain.entities.EntityCST -> spaghettree.domain.processing +0.035
+```
+This is saying, move the `EntityCST` class in `spaghettree.domain.entities` to `spaghettree.domain.processing` for an increase of DWM for 0.035.
+
+There are experimental features that will automatically refactor the entire codebase (`--optimise-src-code`) using a divide and conquer algorithm, the behaviour is much more aggressive than the suggestions which aim to keep the developer in the loop before larger restructuring changes.
+
+Lastly it will print a representation of the call tree to the terminal to allow for further analysis the user may want to do. Each entry in the list is a call the function in the key calls.
+
+```python
+{
+    "some_package.mod_a.A": [],
+    "some_package.mod_a.func_a": [],
+    "some_package.mod_a.func_b": [
+        "some_package.mod_a.func_a",
+        "some_package.mod_a.func_a",
+    ],
+    "some_package.mod_b.B": [
+        "some_package.mod_b.CONSTANT",
+    ],
+    "some_package.mod_b.C": [
+        "some_package.mod_a.A",
+        "some_package.mod_b.B",
+    ],
+    "some_package.mod_b.CONSTANT": [],
+}
+```
 
 # Args
 | Argument           | Type                  | Required | Default | Description                                          |
