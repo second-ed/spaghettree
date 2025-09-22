@@ -68,7 +68,7 @@ def infer_module_names(
 ) -> dict[str, list[EntityCST]]:
     logger.debug(f"{new_modules = }")
 
-    renamed_modules: dict[str, list[EntityCST]] = {}
+    renamed_modules: dict[str, list[EntityCST]] = defaultdict(list)
 
     for contents in new_modules.values():
         if len(contents) > 1:
@@ -86,10 +86,11 @@ def infer_module_names(
                 mod_name = f"{possible_module_names[0][0]}.mod_overflow"
         else:
             mod_name = contents[0].name
-        renamed_modules[mod_name] = contents
+        logger.debug(f"{mod_name = }")
+        renamed_modules[mod_name].extend(contents)
 
     logger.debug(f"{renamed_modules = }")
-    return renamed_modules
+    return dict(renamed_modules)
 
 
 @safe
@@ -97,14 +98,20 @@ def rename_overlapping_mod_names(
     renamed_modules: dict[str, list[EntityCST]],
 ) -> dict[str, list[EntityCST]]:
     def rename_mod_name(name: str, renamed_modules: list[str]) -> str:
+        logger.debug(f"{name = }")
         name_parts = name.split(".")
         root = name_parts[0]
         dirname = ".".join(name_parts[:-1])
+        basename = name_parts[-1]
 
         dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
         dirname_counts = Counter(dirnames)
 
-        if dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1:
+        if (
+            (basename == "__all__" and dirname.endswith(".__init__"))
+            or (basename == "logger" and dirname.endswith(".__init__"))
+            or (dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1)
+        ):
             name = dirname
         elif dirname in renamed_modules:
             name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
@@ -200,7 +207,8 @@ def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
     for path, contents in modules.items():
         init_path = f"{os.path.dirname(path)}/__init__.py"
 
-        if init_path not in modules:
+        if init_path not in modules_with_inits:
+            logger.debug(f"creating __init__ {init_path = }")
             modules_with_inits[init_path] = ""
 
         if not contents.strip() and os.path.basename(path) != "__init__.py":

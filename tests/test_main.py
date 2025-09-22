@@ -191,6 +191,27 @@ def test_main(src_root):
             },
             id="ensure can capture inheritance hierarchies",
         ),
+        pytest.param(
+            "mock_data/mock_case_8/src/case_8",
+            {
+                "result/mock_data/mock_case_8/src/case_8/__init__.py": "",
+                "result/mock_data/mock_case_8/src/case_8/case_8.py": "from case_8.logger import logger\n"
+                "\n"
+                "\n"
+                "def func_a() -> int:\n"
+                '    logger.info("calling func_a")\n'
+                "    return 0\n"
+                "\n"
+                "\n"
+                "def func_b() -> int:\n"
+                '    logger.debug("calling func b")\n'
+                "    return func_a() + float(func_a())\n",
+                "result/mock_data/mock_case_8/src/case_8/logger/__init__.py": "import logging\n"
+                "\n"
+                "logger = logging.getLogger(__name__)\n",
+            },
+            id="ensure it leaves a logger module alone",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
