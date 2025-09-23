@@ -63,7 +63,7 @@ class OnePassVisitor(MetadataBase):
         if self.depth != 0:
             return
         for target in node.targets:
-            if not isinstance(target.target, cst.Name):
+            if not isinstance(target.target, cst.Name) or target.target.value == "__all__":
                 return
             self.current_global = target.target.value
             scope = self._get_current_scope()

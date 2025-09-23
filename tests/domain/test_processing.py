@@ -97,13 +97,15 @@ CASE_3_LOC_MAP = {
 }
 CASE_3_EXPECTED_RESULT = {
     "some/src/root/case_3/__init__.py": "",
-    "some/src/root/case_3/mod_a.py": "from case_3.mod_b import B\nclass A:\n    pass\nC = A | B\n",
-    "some/src/root/case_3/mod_a_mod_overflow.py": "import math\n"
+    "some/src/root/case_3/mod_a.py": (
+        "from __future__ import annotations\nfrom case_3.mod_b import B\nclass A:\n    pass\n\nC = A | B\n"
+    ),
+    "some/src/root/case_3/mod_a_mod_overflow.py": "from __future__ import annotations\nimport math\n"
     "def func_a() -> int:\n"
-    "    return math.ceil(0.5)\n"
+    "    return math.ceil(0.5)\n\n"
     "def func_b() -> int:\n"
     "    return func_a() + func_a()\n",
-    "some/src/root/case_3/mod_b.py": "CONSTANT = 3_000\n"
+    "some/src/root/case_3/mod_b.py": "from __future__ import annotations\nCONSTANT = 3_000\n\n"
     "class B:\n"
     "    def method_a(self) -> int:\n"
     "        return CONSTANT\n",

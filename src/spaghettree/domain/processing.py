@@ -6,7 +6,7 @@ from functools import partial
 from spaghettree import Result, safe
 from spaghettree.adapters.io_wrapper import IOProtocol
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import EntityCST, ImportCST
+from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
@@ -68,9 +68,10 @@ def infer_module_names(
 ) -> dict[str, list[EntityCST]]:
     logger.debug(f"{new_modules = }")
 
-    renamed_modules: dict[str, list[EntityCST]] = {}
+    renamed_modules: dict[str, list[EntityCST]] = defaultdict(list)
 
     for contents in new_modules.values():
+        logger.debug(f"{contents = }")
         if len(contents) > 1:
             names = [".".join(ent.name.split(".")[:-1]) for ent in contents]
             possible_module_names = sorted(
@@ -86,10 +87,11 @@ def infer_module_names(
                 mod_name = f"{possible_module_names[0][0]}.mod_overflow"
         else:
             mod_name = contents[0].name
-        renamed_modules[mod_name] = contents
+        logger.debug(f"{mod_name = }")
+        renamed_modules[mod_name].extend(contents)
 
     logger.debug(f"{renamed_modules = }")
-    return renamed_modules
+    return dict(renamed_modules)
 
 
 @safe
@@ -97,14 +99,23 @@ def rename_overlapping_mod_names(
     renamed_modules: dict[str, list[EntityCST]],
 ) -> dict[str, list[EntityCST]]:
     def rename_mod_name(name: str, renamed_modules: list[str]) -> str:
+        logger.debug(f"{name = }")
         name_parts = name.split(".")
         root = name_parts[0]
         dirname = ".".join(name_parts[:-1])
+        basename = name_parts[-1]
 
         dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
         dirname_counts = Counter(dirnames)
 
-        if dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1:
+        logger.debug(f"{dirname_counts = }")
+        top_level_init = 2
+
+        if len(name_parts) == top_level_init and basename == "__init__":
+            pass
+        elif (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
+            dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1
+        ):
             name = dirname
         elif dirname in renamed_modules:
             name = ".".join([*name_parts[:-2], "_".join(name_parts[-2:])])
@@ -150,8 +161,16 @@ def remap_imports(
                             as_name=imp.as_name,
                         ),
                     )
+            updated_imports.add(
+                ImportCST(
+                    module="__future__",
+                    import_type=ImportType.FROM,
+                    name="annotations",
+                    as_name="annotations",
+                )
+            )
             ent.imports = updated_imports
-            logger.debug(f"{ent = }")
+            logger.debug(f"{mod_name = } {ent = }")
     return modules
 
 
@@ -183,7 +202,7 @@ def convert_to_code_str(
             imports.extend([imp.to_str() for imp in ent.imports])
             code.append(cst_to_str(ent.tree))
 
-        return "".join(sorted(set(imports))) + "".join(code)
+        return "".join(sorted(set(imports))) + "\n".join(code)
 
     return {
         mod_name: get_module_str(sorted(contents, key=lambda x: order_map[x.name.split(".")[-1]]))
@@ -200,13 +219,15 @@ def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
     for path, contents in modules.items():
         init_path = f"{os.path.dirname(path)}/__init__.py"
 
-        if init_path not in modules:
+        if init_path not in modules and init_path not in modules_with_inits:
+            logger.debug(f"creating __init__ {init_path = }")
             modules_with_inits[init_path] = ""
 
         if not contents.strip() and os.path.basename(path) != "__init__.py":
             logger.debug(f"Skipping {path = } {contents = }")
             # skip empty files
             continue
+        logger.debug(f"{path = } {contents = }")
         modules_with_inits[path] = contents
 
     return modules_with_inits
