@@ -6,7 +6,7 @@ from functools import partial
 from spaghettree import Result, safe
 from spaghettree.adapters.io_wrapper import IOProtocol
 from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.entities import EntityCST, ImportCST
+from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
@@ -161,6 +161,14 @@ def remap_imports(
                             as_name=imp.as_name,
                         ),
                     )
+            updated_imports.add(
+                ImportCST(
+                    module="__future__",
+                    import_type=ImportType.FROM,
+                    name="annotations",
+                    as_name="annotations",
+                )
+            )
             ent.imports = updated_imports
             logger.debug(f"{mod_name = } {ent = }")
     return modules

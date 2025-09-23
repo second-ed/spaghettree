@@ -66,7 +66,7 @@ class IOWrapper:
     def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w") as f:
-            f.write(format_code_str(modified_code))
+            f.write(modified_code)
         if format_code:
             self._run_ruff(filepath)
 
