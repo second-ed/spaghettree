@@ -71,6 +71,7 @@ def infer_module_names(
     renamed_modules: dict[str, list[EntityCST]] = defaultdict(list)
 
     for contents in new_modules.values():
+        logger.debug(f"{contents = }")
         if len(contents) > 1:
             names = [".".join(ent.name.split(".")[:-1]) for ent in contents]
             possible_module_names = sorted(
@@ -107,7 +108,12 @@ def rename_overlapping_mod_names(
         dirnames = [".".join(m.split(".")[:-1]) for m in renamed_modules]
         dirname_counts = Counter(dirnames)
 
-        if (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
+        logger.debug(f"{dirname_counts = }")
+        top_level_init = 2
+
+        if len(name_parts) == top_level_init and basename == "__init__":
+            pass
+        elif (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
             dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1
         ):
             name = dirname
@@ -156,7 +162,7 @@ def remap_imports(
                         ),
                     )
             ent.imports = updated_imports
-            logger.debug(f"{ent = }")
+            logger.debug(f"{mod_name = } {ent = }")
     return modules
 
 
@@ -188,7 +194,7 @@ def convert_to_code_str(
             imports.extend([imp.to_str() for imp in ent.imports])
             code.append(cst_to_str(ent.tree))
 
-        return "".join(sorted(set(imports))) + "".join(code)
+        return "".join(sorted(set(imports))) + "\n".join(code)
 
     return {
         mod_name: get_module_str(sorted(contents, key=lambda x: order_map[x.name.split(".")[-1]]))
@@ -205,7 +211,7 @@ def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
     for path, contents in modules.items():
         init_path = f"{os.path.dirname(path)}/__init__.py"
 
-        if init_path not in modules_with_inits:
+        if init_path not in modules and init_path not in modules_with_inits:
             logger.debug(f"creating __init__ {init_path = }")
             modules_with_inits[init_path] = ""
 
@@ -213,6 +219,7 @@ def add_empty_inits_if_needed(modules: dict[str, str]) -> dict[str, str]:
             logger.debug(f"Skipping {path = } {contents = }")
             # skip empty files
             continue
+        logger.debug(f"{path = } {contents = }")
         modules_with_inits[path] = contents
 
     return modules_with_inits

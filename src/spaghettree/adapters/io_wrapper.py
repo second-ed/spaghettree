@@ -12,6 +12,7 @@ import isort
 from ruff.__main__ import find_ruff_bin
 
 from spaghettree import Err, Ok, Result, safe
+from spaghettree.logger import logger
 
 
 @runtime_checkable
@@ -79,6 +80,7 @@ class IOWrapper:
             else:
                 res = self.write(modified_code, filepath, format_code=True)
 
+            logger.debug(f"{filepath = } {res = }")
             if res.is_ok():
                 results[filepath] = res.inner
             else:
