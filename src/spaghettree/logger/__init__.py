@@ -23,7 +23,7 @@ if os.getenv("SPAGHETTREE_LOGGING_ENABLED", "false").lower() == "true":
     log_path = f"{REPO_ROOT}/logs/spaghettree.log"
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
-    file_handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=2)
+    file_handler = RotatingFileHandler(log_path, maxBytes=2_000_000, backupCount=1)
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
 
