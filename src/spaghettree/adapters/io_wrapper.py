@@ -87,7 +87,7 @@ class IOWrapper:
 
             logger.debug(f"{filepath = } {res = }")
             if res.is_ok():
-                print(yellow(f"File written to {filepath}"))  # noqa: T201
+                print(yellow(f"File written to `{filepath}`"))  # noqa: T201
                 results[filepath] = res.inner
             else:
                 fails[filepath] = res
