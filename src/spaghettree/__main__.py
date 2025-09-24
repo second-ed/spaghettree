@@ -1,11 +1,11 @@
 import argparse
-from pprint import pformat
+import json
+from pathlib import Path
 
-from spaghettree import Ok, Result
+from spaghettree import Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.optimisation import (
-    cyan,
     get_dwm,
     get_top_suggested_merges,
     yellow,
@@ -39,27 +39,28 @@ def run_process(
     call_tree = entities_res.and_then(create_call_tree).unwrap()
 
     if optimise_src_code:
-        return optimise_entity_positions(
-            io=io,
+        res = optimise_entity_positions(
             entities=entities,
             location_map=location_map,
             call_tree=call_tree,
             src_root=src_root,
             new_root=new_root,
+        ).unwrap()
+    else:
+        adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
+        print(  # noqa: T201
+            yellow(
+                f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
+            )
         )
+        top_merges = get_top_suggested_merges(adj_mat).unwrap()
 
-    adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
-    print(  # noqa: T201
-        yellow(
-            f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
-        )
-    )
-    top_merges = get_top_suggested_merges(adj_mat).unwrap()
+        for merge in top_merges:
+            merge.display()
 
-    for merge in top_merges:
-        merge.display()
+        res = {Path("./call_tree.json").absolute(): json.dumps(call_tree, indent=4)}
 
-    return Ok(call_tree)
+    return io.write_files(res, ruff_root=new_root, format_code=optimise_src_code)
 
 
 if __name__ == "__main__":
@@ -84,5 +85,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     res = main(args.src_root, new_root=args.new_root, optimise_src_code=args.optimise_src_code)
-    call_tree = res.unwrap()
-    print(f"\n{cyan(pformat(call_tree))}")  # noqa: T201
+    if not res.is_ok():
+        raise res.error
