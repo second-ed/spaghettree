@@ -43,7 +43,7 @@ from spaghettree.domain.optimisation import SuggestedMerge, get_top_suggested_me
                 SuggestedMerge(
                     entity="case_3.mod_a.A",
                     target_community="case_3.mod_b",
-                    gain=0.1600000000000001,
+                    gain=0.15999999999999986,
                 )
             ],
         ),
