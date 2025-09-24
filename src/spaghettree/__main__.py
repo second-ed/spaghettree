@@ -64,6 +64,8 @@ def run_process(
             new_root=new_root,
         ).unwrap()
     else:
+        # remove any new_root so that it doesn't try to use ruff on the json
+        new_root = ""
         adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
         print(  # noqa: T201
             yellow(
