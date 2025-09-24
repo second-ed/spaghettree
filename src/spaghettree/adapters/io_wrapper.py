@@ -12,6 +12,7 @@ import isort
 from ruff.__main__ import find_ruff_bin
 
 from spaghettree import Err, Ok, Result, safe
+from spaghettree.domain.optimisation import yellow
 from spaghettree.logger import logger
 
 
@@ -86,6 +87,7 @@ class IOWrapper:
 
             logger.debug(f"{filepath = } {res = }")
             if res.is_ok():
+                print(yellow(f"File written to {filepath}"))  # noqa: T201
                 results[filepath] = res.inner
             else:
                 fails[filepath] = res
