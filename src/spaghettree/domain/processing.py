@@ -4,7 +4,6 @@ from copy import deepcopy
 from functools import partial
 
 from spaghettree import Result, safe
-from spaghettree.adapters.io_wrapper import IOProtocol
 from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
@@ -19,8 +18,7 @@ from spaghettree.domain.visitors import EntityLocation
 from spaghettree.logger import logger
 
 
-def optimise_entity_positions(  # noqa: PLR0913
-    io: IOProtocol,
+def optimise_entity_positions(
     entities: dict[str, EntityCST],
     location_map: dict[str, EntityLocation],
     call_tree: dict[str, list[str]],
@@ -44,7 +42,6 @@ def optimise_entity_positions(  # noqa: PLR0913
         )
         .and_then(partial(create_new_filepaths, new_root=new_root or src_root))
         .and_then(add_empty_inits_if_needed)
-        .and_then(partial(io.write_files, ruff_root=new_root or src_root))
     )
 
 

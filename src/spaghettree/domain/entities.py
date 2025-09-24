@@ -136,9 +136,13 @@ class GlobalCST:
             self.imports.update(imports)
             return self
 
-        for imp in imports:
-            if imp.as_name in self.referenced or imp.module in sys.stdlib_module_names:
-                self.imports.add(imp)
+        self.imports.update(
+            {
+                imp
+                for imp in imports
+                if imp.as_name in self.referenced or imp.module in sys.stdlib_module_names
+            }
+        )
         return self
 
 
