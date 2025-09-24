@@ -116,11 +116,11 @@ def get_dwm(mat: np.ndarray, communities: list[int]) -> float:
     if total_edges == 0:
         return 0
 
-    communities = np.array(communities)
-    community_mat = communities[:, None] == communities[None, :]
+    communities = np.asarray(communities)
+    community_mat = np.equal.outer(communities, communities)
 
     expected_matrix = np.outer(out_degree, in_degree) / total_edges
-    modularity_matrix = (mat - expected_matrix) * community_mat
+    modularity_matrix = (mat - expected_matrix)[community_mat]
     return modularity_matrix.sum() / total_edges
 
 
