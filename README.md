@@ -71,6 +71,8 @@ Lastly it will print a representation of the call tree to the terminal to allow 
 | ------------------ | --------------------- | -------- | ------- | ---------------------------------------------------- |
 | positional src_root      | `str`                 | ✅       |  | Path to the root of the repository to scan           |
 | `--new-root`    | `str`                 | ❌       | `''` | Optional new root path for output (default: empty, meaning same as src_root if optimisation is enabled).        |
+| `--call-tree-save-path`    | `str`                 | ❌       | `'./call_tree.json'` | The location to save the generated call tree. Only used if `--optimise-src-code` isn't used. Defaults to `./call_tree.json`.        |
+
 | `--optimise-src-code`  | Flag (no value)       | ❌       |  | Enable optimisation of the source code. |
 
 

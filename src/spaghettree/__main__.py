@@ -21,13 +21,30 @@ from spaghettree.domain.processing import (
 from spaghettree.logger import logger
 
 
-def main(src_root: str, *, new_root: str = "", optimise_src_code: bool = False) -> Result:
+def main(
+    src_root: str,
+    *,
+    new_root: str = "",
+    call_tree_save_path: str = "./call_tree.json",
+    optimise_src_code: bool = False,
+) -> Result:
     io = IOWrapper()
-    return run_process(io, src_root, new_root=new_root, optimise_src_code=optimise_src_code)
+    return run_process(
+        io,
+        src_root,
+        new_root=new_root,
+        optimise_src_code=optimise_src_code,
+        call_tree_save_path=call_tree_save_path,
+    )
 
 
 def run_process(
-    io: IOProtocol, src_root: str, *, new_root: str = "", optimise_src_code: bool = False
+    io: IOProtocol,
+    src_root: str,
+    *,
+    new_root: str = "",
+    call_tree_save_path: str = "./call_tree.json",
+    optimise_src_code: bool = False,
 ) -> Result:
     logger.info(f"*** RUNNING `spaghettree` {src_root = } {new_root = } ***")
     src_code = io.read_files(src_root).unwrap()
@@ -58,7 +75,7 @@ def run_process(
         for merge in top_merges:
             merge.display()
 
-        res = {Path("./call_tree.json").absolute(): json.dumps(call_tree, indent=4)}
+        res = {Path(call_tree_save_path).absolute(): json.dumps(call_tree, indent=4)}
 
     return io.write_files(res, ruff_root=new_root, format_code=optimise_src_code)
 
@@ -77,6 +94,13 @@ if __name__ == "__main__":
         help="Optional new root path for output (default: empty, meaning same as src_root if optimisation is enabled).",
     )
     parser.add_argument(
+        "--call-tree-save-path",
+        dest="call_tree_save_path",
+        type=str,
+        default="./call_tree.json",
+        help="The location to save the generated call tree. Only used if `--optimise-src-code` isn't used. Defaults to `./call_tree.json`.",
+    )
+    parser.add_argument(
         "--optimise-src-code",
         dest="optimise_src_code",
         action="store_true",
@@ -84,6 +108,11 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    res = main(args.src_root, new_root=args.new_root, optimise_src_code=args.optimise_src_code)
+    res = main(
+        args.src_root,
+        new_root=args.new_root,
+        call_tree_save_path=args.call_tree_save_path,
+        optimise_src_code=args.optimise_src_code,
+    )
     if not res.is_ok():
         raise res.error
