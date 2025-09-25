@@ -154,7 +154,6 @@ class SomeOtherClass:
 │       │   └── io_wrapper.py
 │       ├── domain
 │       │   ├── __init__.py
-│       │   ├── adj_mat.py
 │       │   ├── entities.py
 │       │   ├── optimisation.py
 │       │   ├── parsing.py

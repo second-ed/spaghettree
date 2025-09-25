@@ -1,7 +1,18 @@
-import pytest
+import string
 
-from spaghettree.domain.adj_mat import AdjMat
-from spaghettree.domain.optimisation import SuggestedMerge, get_top_suggested_merges
+import hypothesis.extra.numpy as hnp
+import numpy as np
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+
+from spaghettree.domain.optimisation import (
+    AdjMat,
+    SuggestedMerge,
+    get_dwm,
+    get_top_suggested_merges,
+    optimise_communities,
+)
 
 
 @pytest.mark.parametrize(
@@ -78,7 +89,76 @@ from spaghettree.domain.optimisation import SuggestedMerge, get_top_suggested_me
     ],
 )
 def test_get_top_suggested_merges(call_tree, expected_result):
-    adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
+    adj_mat = AdjMat.from_call_tree(call_tree, optimise=False).unwrap()
     res = get_top_suggested_merges(adj_mat)
     assert res.is_ok()
     assert res.unwrap() == expected_result
+
+
+@st.composite
+def st_adj_mat_and_comms(draw, max_n: int = 20, max_val: int = 20) -> tuple[np.ndarray, list[int]]:
+    n = draw(st.integers(min_value=1, max_value=max_n))
+
+    adj_mat = draw(
+        hnp.arrays(
+            dtype=np.int64,
+            shape=(n, n),
+            elements=st.integers(min_value=0, max_value=max_val),
+        )
+    )
+
+    comms = draw(
+        st.lists(
+            st.integers(min_value=1, max_value=max_val),
+            min_size=n,
+            max_size=n,
+        )
+    )
+
+    return adj_mat, comms
+
+
+@given(st_adj_mat_and_comms())
+def test_get_dwm_is_within_bounds(data):
+    mat, comms = data
+    dwm = get_dwm(mat, comms)
+    assert -0.5 <= dwm <= 1.0
+
+
+def st_ent_path(
+    root: str = "package",
+    min_modules: int = 1,
+    max_modules: int = 3,
+    id_min_size: int = 3,
+    id_max_size: int = 3,
+):
+    alphabet = string.ascii_lowercase
+    identifier = st.text(alphabet=alphabet, min_size=id_min_size, max_size=id_max_size)
+
+    return st.builds(
+        lambda modules, leaf: ".".join([root, *modules, leaf]),
+        st.lists(identifier, min_size=min_modules, max_size=max_modules),
+        identifier,
+    )
+
+
+def st_call_tree(keys_count: int = 20):
+    keys = st.lists(st_ent_path(), min_size=2, max_size=keys_count, unique=True)
+    return keys.flatmap(
+        lambda k: st.fixed_dictionaries(
+            {key: st.lists(st.sampled_from(k), min_size=0, max_size=5) for key in k}
+        )
+    )
+
+
+@given(st_call_tree())
+def test_does_not_produce_worse_dwm(tree):
+    adj_mat = AdjMat.from_call_tree(tree, optimise=True).unwrap()
+    starting_dwm = get_dwm(adj_mat.mat, adj_mat.communities)
+    res = optimise_communities(adj_mat)
+
+    assert res.is_ok()
+
+    res_adj_mat = res.unwrap()
+    final_dwm = get_dwm(res_adj_mat.mat, res_adj_mat.communities)
+    assert starting_dwm <= final_dwm

@@ -4,9 +4,9 @@ from copy import deepcopy
 from functools import partial
 
 from spaghettree import Result, safe
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
+    AdjMat,
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
 )
@@ -26,7 +26,7 @@ def optimise_entity_positions(
     new_root: str,
 ) -> Result:
     return (
-        AdjMat.from_call_tree(call_tree)
+        AdjMat.from_call_tree(call_tree, optimise=True)
         .and_then(pair_exclusive_calls)
         .and_then(optimise_communities)
         .and_then(merge_single_entity_communities_if_no_gain_penalty)
@@ -106,11 +106,8 @@ def rename_overlapping_mod_names(
         dirname_counts = Counter(dirnames)
 
         logger.debug(f"{dirname_counts = }")
-        top_level_init = 2
 
-        if len(name_parts) == top_level_init and basename == "__init__":
-            pass
-        elif (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
+        if (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
             dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1
         ):
             name = dirname

@@ -2,8 +2,8 @@ from functools import partial
 
 import pytest
 
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
+from spaghettree.domain.optimisation import AdjMat
 from spaghettree.domain.parsing import str_to_cst
 from spaghettree.domain.processing import (
     add_empty_inits_if_needed,
@@ -125,7 +125,7 @@ CASE_3_EXPECTED_RESULT = {
     ],
 )
 def test_second_half_of_processing(call_tree, entities, location_map, src_root, expected_result):
-    adj_mat = AdjMat.from_call_tree(call_tree).inner
+    adj_mat = AdjMat.from_call_tree(call_tree, optimise=True).inner
     adj_mat.communities = [0, 2, 2, 4, 4, 0]
     res = (
         create_new_module_map(adj_mat, entities=entities)
