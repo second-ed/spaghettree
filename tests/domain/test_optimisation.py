@@ -142,7 +142,7 @@ def st_ent_path(
     )
 
 
-def st_call_tree(keys_count: int = 10):
+def st_call_tree(keys_count: int = 20):
     keys = st.lists(st_ent_path(), min_size=2, max_size=keys_count, unique=True)
     return keys.flatmap(
         lambda k: st.fixed_dictionaries(
