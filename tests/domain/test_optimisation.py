@@ -10,6 +10,7 @@ from spaghettree.domain.optimisation import (
     AdjMat,
     SuggestedMerge,
     get_dwm,
+    get_merge_pairs,
     get_top_suggested_merges,
     optimise_communities,
 )
@@ -162,3 +163,21 @@ def test_does_not_produce_worse_dwm(tree):
     res_adj_mat = res.unwrap()
     final_dwm = get_dwm(res_adj_mat.mat, res_adj_mat.communities)
     assert starting_dwm <= final_dwm
+
+
+@given(st_call_tree())
+def test_possible_merges_improve_dwm(tree):
+    adj_mat = AdjMat.from_call_tree(tree, optimise=True).unwrap()
+    merge_pairs = get_merge_pairs(adj_mat)
+
+    if merge_pairs:
+        assert all(pair.gain > 0 for pair in merge_pairs)
+
+
+@given(st_call_tree())
+def test_suggested_merges_improve_dwm(tree):
+    adj_mat = AdjMat.from_call_tree(tree, optimise=False).unwrap()
+    suggested_merges = get_merge_pairs(adj_mat)
+
+    if suggested_merges:
+        assert all(pair.gain > 0 for pair in suggested_merges)
