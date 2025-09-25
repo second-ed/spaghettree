@@ -4,8 +4,8 @@ from pathlib import Path
 
 from spaghettree import Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.optimisation import (
+    AdjMat,
     get_dwm,
     get_top_suggested_merges,
     yellow,
@@ -66,7 +66,7 @@ def run_process(
     else:
         # remove any new_root so that it doesn't try to use ruff on the json
         new_root = ""
-        adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
+        adj_mat = AdjMat.from_call_tree(call_tree, optimise=optimise_src_code).unwrap()
         print(  # noqa: T201
             yellow(
                 f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
@@ -79,7 +79,7 @@ def run_process(
 
         res = {Path(call_tree_save_path).absolute(): json.dumps(call_tree, indent=4)}
 
-    return io.write_files(res, ruff_root=new_root, format_code=optimise_src_code)
+    return io.write_files(res, ruff_root=new_root, format_bulk=optimise_src_code)
 
 
 if __name__ == "__main__":

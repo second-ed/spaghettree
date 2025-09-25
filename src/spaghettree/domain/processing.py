@@ -4,9 +4,9 @@ from copy import deepcopy
 from functools import partial
 
 from spaghettree import Result, safe
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
+    AdjMat,
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
 )
@@ -26,7 +26,7 @@ def optimise_entity_positions(
     new_root: str,
 ) -> Result:
     return (
-        AdjMat.from_call_tree(call_tree)
+        AdjMat.from_call_tree(call_tree, optimise=True)
         .and_then(pair_exclusive_calls)
         .and_then(optimise_communities)
         .and_then(merge_single_entity_communities_if_no_gain_penalty)

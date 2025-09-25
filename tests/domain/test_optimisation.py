@@ -6,8 +6,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.optimisation import (
+    AdjMat,
     SuggestedMerge,
     get_dwm,
     get_top_suggested_merges,
@@ -89,7 +89,7 @@ from spaghettree.domain.optimisation import (
     ],
 )
 def test_get_top_suggested_merges(call_tree, expected_result):
-    adj_mat = AdjMat.from_call_tree_no_optimisation(call_tree).unwrap()
+    adj_mat = AdjMat.from_call_tree(call_tree, optimise=False).unwrap()
     res = get_top_suggested_merges(adj_mat)
     assert res.is_ok()
     assert res.unwrap() == expected_result
@@ -153,7 +153,7 @@ def st_call_tree(keys_count: int = 20):
 
 @given(st_call_tree())
 def test_does_not_produce_worse_dwm(tree):
-    adj_mat = AdjMat.from_call_tree(tree).unwrap()
+    adj_mat = AdjMat.from_call_tree(tree, optimise=True).unwrap()
     starting_dwm = get_dwm(adj_mat.mat, adj_mat.communities)
     res = optimise_communities(adj_mat)
 
