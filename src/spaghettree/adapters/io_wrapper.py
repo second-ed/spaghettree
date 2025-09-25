@@ -90,6 +90,7 @@ class IOWrapper:
                 print(yellow(f"File written to `{filepath}`"))  # noqa: T201
                 results[filepath] = res.inner
             else:
+                logger.debug(f"failed to write {filepath = } {res.err_msg = }")
                 fails[filepath] = res
 
         if ruff_root:
