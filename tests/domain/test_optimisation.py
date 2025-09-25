@@ -177,7 +177,10 @@ def test_possible_merges_improve_dwm(tree):
 @given(st_call_tree())
 def test_suggested_merges_improve_dwm(tree):
     adj_mat = AdjMat.from_call_tree(tree, optimise=False).unwrap()
-    suggested_merges = get_merge_pairs(adj_mat)
+    suggested_merges = get_top_suggested_merges(adj_mat)
+
+    assert suggested_merges.is_ok()
+    suggested_merges = suggested_merges.unwrap()
 
     if suggested_merges:
         assert all(pair.gain > 0 for pair in suggested_merges)
