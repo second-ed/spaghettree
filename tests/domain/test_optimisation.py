@@ -126,28 +126,34 @@ def test_get_dwm_is_within_bounds(data):
     assert -0.5 <= dwm <= 1.0
 
 
-def st_ent_path(
-    root: str = "package",
-    min_modules: int = 1,
-    max_modules: int = 3,
-    id_min_size: int = 3,
-    id_max_size: int = 3,
-):
-    alphabet = string.ascii_lowercase
-    identifier = st.text(alphabet=alphabet, min_size=id_min_size, max_size=id_max_size)
-
-    return st.builds(
-        lambda modules, leaf: ".".join([root, *modules, leaf]),
-        st.lists(identifier, min_size=min_modules, max_size=max_modules),
-        identifier,
-    )
+identifier = st.text(
+    alphabet=string.ascii_lowercase,
+    min_size=3,
+    max_size=3,
+)
 
 
-def st_call_tree(keys_count: int = 20):
-    keys = st.lists(st_ent_path(), min_size=2, max_size=keys_count, unique=True)
-    return keys.flatmap(
-        lambda k: st.fixed_dictionaries(
-            {key: st.lists(st.sampled_from(k), min_size=0, max_size=5) for key in k}
+def st_call_tree():
+    subs_s = st.lists(identifier, min_size=1, max_size=4, unique=True)
+    mods_s = st.lists(identifier, min_size=2, max_size=5, unique=True)
+    ents_s = st.lists(identifier, min_size=5, max_size=20, unique=True)
+
+    def _make_paths(subs, mods, ents):
+        path_strategy = st.builds(
+            lambda s, m, e: f"package.{s}.{m}.{e}",
+            st.sampled_from(subs),
+            st.sampled_from(mods),
+            st.sampled_from(ents),
+        )
+        return st.sets(path_strategy, min_size=len(ents), max_size=len(ents)).map(sorted)
+
+    return (
+        st.tuples(subs_s, mods_s, ents_s)
+        .flatmap(lambda x: _make_paths(*x))
+        .flatmap(
+            lambda k: st.fixed_dictionaries(
+                {key: st.lists(st.sampled_from(k), min_size=0, max_size=5) for key in k}
+            )
         )
     )
 
