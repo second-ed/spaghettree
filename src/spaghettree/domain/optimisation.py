@@ -1,26 +1,76 @@
 from collections import defaultdict
 from copy import deepcopy
+from typing import Self
 
 import attrs
 import numpy as np
 
 from spaghettree import safe
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.logger import logger
+
+
+@attrs.define
+class AdjMat:
+    mat: np.ndarray = attrs.field()
+    node_map: dict[int, str] = attrs.field()
+    communities: list[int] = attrs.field()
+    comm_map: dict[int, str] = attrs.field(factory=dict)
+
+    @classmethod
+    @safe
+    def from_call_tree(cls, call_tree: dict[str, list[str]], *, optimise: bool = True) -> Self:
+        logger.debug(f"{call_tree = }")
+        ent_idx, node_map, modules, mod_map = AdjMat._get_components(call_tree)
+        communities = [mod_map[name] for name in modules]
+
+        mat = AdjMat._create_adj_map(call_tree, ent_idx)
+
+        starting_dwm = get_dwm(mat, communities)
+        print(cyan("Starting DWM:"), yellow(starting_dwm))  # noqa: T201
+        logger.debug(f"{starting_dwm = }")
+
+        communities = list(node_map.keys()) if optimise else communities
+
+        return cls(mat, node_map, communities, comm_map={v: k for k, v in mod_map.items()})
+
+    @staticmethod
+    def _create_adj_map(call_tree: dict[str, list[str]], ent_idx: dict[str, int]) -> np.ndarray:
+        n = len(ent_idx)
+        adj_mat = np.zeros((n, n), dtype=int)
+
+        for caller, called in call_tree.items():
+            for call in called:
+                src_idx = ent_idx[caller]
+                dst_idx = ent_idx[call]
+                adj_mat[src_idx, dst_idx] += 1
+        return adj_mat
+
+    @staticmethod
+    def _get_components(
+        call_tree: dict[str, list[str]],
+    ) -> tuple[dict[str, int], dict[int, str], list[str], dict[str, int]]:
+        ent_idx: dict[str, int] = {node: i for i, node in enumerate(call_tree)}
+        node_map: dict[int, str] = {idx: ent_name for ent_name, idx in ent_idx.items()}
+        modules: list[str] = [".".join(k.split(".")[:-1]) for k in call_tree]
+        unique_mods = list(dict.fromkeys(modules))
+        return ent_idx, node_map, modules, {name: idx for idx, name in enumerate(unique_mods)}
 
 
 @safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
     valid_merges = get_merge_pairs(adj_mat)
-    logger.debug(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")
 
     while valid_merges:
         to_merge = remove_overlapping_pairs(valid_merges)
         adj_mat.communities = apply_merges(adj_mat.communities, to_merge)
         valid_merges = get_merge_pairs(adj_mat)
 
-    logger.debug(f"{get_dwm(adj_mat.mat, adj_mat.communities) = }")
+    opt_dwm = get_dwm(adj_mat.mat, adj_mat.communities)
+
+    print(cyan("Optimised DWM:"), yellow(opt_dwm))  # noqa: T201
+    logger.debug(f"{opt_dwm = }")
     logger.debug(f"{adj_mat.communities = }")
+
     return adj_mat
 
 
@@ -116,11 +166,11 @@ def get_dwm(mat: np.ndarray, communities: list[int]) -> float:
     if total_edges == 0:
         return 0
 
-    communities = np.array(communities)
-    community_mat = communities[:, None] == communities[None, :]
+    communities = np.asarray(communities)
+    community_mat = np.equal.outer(communities, communities)
 
     expected_matrix = np.outer(out_degree, in_degree) / total_edges
-    modularity_matrix = (mat - expected_matrix) * community_mat
+    modularity_matrix = (mat - expected_matrix)[community_mat]
     return modularity_matrix.sum() / total_edges
 
 

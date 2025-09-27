@@ -9,8 +9,8 @@ import numpy as np
 from tqdm import tqdm
 
 from spaghettree import safe
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST
+from spaghettree.domain.optimisation import AdjMat
 from spaghettree.domain.visitors import EntityLocation, OnePassVisitor
 from spaghettree.logger import logger
 
@@ -92,6 +92,7 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
     adj_mat = deepcopy(adj_mat)
     matrix: np.ndarray = adj_mat.mat
     communities: list[int] = adj_mat.communities.copy()
+    logger.debug(f"{adj_mat.communities = }")
 
     # make it so we don't weight by call count yet
     adj_bin = (matrix > 0).astype(bool)
@@ -112,4 +113,5 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
                 changed = True
 
     adj_mat.communities = communities.tolist()
+    logger.debug(f"{adj_mat.communities = }")
     return adj_mat

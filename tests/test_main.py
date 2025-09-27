@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -31,6 +32,7 @@ def test_main(src_root):
             {
                 "result/mock_data/mock_case_1/src/case_1/__init__.py": "",
                 "result/mock_data/mock_case_1/src/case_1/case_1.py": (
+                    "from __future__ import annotations\n\n\n"
                     "def func_a() -> int:\n"
                     "    return 0\n"
                     "\n"
@@ -44,18 +46,18 @@ def test_main(src_root):
         pytest.param(
             "mock_data/mock_case_2/src/case_2",
             {
-                "result/mock_data/mock_case_2/src/case_2/__init__.py": "from case_2.mod_a import func_a, func_b\n"
+                "result/mock_data/mock_case_2/src/case_2/__init__.py": "from __future__ import annotations\n\nfrom case_2.mod_a import func_a, func_b\n"
                 "from case_2.mod_a_isolated_func import isolated_func\nfrom case_2.mod_b import ClassA, func_c, func_d\n\n"
                 '__all__: list[str] = ["ClassA", "func_a", "func_b", "func_c", "func_d", "isolated_func"]\n',
-                "result/mock_data/mock_case_2/src/case_2/mod_a.py": "def func_a() -> int:\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_a.py": "from __future__ import annotations\n\n\ndef func_a() -> int:\n"
                 "    return 0 + func_b()\n"
                 "\n"
                 "\n"
                 "def func_b() -> int:\n"
                 "    return 1\n",
-                "result/mock_data/mock_case_2/src/case_2/mod_a_isolated_func.py": "def isolated_func() -> int:\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_a_isolated_func.py": "from __future__ import annotations\n\n\ndef isolated_func() -> int:\n"
                 "    return 5\n",
-                "result/mock_data/mock_case_2/src/case_2/mod_b.py": "def func_c() -> int:\n"
+                "result/mock_data/mock_case_2/src/case_2/mod_b.py": "from __future__ import annotations\n\n\ndef func_c() -> int:\n"
                 "    return 2 + func_d()\n"
                 "\n"
                 "\n"
@@ -73,7 +75,7 @@ def test_main(src_root):
             "mock_data/mock_case_3/src/case_3",
             {
                 "result/mock_data/mock_case_3/src/case_3/__init__.py": "",
-                "result/mock_data/mock_case_3/src/case_3/mod_a.py": "from case_3.mod_b import B\n"
+                "result/mock_data/mock_case_3/src/case_3/mod_a.py": "from __future__ import annotations\n\nfrom case_3.mod_b import B\n"
                 "\n"
                 "\n"
                 "class A:\n"
@@ -81,7 +83,7 @@ def test_main(src_root):
                 "\n"
                 "\n"
                 "C = A | B\n",
-                "result/mock_data/mock_case_3/src/case_3/mod_a_mod_overflow.py": "import math\n"
+                "result/mock_data/mock_case_3/src/case_3/mod_a_mod_overflow.py": "from __future__ import annotations\n\nimport math\n"
                 "\n"
                 "\n"
                 "def func_a() -> int:\n"
@@ -90,7 +92,7 @@ def test_main(src_root):
                 "\n"
                 "def func_b() -> int:\n"
                 "    return func_a() + func_a()\n",
-                "result/mock_data/mock_case_3/src/case_3/mod_b.py": "CONSTANT = 3_000\n"
+                "result/mock_data/mock_case_3/src/case_3/mod_b.py": "from __future__ import annotations\n\nCONSTANT = 3_000\n"
                 "\n"
                 "\n"
                 "class B:\n"
@@ -103,7 +105,7 @@ def test_main(src_root):
             "mock_data/mock_case_4/src/case_4",
             {
                 "result/mock_data/mock_case_4/src/case_4/__init__.py": "",
-                "result/mock_data/mock_case_4/src/case_4/mod_a.py": "import math as mt\n\n\n"
+                "result/mock_data/mock_case_4/src/case_4/mod_a.py": "from __future__ import annotations\n\nimport math as mt\n\n\n"
                 "def func_a() -> int:\n"
                 "    return mt.ceil(CONSTANT)\n"
                 "\n"
@@ -113,7 +115,7 @@ def test_main(src_root):
                 "\n"
                 "\n"
                 "CONSTANT: float = 1_000.99\n",
-                "result/mock_data/mock_case_4/src/case_4/mod_b.py": "CONSTANT = 3_000\n"
+                "result/mock_data/mock_case_4/src/case_4/mod_b.py": "from __future__ import annotations\n\nCONSTANT = 3_000\n"
                 "\n"
                 "\n"
                 "class B:\n"
@@ -126,7 +128,7 @@ def test_main(src_root):
             "mock_data/mock_case_5/src/case_5",
             {
                 "result/mock_data/mock_case_5/src/case_5/__init__.py": "",
-                "result/mock_data/mock_case_5/src/case_5/mod_a.py": "import attrs\n"
+                "result/mock_data/mock_case_5/src/case_5/mod_a.py": "from __future__ import annotations\n\nimport attrs\n"
                 "\n"
                 "\n"
                 "@attrs.define\n"
@@ -142,7 +144,7 @@ def test_main(src_root):
             "mock_data/mock_case_6/src/case_6",
             {
                 "result/mock_data/mock_case_6/src/case_6/__init__.py": "",
-                "result/mock_data/mock_case_6/src/case_6/case_6.py": "import math\n"
+                "result/mock_data/mock_case_6/src/case_6/case_6.py": "from __future__ import annotations\n\nimport math\n"
                 "\n"
                 "PI: float = math.pi\n"
                 "\n"
@@ -153,7 +155,7 @@ def test_main(src_root):
                 "\n"
                 "    def calc_area(self) -> float:\n"
                 "        return PI * self.radius * self.radius\n",
-                "result/mock_data/mock_case_6/src/case_6/mod_b.py": "from case_6.case_6 import PI\n"
+                "result/mock_data/mock_case_6/src/case_6/mod_b.py": "from __future__ import annotations\n\nfrom case_6.case_6 import PI\n"
                 "\n"
                 "\n"
                 "def calculate_circumference(radius: float) -> float:\n"
@@ -165,7 +167,7 @@ def test_main(src_root):
             "mock_data/mock_case_7/src/case_7",
             {
                 "result/mock_data/mock_case_7/src/case_7/__init__.py": "",
-                "result/mock_data/mock_case_7/src/case_7/case_7.py": "from typing import Protocol, runtime_checkable\n"
+                "result/mock_data/mock_case_7/src/case_7/case_7.py": "from __future__ import annotations\n\nfrom typing import Protocol, runtime_checkable\n"
                 "\n"
                 "\n"
                 "@runtime_checkable\n"
@@ -176,7 +178,7 @@ def test_main(src_root):
                 "class FreeClass:\n"
                 "    def some_other_method(self, a: int, b: int) -> int:\n"
                 "        return a * b\n",
-                "result/mock_data/mock_case_7/src/case_7/mod_protocol_mod_overflow.py": "import abc\n"
+                "result/mock_data/mock_case_7/src/case_7/mod_protocol_mod_overflow.py": "from __future__ import annotations\n\nimport abc\n"
                 "\n"
                 "\n"
                 "class Base(abc.ABC):\n"
@@ -190,6 +192,27 @@ def test_main(src_root):
                 "        return a.upper()\n",
             },
             id="ensure can capture inheritance hierarchies",
+        ),
+        pytest.param(
+            "mock_data/mock_case_8/src/case_8",
+            {
+                "result/mock_data/mock_case_8/src/case_8/__init__.py": "",
+                "result/mock_data/mock_case_8/src/case_8/case_8.py": "from __future__ import annotations\n\nfrom case_8.logger import logger\n"
+                "\n"
+                "\n"
+                "def func_a() -> int:\n"
+                '    logger.info("calling func_a")\n'
+                "    return 0\n"
+                "\n"
+                "\n"
+                "def func_b() -> int:\n"
+                '    logger.debug("calling func b")\n'
+                "    return func_a() + float(func_a())\n",
+                "result/mock_data/mock_case_8/src/case_8/logger/__init__.py": "from __future__ import annotations\n\nimport logging\n"
+                "\n"
+                "logger = logging.getLogger(__name__)\n",
+            },
+            id="ensure it leaves a logger module alone",
         ),
     ],
     indirect=["fixture_get_subset_files"],
@@ -303,6 +326,18 @@ def test_run_process(fixture_get_subset_files, expected_result):
             },
             id="ensure identifies the correct call tree for case_7",
         ),
+        pytest.param(
+            "mock_data/mock_case_8/src/case_8",
+            {
+                "case_8.logger.__init__.logger": [],
+                "case_8.mod_a.func_a": [],
+                "case_8.mod_b.func_b": [
+                    "case_8.mod_a.func_a",
+                    "case_8.mod_a.func_a",
+                ],
+            },
+            id="ensure identifies the correct call tree for case_8",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
@@ -311,4 +346,4 @@ def test_run_process_return_call_tree(fixture_get_subset_files, expected_result)
     io = FakeIOWrapper(files)
     res = run_process(io, name, optimise_src_code=False)
     assert res.is_ok()
-    assert res.inner == expected_result
+    assert json.loads(io.files[Path("./call_tree.json").absolute()]) == expected_result

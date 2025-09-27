@@ -2,8 +2,8 @@ from functools import partial
 
 import pytest
 
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
+from spaghettree.domain.optimisation import AdjMat
 from spaghettree.domain.parsing import str_to_cst
 from spaghettree.domain.processing import (
     add_empty_inits_if_needed,
@@ -97,13 +97,15 @@ CASE_3_LOC_MAP = {
 }
 CASE_3_EXPECTED_RESULT = {
     "some/src/root/case_3/__init__.py": "",
-    "some/src/root/case_3/mod_a.py": "from case_3.mod_b import B\nclass A:\n    pass\nC = A | B\n",
-    "some/src/root/case_3/mod_a_mod_overflow.py": "import math\n"
+    "some/src/root/case_3/mod_a.py": (
+        "from __future__ import annotations\nfrom case_3.mod_b import B\nclass A:\n    pass\n\nC = A | B\n"
+    ),
+    "some/src/root/case_3/mod_a_mod_overflow.py": "from __future__ import annotations\nimport math\n"
     "def func_a() -> int:\n"
-    "    return math.ceil(0.5)\n"
+    "    return math.ceil(0.5)\n\n"
     "def func_b() -> int:\n"
     "    return func_a() + func_a()\n",
-    "some/src/root/case_3/mod_b.py": "CONSTANT = 3_000\n"
+    "some/src/root/case_3/mod_b.py": "from __future__ import annotations\nCONSTANT = 3_000\n\n"
     "class B:\n"
     "    def method_a(self) -> int:\n"
     "        return CONSTANT\n",
@@ -123,7 +125,7 @@ CASE_3_EXPECTED_RESULT = {
     ],
 )
 def test_second_half_of_processing(call_tree, entities, location_map, src_root, expected_result):
-    adj_mat = AdjMat.from_call_tree(call_tree).inner
+    adj_mat = AdjMat.from_call_tree(call_tree, optimise=True).inner
     adj_mat.communities = [0, 2, 2, 4, 4, 0]
     res = (
         create_new_module_map(adj_mat, entities=entities)

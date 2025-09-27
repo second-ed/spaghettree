@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Collection
 from enum import Enum, auto
 from typing import Protocol, Self, runtime_checkable
@@ -7,6 +8,8 @@ from typing import Protocol, Self, runtime_checkable
 import attrs
 import libcst as cst
 from attrs.validators import instance_of
+
+from spaghettree.logger import logger
 
 
 @runtime_checkable
@@ -93,7 +96,11 @@ class FuncCST:
 
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self:
         for imp in imports:
-            if imp.as_name in self.calls or f"{imp.module}.{imp.as_name}" in self.calls:
+            if (
+                imp.as_name in self.calls
+                or f"{imp.module}.{imp.as_name}" in self.calls
+                or imp.module in sys.stdlib_module_names
+            ):
                 self.imports.add(imp)
         return self
 
@@ -129,9 +136,13 @@ class GlobalCST:
             self.imports.update(imports)
             return self
 
-        for imp in imports:
-            if imp.as_name in self.referenced:
-                self.imports.add(imp)
+        self.imports.update(
+            {
+                imp
+                for imp in imports
+                if imp.as_name in self.referenced or imp.module in sys.stdlib_module_names
+            }
+        )
         return self
 
 
@@ -164,6 +175,10 @@ def resolve_calls(
     import_map: dict[str, str],
     ent_map: dict[str, str],
 ) -> list[str]:
+    logger.debug(f"{calls = }")
+    logger.debug(f"{import_map = }")
+    logger.debug(f"{ent_map = }")
+
     resolved_calls: list[str] = []
     for call in calls:
         call_parts = call.split(".")

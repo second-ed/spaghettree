@@ -1,7 +1,7 @@
 [project]
 name = "spaghettree"
-version = "0.2.1"
-description = "Add your description here"
+version = "0.3.0"
+description = "Code that reorganises code"
 readme = "README.md"
 authors = [
     { name = "ed cuss", email = "edcussmusic@gmail.com" }
@@ -27,6 +27,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "hypothesis>=6.140.2",
     "ipykernel>=6.29.5",
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
