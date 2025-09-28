@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from enum import Enum, auto
 from typing import Protocol, Self, runtime_checkable
 
@@ -25,9 +25,15 @@ class EntityCST(Protocol):
     def add_referenced_imports(self, imports: set[ImportCST]) -> Self: ...
 
 
+def scope_to_str(scope: Sequence[str] | str) -> str:
+    if isinstance(scope, str):
+        return scope
+    return ".".join(scope)
+
+
 @attrs.define
 class ClassCST:
-    name: str = attrs.field(validator=[instance_of(str)])
+    name: str = attrs.field(validator=[instance_of(str)], converter=scope_to_str)
     tree: cst.ClassDef = attrs.field(validator=[instance_of(cst.ClassDef)], repr=False)
     methods: list[FuncCST] = attrs.field(factory=list, validator=[instance_of(list)])
     imports: set[ImportCST] = attrs.field(factory=set)
@@ -70,7 +76,7 @@ class ClassCST:
 
 @attrs.define
 class FuncCST:
-    name: str = attrs.field(validator=[instance_of(str)])
+    name: str = attrs.field(validator=[instance_of(str)], converter=scope_to_str)
     tree: cst.FunctionDef = attrs.field(validator=[instance_of(cst.FunctionDef)], repr=False)
     calls: list[str] = attrs.field(factory=list, validator=[instance_of(list)])
     imports: set[ImportCST] = attrs.field(factory=set)
@@ -107,7 +113,7 @@ class FuncCST:
 
 @attrs.define(eq=True)
 class GlobalCST:
-    name: str = attrs.field()
+    name: str = attrs.field(validator=[instance_of(str)], converter=scope_to_str)
     tree: cst.SimpleStatementLine = attrs.field(repr=False)
     referenced: list[str] = attrs.field(factory=list)
     imports: set[ImportCST] = attrs.field(factory=set)
