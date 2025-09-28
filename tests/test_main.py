@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -345,4 +346,4 @@ def test_run_process_return_call_tree(fixture_get_subset_files, expected_result)
     io = FakeIOWrapper(files)
     res = run_process(io, name, optimise_src_code=False)
     assert res.is_ok()
-    assert res.inner == expected_result
+    assert json.loads(io.files[Path("./call_tree.json").absolute()]) == expected_result

@@ -1,0 +1,223 @@
+{
+    "spaghettree.__init__.T": [],
+    "spaghettree.__init__.P": [],
+    "spaghettree.__init__.Ok": [
+        "spaghettree.__init__.T",
+        "spaghettree.__init__.Result",
+        "spaghettree.__init__.T"
+    ],
+    "spaghettree.__init__.Err": [
+        "spaghettree.__init__.T",
+        "spaghettree.__init__.Result"
+    ],
+    "spaghettree.__init__.Result": [
+        "spaghettree.__init__.Ok",
+        "spaghettree.__init__.Err"
+    ],
+    "spaghettree.__init__.safe": [
+        "spaghettree.__init__.P",
+        "spaghettree.__init__.T",
+        "spaghettree.__init__.Result",
+        "spaghettree.__init__.Ok",
+        "spaghettree.__init__.Err"
+    ],
+    "spaghettree.__main__.main": [
+        "spaghettree.adapters.io_wrapper.IOWrapper",
+        "spaghettree.__main__.run_process"
+    ],
+    "spaghettree.__main__.run_process": [
+        "spaghettree.adapters.io_wrapper.IOProtocol",
+        "spaghettree.domain.parsing.extract_entities_and_locations",
+        "spaghettree.domain.parsing.filter_non_native_calls",
+        "spaghettree.domain.parsing.create_call_tree",
+        "spaghettree.domain.processing.optimise_entity_positions",
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.optimisation.yellow",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.get_top_suggested_merges"
+    ],
+    "spaghettree.adapters.io_wrapper.IOProtocol": [],
+    "spaghettree.adapters.io_wrapper.IOWrapper": [
+        "spaghettree.domain.optimisation.yellow",
+        "spaghettree.domain.optimisation.yellow"
+    ],
+    "spaghettree.adapters.io_wrapper.FakeIOWrapper": [
+        "spaghettree.adapters.io_wrapper.format_code_str"
+    ],
+    "spaghettree.adapters.io_wrapper.format_code_str": [],
+    "spaghettree.domain.adj_mat.AdjMat": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.adj_mat.AdjMat"
+    ],
+    "spaghettree.domain.entities.EntityCST": [
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.ImportCST"
+    ],
+    "spaghettree.domain.entities.ClassCST": [
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.entities.ImportCST"
+    ],
+    "spaghettree.domain.entities.FuncCST": [
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.entities.ImportCST"
+    ],
+    "spaghettree.domain.entities.GlobalCST": [
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.resolve_calls",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.entities.ImportCST"
+    ],
+    "spaghettree.domain.entities.ImportType": [],
+    "spaghettree.domain.entities.ImportCST": [
+        "spaghettree.domain.entities.ImportType"
+    ],
+    "spaghettree.domain.entities.resolve_calls": [],
+    "spaghettree.domain.optimisation.optimise_communities": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.optimisation.get_merge_pairs",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.remove_overlapping_pairs",
+        "spaghettree.domain.optimisation.apply_merges",
+        "spaghettree.domain.optimisation.get_merge_pairs",
+        "spaghettree.domain.optimisation.get_dwm"
+    ],
+    "spaghettree.domain.optimisation.merge_single_entity_communities_if_no_gain_penalty": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.PossibleMerge",
+        "spaghettree.domain.optimisation.apply_merges"
+    ],
+    "spaghettree.domain.optimisation.PossibleMerge": [],
+    "spaghettree.domain.optimisation.get_merge_pairs": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.optimisation.PossibleMerge",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.PossibleMerge"
+    ],
+    "spaghettree.domain.optimisation.remove_overlapping_pairs": [
+        "spaghettree.domain.optimisation.PossibleMerge"
+    ],
+    "spaghettree.domain.optimisation.apply_merges": [
+        "spaghettree.domain.optimisation.PossibleMerge"
+    ],
+    "spaghettree.domain.optimisation.get_dwm": [],
+    "spaghettree.domain.optimisation.SuggestedMerge": [
+        "spaghettree.domain.optimisation.cyan",
+        "spaghettree.domain.optimisation.yellow",
+        "spaghettree.domain.optimisation.cyan",
+        "spaghettree.domain.optimisation.green"
+    ],
+    "spaghettree.domain.optimisation.get_top_suggested_merges": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.optimisation.SuggestedMerge",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.get_dwm",
+        "spaghettree.domain.optimisation.SuggestedMerge"
+    ],
+    "spaghettree.domain.optimisation.yellow": [],
+    "spaghettree.domain.optimisation.cyan": [],
+    "spaghettree.domain.optimisation.green": [],
+    "spaghettree.domain.parsing.str_to_cst": [],
+    "spaghettree.domain.parsing.cst_to_str": [],
+    "spaghettree.domain.parsing.extract_entities_and_locations": [
+        "spaghettree.domain.entities.EntityCST",
+        "spaghettree.domain.visitors.EntityLocation",
+        "spaghettree.domain.parsing.str_to_cst",
+        "spaghettree.domain.visitors.OnePassVisitor",
+        "spaghettree.domain.entities.resolve_calls"
+    ],
+    "spaghettree.domain.parsing.filter_non_native_calls": [
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.parsing.create_call_tree": [
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.parsing.pair_exclusive_calls": [
+        "spaghettree.domain.adj_mat.AdjMat"
+    ],
+    "spaghettree.domain.processing.optimise_entity_positions": [
+        "spaghettree.domain.entities.EntityCST",
+        "spaghettree.domain.visitors.EntityLocation",
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.parsing.pair_exclusive_calls",
+        "spaghettree.domain.optimisation.optimise_communities",
+        "spaghettree.domain.optimisation.merge_single_entity_communities_if_no_gain_penalty",
+        "spaghettree.domain.processing.create_new_module_map",
+        "spaghettree.domain.processing.infer_module_names",
+        "spaghettree.domain.processing.rename_overlapping_mod_names",
+        "spaghettree.domain.processing.remap_imports",
+        "spaghettree.domain.processing.convert_to_code_str",
+        "spaghettree.domain.processing.create_new_filepaths",
+        "spaghettree.domain.processing.add_empty_inits_if_needed"
+    ],
+    "spaghettree.domain.processing.create_new_module_map": [
+        "spaghettree.domain.adj_mat.AdjMat",
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.processing.infer_module_names": [
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.processing.rename_overlapping_mod_names": [
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.processing.remap_imports": [
+        "spaghettree.domain.entities.EntityCST",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.entities.ImportType"
+    ],
+    "spaghettree.domain.processing.create_new_filepaths": [
+        "spaghettree.domain.entities.EntityCST"
+    ],
+    "spaghettree.domain.processing.convert_to_code_str": [
+        "spaghettree.domain.entities.EntityCST",
+        "spaghettree.domain.parsing.cst_to_str"
+    ],
+    "spaghettree.domain.processing.add_empty_inits_if_needed": [],
+    "spaghettree.domain.visitors.EntityLocation": [],
+    "spaghettree.domain.visitors.MetadataBase": [],
+    "spaghettree.domain.visitors.OnePassVisitor": [
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.GlobalCST",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.GlobalCST",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.ClassCST",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.FuncCST",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.entities.ImportType",
+        "spaghettree.domain.entities.ImportCST",
+        "spaghettree.domain.visitors.MetadataBase",
+        "spaghettree.domain.visitors.EntityLocation",
+        "spaghettree.domain.visitors.MetadataBase"
+    ],
+    "spaghettree.logger.__init__.logger": [],
+    "spaghettree.logger.__init__.REPO_ROOT": []
+}

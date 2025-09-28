@@ -12,6 +12,7 @@ import isort
 from ruff.__main__ import find_ruff_bin
 
 from spaghettree import Err, Ok, Result, safe
+from spaghettree.domain.optimisation import yellow
 from spaghettree.logger import logger
 
 
@@ -29,7 +30,9 @@ class IOProtocol(Protocol):
     @safe
     def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None: ...
 
-    def write_files(self, src_code: dict[str, str], ruff_root: str | None = None) -> Result: ...
+    def write_files(
+        self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
+    ) -> Result: ...
 
 
 @attrs.define
@@ -70,11 +73,13 @@ class IOWrapper:
         if format_code:
             self._run_ruff(filepath)
 
-    def write_files(self, src_code: dict[str, str], ruff_root: str | None = None) -> Result:
+    def write_files(
+        self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
+    ) -> Result:
         results, fails = {}, {}
 
         for filepath, modified_code in src_code.items():
-            if ruff_root is not None:
+            if not ruff_root or format_bulk:
                 # format all at the end instead
                 res = self.write(modified_code, filepath, format_code=False)
             else:
@@ -82,11 +87,13 @@ class IOWrapper:
 
             logger.debug(f"{filepath = } {res = }")
             if res.is_ok():
+                print(yellow(f"File written to `{filepath}`"))  # noqa: T201
                 results[filepath] = res.inner
             else:
+                logger.error(yellow(f"failed to write {filepath = } {res.err_msg = }"))
                 fails[filepath] = res
 
-        if ruff_root:
+        if ruff_root and format_bulk:
             self._run_ruff(ruff_root)
         if fails:
             return Err(fails)
@@ -139,12 +146,14 @@ class FakeIOWrapper:
     def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
         self.files[filepath] = format_code_str(modified_code) if format_code else modified_code
 
-    def write_files(self, src_code: dict[str, str], ruff_root: str | None = None) -> Result:
+    def write_files(
+        self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
+    ) -> Result:
         results, fails = {}, {}
 
         for filepath, modified_code in src_code.items():
             if ruff_root is not None:
-                res = self.write(modified_code, filepath)
+                res = self.write(modified_code, filepath, format_code=format_bulk)
 
             if res.is_ok():
                 results[filepath] = res.inner

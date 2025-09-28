@@ -4,10 +4,9 @@ from copy import deepcopy
 from functools import partial
 
 from spaghettree import Result, safe
-from spaghettree.adapters.io_wrapper import IOProtocol
-from spaghettree.domain.adj_mat import AdjMat
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
+    AdjMat,
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
 )
@@ -19,8 +18,7 @@ from spaghettree.domain.visitors import EntityLocation
 from spaghettree.logger import logger
 
 
-def optimise_entity_positions(  # noqa: PLR0913
-    io: IOProtocol,
+def optimise_entity_positions(
     entities: dict[str, EntityCST],
     location_map: dict[str, EntityLocation],
     call_tree: dict[str, list[str]],
@@ -28,7 +26,7 @@ def optimise_entity_positions(  # noqa: PLR0913
     new_root: str,
 ) -> Result:
     return (
-        AdjMat.from_call_tree(call_tree)
+        AdjMat.from_call_tree(call_tree, optimise=True)
         .and_then(pair_exclusive_calls)
         .and_then(optimise_communities)
         .and_then(merge_single_entity_communities_if_no_gain_penalty)
@@ -44,7 +42,6 @@ def optimise_entity_positions(  # noqa: PLR0913
         )
         .and_then(partial(create_new_filepaths, new_root=new_root or src_root))
         .and_then(add_empty_inits_if_needed)
-        .and_then(partial(io.write_files, ruff_root=new_root or src_root))
     )
 
 
@@ -109,11 +106,8 @@ def rename_overlapping_mod_names(
         dirname_counts = Counter(dirnames)
 
         logger.debug(f"{dirname_counts = }")
-        top_level_init = 2
 
-        if len(name_parts) == top_level_init and basename == "__init__":
-            pass
-        elif (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
+        if (basename in ("__all__", "logger") and dirname.endswith(".__init__")) or (
             dirname not in renamed_modules and dirname_counts.get(dirname, 0) <= 1
         ):
             name = dirname
