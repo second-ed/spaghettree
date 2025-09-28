@@ -31,7 +31,7 @@ class OnePassVisitor(MetadataBase):
     depth: int = attrs.field(default=0)
     in_cls: bool = attrs.field(default=False)
     in_func: bool = attrs.field(default=False)
-    in_global: str = attrs.field(default=False)
+    in_global: bool = attrs.field(default=False)
     entities: dict = attrs.field(factory=dict)
     locations: dict = attrs.field(factory=dict)
     imports: set[ImportCST] = attrs.field(factory=set)
