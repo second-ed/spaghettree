@@ -5,6 +5,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 import spaghettree.domain.entities as ent
+from tests.conftest import identifier
 
 
 @pytest.mark.parametrize(
@@ -21,10 +22,11 @@ def test_entities_match_protocol(entity_cst):
 
 @given(
     st.one_of(
-        st.tuples(st.text(alphabet=string.ascii_lowercase)),
-        st.text(alphabet=string.ascii_lowercase),
+        st.lists(st.text(alphabet=string.ascii_lowercase), min_size=2),
+        identifier,
     )
 )
 def test_scope_to_str(data):
     res = ent.scope_to_str(data)
     assert isinstance(res, str)
+    assert all(elem in res for elem in data)
