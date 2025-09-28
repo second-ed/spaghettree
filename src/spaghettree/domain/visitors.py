@@ -29,10 +29,7 @@ class OnePassVisitor(MetadataBase):
     imports: set[ImportCST] = attrs.field(factory=set)
 
     def visit_Import(self, node: cst.Import) -> None:  # noqa: N802
-        for alias in node.names:
-            name = self._resolve_attr(alias.name)
-            asname = alias.asname.name.value if alias.asname else name
-            self._add_import(name, ImportType.IMPORT, name, asname)
+        self._record_import(None, node.names, ImportType.IMPORT)
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:  # noqa: N802
         module = self._resolve_attr(node.module)
@@ -44,14 +41,17 @@ class OnePassVisitor(MetadataBase):
             self._add_import(module, ImportType.FROM, "*", "*")
             return
 
-        aliases = node.names
-        if isinstance(aliases, cst.ImportAlias):
-            aliases = [aliases]
+        aliases = [node.names] if isinstance(node.names, cst.ImportAlias) else node.names
+        self._record_import(module, aliases, ImportType.FROM)
 
+    def _record_import(self, module: str | None, aliases: list, import_type: ImportType) -> None:
         for alias in aliases:
             name = self._resolve_attr(alias.name)
             asname = alias.asname.name.value if alias.asname else name
-            self._add_import(module, ImportType.FROM, name, asname)
+            self._add_import(module or name, import_type, name, asname)
+
+    def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
+        self.imports.add(ImportCST(key, import_type, name, as_name))
 
     def visit_IndentedBlock(self, _: cst.IndentedBlock) -> bool | None:  # noqa: N802
         self.depth += 1
@@ -64,24 +64,24 @@ class OnePassVisitor(MetadataBase):
             return
         for target in node.targets:
             if not isinstance(target.target, cst.Name) or target.target.value == "__all__":
-                return
-            self.current_global = target.target.value
-            scope = self._get_current_scope()
-            self.entities[scope] = GlobalCST(scope, node)
-            self._record_location(node, self.current_global)
+                continue
+            self._record_global(target.target.value, node)
 
     def leave_Assign(self, _: cst.Assign) -> None:  # noqa: N802
         self.current_global = ""
 
     def visit_AnnAssign(self, node: cst.AnnAssign) -> None:  # noqa: N802
         if self.depth == 0 and isinstance(node.target, cst.Name):
-            self.current_global = node.target.value
-            scope = self._get_current_scope()
-            self.entities[scope] = GlobalCST(scope, node)
-            self._record_location(node, self.current_global)
+            self._record_global(node.target.value, node)
 
     def leave_AnnAssign(self, _: cst.AnnAssign) -> None:  # noqa: N802
         self.current_global = ""
+
+    def _record_global(self, name: str, node: cst.CSTNode) -> None:
+        self.current_global = name
+        scope = self._get_current_scope()
+        self.entities[scope] = GlobalCST(scope, node)
+        self._record_location(node, self.current_global)
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:  # noqa: N802
         if self.depth == 0:
@@ -114,14 +114,13 @@ class OnePassVisitor(MetadataBase):
 
     def visit_Call(self, node: cst.Call) -> None:  # noqa: N802
         scope = self._get_current_scope()
+        fn_call = self._resolve_attr(node.func)
 
         if self.current_class and self.current_func:
             # add the calls to the last added method
-            self.entities[self._get_current_class_scope()].methods[-1].calls.append(
-                self._resolve_attr(node.func)
-            )
+            self.entities[self._get_current_class_scope()].methods[-1].calls.append(fn_call)
         elif self.current_func:
-            self.entities[scope].calls.append(self._resolve_attr(node.func))
+            self.entities[scope].calls.append(fn_call)
 
     def visit_Name(self, node: cst.Name) -> None:  # noqa: N802
         scope = self._get_current_class_scope() if self.current_class else self._get_current_scope()
@@ -154,9 +153,6 @@ class OnePassVisitor(MetadataBase):
 
     def _get_current_class_scope(self) -> str:
         return f"{self.module_name}.{self.current_class}"
-
-    def _add_import(self, key: str, import_type: ImportType, name: str, as_name: str) -> None:
-        self.imports.add(ImportCST(key, import_type, name, as_name))
 
     def _record_location(self, node: cst.CSTNode, name: str) -> None:
         self.locations[name] = EntityLocation(
