@@ -214,6 +214,46 @@ def test_main(src_root):
             },
             id="ensure it leaves a logger module alone",
         ),
+        pytest.param(
+            "mock_data/mock_case_9/src/case_9",
+            {
+                "result/mock_data/mock_case_9/src/case_9/__init__.py": "",
+                "result/mock_data/mock_case_9/src/case_9/mod_generics.py": "from __future__ import annotations\n\nfrom typing import Optional, TypeVar\n"
+                "\n"
+                "from case_9.mod_utils import T\n"
+                "\n"
+                "\n"
+                "def process_list(items: list[str]) -> list[str]:\n"
+                "    return process_data(items)\n"
+                "\n"
+                "\n"
+                "def create_mapping(keys: list[str], values: list[int]) -> dict[str, int]:\n"
+                "    result: dict[str, int] = {}\n"
+                "    for key, value in zip(keys, values):\n"
+                "        result[key] = value\n"
+                "    return result\n"
+                "\n"
+                "\n"
+                "def process_data[T](data: list[T]) -> list[T]:\n"
+                "    return [item for item in data if item is not None]\n",
+                "result/mock_data/mock_case_9/src/case_9/mod_generics_find_item.py": "from __future__ import annotations\n\nfrom typing import Optional\n"
+                "\n"
+                "\n"
+                "def find_item(items: list[str], target: str) -> str | None:\n"
+                "    for item in items:\n"
+                "        if item == target:\n"
+                "            return item\n"
+                "    return None\n",
+                "result/mock_data/mock_case_9/src/case_9/mod_utils.py": "from __future__ import annotations\n\nfrom typing import TypeVar\n"
+                "\n"
+                'T = TypeVar("T")\n'
+                "\n"
+                "\n"
+                "def get_first_item[T](items: list[T]) -> T:\n"
+                "    return items[0]\n",
+            },
+            id="ensure handles generic types and TypeVar correctly",
+        ),
     ],
     indirect=["fixture_get_subset_files"],
 )
@@ -337,6 +377,24 @@ def test_run_process(fixture_get_subset_files, expected_result):
                 ],
             },
             id="ensure identifies the correct call tree for case_8",
+        ),
+        pytest.param(
+            "mock_data/mock_case_9/src/case_9",
+            {
+                "case_9.mod_generics.process_list": [
+                    "case_9.mod_utils.process_data",
+                ],
+                "case_9.mod_generics.create_mapping": [],
+                "case_9.mod_generics.find_item": [],
+                "case_9.mod_utils.T": [],
+                "case_9.mod_utils.process_data": [
+                    "case_9.mod_utils.T",
+                ],
+                "case_9.mod_utils.get_first_item": [
+                    "case_9.mod_utils.T",
+                ],
+            },
+            id="ensure identifies the correct call tree for case_9 with generics",
         ),
     ],
     indirect=["fixture_get_subset_files"],

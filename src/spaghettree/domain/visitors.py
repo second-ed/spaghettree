@@ -171,4 +171,6 @@ class OnePassVisitor(MetadataBase):
         if isinstance(node, cst.Attribute):
             parent = self._resolve_attr(node.value)
             return f"{parent}.{node.attr.value}" if parent else node.attr.value
+        if isinstance(node, cst.Subscript):
+            return self._resolve_attr(node.value)
         return None
