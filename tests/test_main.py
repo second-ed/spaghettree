@@ -218,7 +218,7 @@ def test_main(src_root):
             "mock_data/mock_case_9/src/case_9",
             {
                 "result/mock_data/mock_case_9/src/case_9/__init__.py": "",
-                "result/mock_data/mock_case_9/src/case_9/mod_generics.py": "from __future__ import annotations\n\nfrom typing import Optional, TypeVar\n"
+                "result/mock_data/mock_case_9/src/case_9/mod_generics.py": "from __future__ import annotations\n\nfrom typing import TypeVar\n"
                 "\n"
                 "from case_9.mod_utils import T\n"
                 "\n"
@@ -228,16 +228,12 @@ def test_main(src_root):
                 "\n"
                 "\n"
                 "def create_mapping(keys: list[str], values: list[int]) -> dict[str, int]:\n"
-                "    result: dict[str, int] = {}\n"
-                "    for key, value in zip(keys, values):\n"
-                "        result[key] = value\n"
-                "    return result\n"
+                "    return dict(zip(keys, values, strict=False))\n"
                 "\n"
                 "\n"
                 "def process_data[T](data: list[T]) -> list[T]:\n"
                 "    return [item for item in data if item is not None]\n",
-                "result/mock_data/mock_case_9/src/case_9/mod_generics_find_item.py": "from __future__ import annotations\n\nfrom typing import Optional\n"
-                "\n"
+                "result/mock_data/mock_case_9/src/case_9/mod_generics_find_item.py": "from __future__ import annotations\n\n"
                 "\n"
                 "def find_item(items: list[str], target: str) -> str | None:\n"
                 "    for item in items:\n"

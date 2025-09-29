@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 from case_9.mod_utils import process_data
 
@@ -8,10 +8,7 @@ def process_list(items: list[str]) -> list[str]:
 
 
 def create_mapping(keys: list[str], values: list[int]) -> dict[str, int]:
-    result: dict[str, int] = {}
-    for key, value in zip(keys, values):
-        result[key] = value
-    return result
+    return dict(zip(keys, values, strict=False))
 
 
 def find_item(items: list[str], target: str) -> str | None:
