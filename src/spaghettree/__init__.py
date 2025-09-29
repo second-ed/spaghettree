@@ -13,6 +13,8 @@ from typing import (
 
 import attrs
 
+from spaghettree.logger import logger
+
 T = TypeVar("T")
 P = ParamSpec("P")
 
@@ -82,6 +84,7 @@ def safe[**P, T](func: Callable[P, T]) -> Callable[P, Result]:
         try:
             return Ok(func(*args, **kwargs))
         except Exception as e:  # noqa: BLE001
+            logger.error(f"{args = } {kwargs = } {e = }")
             return Err((args, kwargs), e)
 
     return wrapper

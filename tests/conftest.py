@@ -1,7 +1,9 @@
+import string
 import types
 from pathlib import Path
 
 import pytest
+from hypothesis import strategies as st
 
 from spaghettree.adapters.io_wrapper import IOWrapper
 
@@ -22,3 +24,10 @@ def fixture_get_subset_files(
 ) -> tuple[str, dict[str, str]]:
     case_name = request.param
     return case_name, {k: v for k, v in fixture_get_files.items() if case_name in k}
+
+
+identifier = st.text(
+    alphabet=string.ascii_lowercase,
+    min_size=3,
+    max_size=3,
+)

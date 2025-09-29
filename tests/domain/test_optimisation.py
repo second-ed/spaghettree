@@ -1,5 +1,3 @@
-import string
-
 import hypothesis.extra.numpy as hnp
 import numpy as np
 import pytest
@@ -14,6 +12,7 @@ from spaghettree.domain.optimisation import (
     get_top_suggested_merges,
     optimise_communities,
 )
+from tests.conftest import identifier
 
 
 @pytest.mark.parametrize(
@@ -124,13 +123,6 @@ def test_get_dwm_is_within_bounds(data):
     mat, comms = data
     dwm = get_dwm(mat, comms)
     assert -0.5 <= dwm <= 1.0
-
-
-identifier = st.text(
-    alphabet=string.ascii_lowercase,
-    min_size=3,
-    max_size=3,
-)
 
 
 def st_call_tree():
