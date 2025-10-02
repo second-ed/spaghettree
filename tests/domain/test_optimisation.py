@@ -86,6 +86,23 @@ from tests.conftest import identifier
             },
             [],
         ),
+        pytest.param(
+            {
+                "case_9.mod_generics.process_list": ["case_9.mod_utils.process_data"],
+                "case_9.mod_generics.create_mapping": [],
+                "case_9.mod_generics.find_item": [],
+                "case_9.mod_utils.T": [],
+                "case_9.mod_utils.process_data": ["case_9.mod_utils.T"],
+                "case_9.mod_utils.get_first_item": ["case_9.mod_utils.T"],
+            },
+            [
+                SuggestedMerge(
+                    entity="case_9.mod_utils.process_data",
+                    target_community="case_9.mod_generics",
+                    gain=0.22222222222222215,
+                )
+            ],
+        ),
     ],
 )
 def test_get_top_suggested_merges(call_tree, expected_result):
