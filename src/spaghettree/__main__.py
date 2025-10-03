@@ -2,8 +2,9 @@ import argparse
 import json
 from pathlib import Path
 
-from spaghettree import Result
 from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
+from spaghettree.core.logger import logger
+from spaghettree.core.result import Result
 from spaghettree.domain.optimisation import (
     AdjMat,
     get_dwm,
@@ -18,7 +19,6 @@ from spaghettree.domain.parsing import (
 from spaghettree.domain.processing import (
     optimise_entity_positions,
 )
-from spaghettree.logger import logger
 
 
 def main(

@@ -1,6 +1,6 @@
 import pytest
 
-from spaghettree import safe
+from spaghettree.core.result import safe
 
 
 def test_safe():
