@@ -3,7 +3,8 @@ from collections import Counter, defaultdict
 from copy import deepcopy
 from functools import partial
 
-from spaghettree import Result, safe
+from spaghettree.core.logger import logger
+from spaghettree.core.result import Result, safe
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
     AdjMat,
@@ -15,7 +16,6 @@ from spaghettree.domain.parsing import (
     pair_exclusive_calls,
 )
 from spaghettree.domain.visitors import EntityLocation
-from spaghettree.logger import logger
 
 
 def optimise_entity_positions(

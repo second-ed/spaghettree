@@ -152,6 +152,10 @@ class SomeOtherClass:
 │       ├── adapters
 │       │   ├── __init__.py
 │       │   └── io_wrapper.py
+│       ├── core
+│       │   ├── __init__.py
+│       │   ├── logger.py
+│       │   └── result.py
 │       ├── domain
 │       │   ├── __init__.py
 │       │   ├── entities.py
@@ -159,14 +163,15 @@ class SomeOtherClass:
 │       │   ├── parsing.py
 │       │   ├── processing.py
 │       │   └── visitors.py
-│       ├── logger
-│       │   └── __init__.py
 │       ├── __init__.py
 │       └── __main__.py
 ├── tests
 │   ├── adapters
 │   │   ├── __init__.py
 │   │   └── test_adapter_apis.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   └── test_result.py
 │   ├── domain
 │   │   ├── __init__.py
 │   │   ├── test_entities.py
@@ -174,8 +179,7 @@ class SomeOtherClass:
 │   │   └── test_processing.py
 │   ├── __init__.py
 │   ├── conftest.py
-│   ├── test_main.py
-│   └── test_result.py
+│   └── test_main.py
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── pyproject.toml

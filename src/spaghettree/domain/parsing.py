@@ -8,11 +8,11 @@ import libcst as cst
 import numpy as np
 from tqdm import tqdm
 
-from spaghettree import safe
+from spaghettree.core.logger import logger
+from spaghettree.core.result import safe
 from spaghettree.domain.entities import EntityCST
 from spaghettree.domain.optimisation import AdjMat
 from spaghettree.domain.visitors import EntityLocation, OnePassVisitor
-from spaghettree.logger import logger
 
 
 def str_to_cst(code: str) -> cst.Module:

@@ -9,7 +9,7 @@ import attrs
 import libcst as cst
 from attrs.validators import instance_of
 
-from spaghettree.logger import logger
+from spaghettree.core.logger import logger
 
 
 @runtime_checkable

@@ -11,9 +11,9 @@ import black
 import isort
 from ruff.__main__ import find_ruff_bin
 
-from spaghettree import Err, Ok, Result, safe
+from spaghettree.core.logger import logger
+from spaghettree.core.result import Err, Ok, Result, safe
 from spaghettree.domain.optimisation import yellow
-from spaghettree.logger import logger
 
 
 @runtime_checkable
