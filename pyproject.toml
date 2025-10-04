@@ -34,7 +34,6 @@ dev = [
     "pytest-cov>=6.0.0",
     "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.9",
-    "ty>=0.0.1a18",
 ]
 research = [
     "attrs==25.1.0",
