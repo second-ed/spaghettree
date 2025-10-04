@@ -68,3 +68,12 @@ research = [
     "structlog==25.3.0",
     "stamina==25.1.0",
 ]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-vv",
+    "--cov=src",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=80",
+]
+testpaths = ["tests"]
