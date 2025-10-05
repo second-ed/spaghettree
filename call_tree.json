@@ -19,6 +19,7 @@
     ],
     "spaghettree.adapters.io_wrapper.IOBase": [
         "spaghettree.core.result.Result",
+        "spaghettree.core.logger.logger",
         "spaghettree.core.result.Err",
         "spaghettree.core.result.Ok",
         "spaghettree.core.result.Result",
@@ -40,6 +41,7 @@
     "spaghettree.adapters.io_wrapper.FakeIOWrapper": [
         "spaghettree.adapters.io_wrapper.IOBase",
         "spaghettree.core.result.safe",
+        "spaghettree.core.logger.logger",
         "spaghettree.adapters.io_wrapper.IOBase",
         "spaghettree.core.result.safe",
         "spaghettree.adapters.io_wrapper.IOBase",

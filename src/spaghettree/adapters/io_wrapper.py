@@ -16,8 +16,23 @@ from spaghettree.domain.optimisation import yellow
 
 @attrs.define
 class IOBase(ABC):
-    src_files: dict[str, str] = attrs.field(factory=dict)
-    test_files: dict[str, str] = attrs.field(factory=dict)
+    src_dirname: str = attrs.field(
+        default="src",
+        converter=lambda x: str(x).strip("/"),
+        validator=attrs.validators.instance_of(str),
+    )
+    src_files: dict[str, str] = attrs.field(
+        factory=dict, validator=attrs.validators.instance_of(dict)
+    )
+    tests_dirname: str = attrs.field(
+        default="tests",
+        converter=lambda x: str(x).strip("/"),
+        validator=attrs.validators.instance_of(str),
+    )
+    test_files: dict[str, str] = attrs.field(
+        factory=dict, validator=attrs.validators.instance_of(dict)
+    )
+    ignore_dirs: list[str] = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
 
     @abstractmethod
     def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
@@ -41,20 +56,29 @@ class IOBase(ABC):
             return paths_res
         paths = paths_res.inner
 
+        logger.debug(f"{paths = }")
+
         fails = {}
         for path in paths:
+            if any(ignore_dir in path for ignore_dir in self.ignore_dirs):
+                continue
             res = self.read(path)
             if res.is_ok():
-                if "/tests/" in path and (
-                    Path(path).stem.startswith("test_") or Path(path).stem == "__init__"
+                if f"/{self.src_dirname}/" in path:
+                    self.src_files[path] = res.inner
+                elif f"/{self.tests_dirname}/" in path and (
+                    Path(path).stem.startswith("test_")
+                    or Path(path).stem in ["__init__", "conftest"]
                 ):
                     self.test_files[path] = res.inner
-                else:
-                    self.src_files[path] = res.inner
             else:
                 fails[path] = res
 
+        logger.debug(f"{self.src_files = }")
+        logger.debug(f"{self.test_files = }")
+
         if fails:
+            logger.error(f"{fails = }")
             return Err(fails)
         return Ok(self.src_files)
 
@@ -110,10 +134,11 @@ class IOWrapper(IOBase):
 
 @attrs.define
 class FakeIOWrapper(IOBase):
-    files: dict = attrs.field(factory=dict)
+    files: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
 
     @safe
     def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
+        logger.debug(f"{self.files = }")
         if recursive:
             return sorted([f for f in self.files if root in f and f.endswith(".py")])
         return sorted(
