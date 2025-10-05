@@ -11,7 +11,7 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
 
 @pytest.mark.parametrize(
     ("src_root"),
-    [pytest.param("./mock_data/mock_case_1/src/case_1", id="Should run E2E without any errs")],
+    [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")],
 )
 def test_main(src_root):
     try:

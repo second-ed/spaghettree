@@ -35,7 +35,8 @@ def extract_entities_and_locations(
     def get_module_name(path: str, root: str) -> str:
         return os.path.splitext(path.removeprefix(root))[0].replace("/", ".").strip(".")
 
-    common_prefix = find_common_prefix(src_code.keys())
+    # ignore the tests for now, no point keeping in memory until the src is optimised
+    common_prefix = find_common_prefix([p for p in src_code if "/tests/" not in p])
     logger.debug(f"{common_prefix = }")
 
     entities: dict[str, EntityCST] = {}
