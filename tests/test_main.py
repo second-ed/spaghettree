@@ -1,5 +1,4 @@
 import json
-import os
 import shutil
 from pathlib import Path
 
@@ -15,8 +14,8 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
 )
 def test_e2e(src_root):
     try:
-        tmp = str(Path("./tmp_test").absolute())
-        os.makedirs(tmp, exist_ok=True)
+        tmp: Path = Path("./tmp_test").absolute()
+        tmp.parent.mkdir(parents=True, exist_ok=True)
         res = main(src_root, new_root=f"{tmp}/src/case_1", optimise_src_code=True)
         assert res.is_ok()
 
