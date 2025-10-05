@@ -2,7 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
-from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
+from spaghettree.adapters.io_wrapper import IOBase, IOWrapper
 from spaghettree.core.logger import logger
 from spaghettree.core.result import Result
 from spaghettree.domain.optimisation import (
@@ -27,8 +27,9 @@ def main(
     new_root: str = "",
     call_tree_save_path: str = "./call_tree.json",
     optimise_src_code: bool = False,
+    ignore_dirs: list | None = None,
 ) -> Result:
-    io = IOWrapper()
+    io = IOWrapper(ignore_dirs=ignore_dirs or [])
     return run_process(
         io,
         src_root,
@@ -39,7 +40,7 @@ def main(
 
 
 def run_process(
-    io: IOProtocol,
+    io: IOBase,
     src_root: str,
     *,
     new_root: str = "",

@@ -34,7 +34,6 @@ dev = [
     "pytest-cov>=6.0.0",
     "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.9",
-    "ty>=0.0.1a18",
 ]
 research = [
     "attrs==25.1.0",
@@ -68,3 +67,12 @@ research = [
     "structlog==25.3.0",
     "stamina==25.1.0",
 ]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-vv",
+    "--cov=src",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=80",
+]
+testpaths = ["tests"]

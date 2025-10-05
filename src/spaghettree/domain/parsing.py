@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+from collections.abc import Iterable
 from copy import deepcopy
 
 import libcst as cst
@@ -27,7 +28,7 @@ def cst_to_str(node: cst.CSTNode) -> str:
 def extract_entities_and_locations(
     src_code: dict[str, str],
 ) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
-    def find_common_prefix(paths: list[str]) -> str:
+    def find_common_prefix(paths: Iterable[str]) -> str:
         logger.debug(f"{paths = }")
         return str(pathlib.Path(os.path.commonpath(paths)).parent)
 
@@ -96,7 +97,7 @@ def pair_exclusive_calls(adj_mat: AdjMat) -> AdjMat:
 
     # make it so we don't weight by call count yet
     adj_bin = (matrix > 0).astype(bool)
-    communities: np.ndarray = np.array(communities, dtype=int)
+    communities: np.ndarray = np.asarray(communities, dtype=int)
 
     changed = True
     while changed:

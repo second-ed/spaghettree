@@ -14,6 +14,10 @@ from spaghettree.core.logger import logger
 
 @runtime_checkable
 class EntityCST(Protocol):
+    name: str
+    tree: cst.ClassDef | cst.FunctionDef | cst.SimpleStatementLine
+    imports: set[ImportCST]
+
     def get_call_tree_entries(self) -> list[str]: ...
 
     def resolve_calls(self, import_map: dict[str, str], ent_map: dict[str, str]) -> Self: ...
@@ -72,6 +76,7 @@ class ClassCST:
             for meth in self.methods:
                 if imp.as_name in meth.calls or f"{imp.module}.{imp.as_name}" in meth.calls:
                     self.imports.add(imp)
+        return self
 
 
 @attrs.define

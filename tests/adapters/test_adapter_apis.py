@@ -1,16 +1,15 @@
 import inspect
-from collections.abc import Callable
 
 import pytest
 
-from spaghettree.adapters.io_wrapper import FakeIOWrapper, IOProtocol, IOWrapper
+from spaghettree.adapters.io_wrapper import FakeIOWrapper, IOBase, IOWrapper
 
 
 @pytest.mark.parametrize(
     ("obj", "protocol"),
     [
-        pytest.param(IOWrapper(), IOProtocol),
-        pytest.param(FakeIOWrapper(), IOProtocol),
+        pytest.param(IOWrapper(), IOBase),
+        pytest.param(FakeIOWrapper(), IOBase),
     ],
 )
 def test_protocols(obj, protocol):
@@ -72,13 +71,13 @@ class FakeMismatchingSignature:
         ),
         pytest.param(
             IOWrapper,
-            IOProtocol,
+            IOBase,
             id="ensure IO wrapper matches protocol",
         ),
     ],
 )
 def test_api_match(real: object, fake: object) -> None:
-    def get_methods(obj: Callable) -> dict[str, inspect.Signature]:
+    def get_methods(obj: object) -> dict[str, inspect.Signature]:
         return {
             name: inspect.signature(fn)
             for name, fn in inspect.getmembers(obj, inspect.isroutine)

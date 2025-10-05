@@ -1,5 +1,4 @@
 import json
-import os
 import shutil
 from pathlib import Path
 
@@ -13,10 +12,10 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
     ("src_root"),
     [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")],
 )
-def test_main(src_root):
+def test_e2e(src_root):
     try:
-        tmp = str(Path("./tmp_test").absolute())
-        os.makedirs(tmp, exist_ok=True)
+        tmp: Path = Path("./tmp_test").absolute()
+        tmp.parent.mkdir(parents=True, exist_ok=True)
         res = main(src_root, new_root=f"{tmp}/src/case_1", optimise_src_code=True)
         assert res.is_ok()
 
@@ -255,7 +254,7 @@ def test_main(src_root):
 )
 def test_run_process(fixture_get_subset_files, expected_result):
     name, files = fixture_get_subset_files
-    io = FakeIOWrapper(files)
+    io = FakeIOWrapper(files=files)
     run_process(io, name, new_root=f"result/{name}", optimise_src_code=True)
     assert {k: v for k, v in io.files.items() if k.startswith("result/")} == expected_result
 
@@ -397,7 +396,7 @@ def test_run_process(fixture_get_subset_files, expected_result):
 )
 def test_run_process_return_call_tree(fixture_get_subset_files, expected_result):
     name, files = fixture_get_subset_files
-    io = FakeIOWrapper(files)
+    io = FakeIOWrapper(files=files)
     res = run_process(io, name, optimise_src_code=False)
     assert res.is_ok()
     assert json.loads(io.files[Path("./call_tree.json").absolute()]) == expected_result
