@@ -2,7 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
-from spaghettree.adapters.io_wrapper import IOProtocol, IOWrapper
+from spaghettree.adapters.io_wrapper import IOBase, IOWrapper
 from spaghettree.core.logger import logger
 from spaghettree.core.result import Result
 from spaghettree.domain.optimisation import (
@@ -39,7 +39,7 @@ def main(
 
 
 def run_process(
-    io: IOProtocol,
+    io: IOBase,
     src_root: str,
     *,
     new_root: str = "",

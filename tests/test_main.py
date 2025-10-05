@@ -13,7 +13,7 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
     ("src_root"),
     [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")],
 )
-def test_main(src_root):
+def test_e2e(src_root):
     try:
         tmp = str(Path("./tmp_test").absolute())
         os.makedirs(tmp, exist_ok=True)

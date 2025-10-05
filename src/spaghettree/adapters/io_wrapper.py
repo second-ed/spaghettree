@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import glob
-import os
 import subprocess
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Protocol, runtime_checkable
 
 import attrs
 import black
@@ -16,36 +14,26 @@ from spaghettree.core.result import Err, Ok, Result, safe
 from spaghettree.domain.optimisation import yellow
 
 
-@runtime_checkable
-class IOProtocol(Protocol):
-    @safe
-    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]: ...
-
-    @safe
-    def read(self, path: str) -> str: ...
-
-    @safe
-    def read_files(self, root: str | Path) -> Result: ...
-
-    @safe
-    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None: ...
-
-    def write_files(
-        self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
-    ) -> Result: ...
-
-
 @attrs.define
-class IOWrapper:
-    @safe
-    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
-        root = os.path.abspath(str(root))
-        return sorted(glob.glob(f"{root}/**/**.py", recursive=recursive))
+class IOBase(ABC):
+    src_files: dict[str, str] = attrs.field(factory=dict)
+    test_files: dict[str, str] = attrs.field(factory=dict)
 
-    @safe
+    @abstractmethod
+    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
+        pass
+
+    @abstractmethod
     def read(self, path: str) -> str:
-        with open(path) as f:
-            return f.read()
+        pass
+
+    @abstractmethod
+    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
+        pass
+
+    @abstractmethod
+    def _run_ruff(self, path: str) -> None:
+        pass
 
     def read_files(self, root: str | Path) -> Result:
         paths_res = self.list_files(root)
@@ -53,37 +41,32 @@ class IOWrapper:
             return paths_res
         paths = paths_res.inner
 
-        results, fails = {}, {}
+        fails = {}
         for path in paths:
             res = self.read(path)
             if res.is_ok():
-                results[path] = res.inner
+                if "/tests/" in path and (
+                    Path(path).stem.startswith("test_") or Path(path).stem == "__init__"
+                ):
+                    self.test_files[path] = res.inner
+                else:
+                    self.src_files[path] = res.inner
             else:
                 fails[path] = res
 
         if fails:
             return Err(fails)
-        return Ok(results)
-
-    @safe
-    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, "w") as f:
-            f.write(modified_code)
-        if format_code:
-            self._run_ruff(filepath)
+        return Ok(self.src_files)
 
     def write_files(
         self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
     ) -> Result:
         results, fails = {}, {}
 
+        format_code = ruff_root and not format_bulk
+
         for filepath, modified_code in src_code.items():
-            if not ruff_root or format_bulk:
-                # format all at the end instead
-                res = self.write(modified_code, filepath, format_code=False)
-            else:
-                res = self.write(modified_code, filepath, format_code=True)
+            res: Result = self.write(modified_code, filepath, format_code=format_code)
 
             logger.debug(f"{filepath = } {res = }")
             if res.is_ok():
@@ -99,13 +82,34 @@ class IOWrapper:
             return Err(fails)
         return Ok(results)
 
+
+@attrs.define
+class IOWrapper(IOBase):
+    @safe
+    def list_files(self, root: str | Path, *, recursive: bool = True) -> list[str]:
+        root_path = Path(root).resolve()
+        files = root_path.rglob("*.py") if recursive else root_path.glob("*.py")
+        return sorted(str(f) for f in files if f.is_file())
+
+    @safe
+    def read(self, path: str) -> str:
+        return Path(path).read_text(encoding="utf-8")
+
+    @safe
+    def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
+        path = Path(filepath)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(modified_code, encoding="utf-8")
+        if format_code:
+            self._run_ruff(filepath)
+
     def _run_ruff(self, path: str) -> None:
         subprocess.run([find_ruff_bin(), "check", "--fix", str(path)], check=True)  # noqa: S603
         subprocess.run([find_ruff_bin(), "format", str(path)], check=True)  # noqa: S603
 
 
 @attrs.define
-class FakeIOWrapper:
+class FakeIOWrapper(IOBase):
     files: dict = attrs.field(factory=dict)
 
     @safe
@@ -124,45 +128,16 @@ class FakeIOWrapper:
     def read(self, path: str) -> str:
         return self.files[path]
 
-    def read_files(self, root: str | Path) -> Result:
-        paths_res = self.list_files(root)
-        if not paths_res.is_ok():
-            return paths_res
-        paths = paths_res.inner
-
-        results, fails = {}, {}
-        for path in paths:
-            res = self.read(path)
-            if res.is_ok():
-                results[path] = res.inner
-            else:
-                fails[path] = res
-
-        if fails:
-            return Err(fails)
-        return Ok(results)
-
     @safe
     def write(self, modified_code: str, filepath: str, *, format_code: bool = True) -> None:
         self.files[filepath] = format_code_str(modified_code) if format_code else modified_code
 
-    def write_files(
-        self, src_code: dict[str, str], ruff_root: str | None = None, *, format_bulk: bool = True
-    ) -> Result:
-        results, fails = {}, {}
-
-        for filepath, modified_code in src_code.items():
-            if ruff_root is not None:
-                res = self.write(modified_code, filepath, format_code=format_bulk)
-
-            if res.is_ok():
-                results[filepath] = res.inner
-            else:
-                fails[filepath] = res
-
-        if fails:
-            return Err(fails)
-        return Ok(results)
+    def _run_ruff(self, path: str) -> None:
+        tgt_files = self.list_files(path).unwrap()
+        self.files = {
+            p: format_code_str(self.files[p]) if p.endswith(".py") else self.files[p]
+            for p in tgt_files
+        }
 
 
 def format_code_str(code: str) -> str:
