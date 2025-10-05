@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from copy import deepcopy
 from typing import Self
@@ -225,13 +227,13 @@ def get_top_suggested_merges(adj_mat: AdjMat, top_n: int = 5) -> list[SuggestedM
     return sorted(suggested_merges, key=lambda x: -x.gain)[:top_n]
 
 
-def yellow(inp_str: str) -> str:
+def yellow(inp_str: str | float) -> str:
     return f"\033[33m{inp_str}\033[0m"
 
 
-def cyan(inp_str: str) -> str:
+def cyan(inp_str: str | float) -> str:
     return f"\033[36m{inp_str}\033[0m"
 
 
-def green(inp_str: str) -> str:
+def green(inp_str: str | float) -> str:
     return f"\033[32m{inp_str}\033[0m"

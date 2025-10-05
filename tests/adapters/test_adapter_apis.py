@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Callable
 
 import pytest
 
@@ -78,7 +77,7 @@ class FakeMismatchingSignature:
     ],
 )
 def test_api_match(real: object, fake: object) -> None:
-    def get_methods(obj: Callable) -> dict[str, inspect.Signature]:
+    def get_methods(obj: object) -> dict[str, inspect.Signature]:
         return {
             name: inspect.signature(fn)
             for name, fn in inspect.getmembers(obj, inspect.isroutine)
