@@ -26,8 +26,8 @@ class Ok:
     def is_ok(self) -> Literal[True]:
         return True
 
-    def and_then(self, func: Callable[[T], Result]) -> Result:
-        return func(self.inner)
+    def and_then(self, func: Callable[[T], Result], **kwargs: dict) -> Result:
+        return func(self.inner, **kwargs)
 
     def unwrap(self) -> T:
         return self.inner
@@ -68,7 +68,7 @@ class Err:
     def is_ok(self) -> Literal[False]:
         return False
 
-    def and_then(self, _: Callable[[T], Result]) -> Self:
+    def and_then(self, _: Callable[[T], Result], **_kwargs: dict) -> Self:
         return self
 
     def unwrap(self) -> None:

@@ -1,7 +1,6 @@
 import os
 from collections import Counter, defaultdict
 from copy import deepcopy
-from functools import partial
 
 from spaghettree.core.logger import logger
 from spaghettree.core.result import Result, safe
@@ -30,17 +29,15 @@ def optimise_entity_positions(
         .and_then(pair_exclusive_calls)
         .and_then(optimise_communities)
         .and_then(merge_single_entity_communities_if_no_gain_penalty)
-        .and_then(partial(create_new_module_map, entities=entities))
+        .and_then(create_new_module_map, entities=entities)
         .and_then(infer_module_names)
         .and_then(rename_overlapping_mod_names)
         .and_then(remap_imports)
         .and_then(
-            partial(
-                convert_to_code_str,
-                order_map=location_map,
-            ),
+            convert_to_code_str,
+            order_map=location_map,
         )
-        .and_then(partial(create_new_filepaths, new_root=new_root or src_root))
+        .and_then(create_new_filepaths, new_root=(new_root or src_root))
         .and_then(add_empty_inits_if_needed)
     )
 

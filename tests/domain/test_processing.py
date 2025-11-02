@@ -1,5 +1,3 @@
-from functools import partial
-
 import pytest
 
 from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType
@@ -133,12 +131,10 @@ def test_second_half_of_processing(call_tree, entities, location_map, src_root, 
         .and_then(rename_overlapping_mod_names)
         .and_then(remap_imports)
         .and_then(
-            partial(
-                convert_to_code_str,
-                order_map=location_map,
-            ),
+            convert_to_code_str,
+            order_map=location_map,
         )
-        .and_then(partial(create_new_filepaths, new_root=src_root))
+        .and_then(create_new_filepaths, new_root=src_root)
         .and_then(add_empty_inits_if_needed)
     )
     assert res.is_ok()
