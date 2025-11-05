@@ -1,22 +1,15 @@
 import argparse
-import json
-from pathlib import Path
 
 from spaghettree.adapters.io_wrapper import IOBase, IOWrapper
 from spaghettree.core.logger import logger
 from spaghettree.core.result import Result
-from spaghettree.domain.optimisation import (
-    AdjMat,
-    get_dwm,
-    get_top_suggested_merges,
-    yellow,
-)
 from spaghettree.domain.parsing import (
     create_call_tree,
     extract_entities_and_locations,
     filter_non_native_calls,
 )
 from spaghettree.domain.processing import (
+    analyse_existing_structure,
     optimise_entity_positions,
 )
 
@@ -65,20 +58,9 @@ def run_process(
             new_root=new_root,
         ).unwrap()
     else:
-        # remove any new_root so that it doesn't try to use ruff on the json
-        new_root = ""
-        adj_mat = AdjMat.from_call_tree(call_tree, optimise=optimise_src_code).unwrap()
-        print(  # noqa: T201
-            yellow(
-                f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
-            )
-        )
-        top_merges = get_top_suggested_merges(adj_mat).unwrap()
-
-        for merge in top_merges:
-            merge.display()
-
-        res = {Path(call_tree_save_path).absolute(): json.dumps(call_tree, indent=4)}
+        res, new_root = analyse_existing_structure(
+            call_tree, call_tree_save_path, optimise_src_code=optimise_src_code
+        ).unwrap()
 
     return io.write_files(res, ruff_root=new_root, format_bulk=optimise_src_code)
 

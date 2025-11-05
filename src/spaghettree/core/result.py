@@ -80,7 +80,7 @@ Result = Ok[T] | Err[T]
 
 def safe[**P, T](func: Callable[P, T]) -> Callable[P, Result]:
     @functools.wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Result[T]:
         try:
             return Ok(func(*args, **kwargs))
         except Exception as e:  # noqa: BLE001
