@@ -20,7 +20,7 @@ P = ParamSpec("P")
 
 
 @attrs.define
-class Ok:
+class Ok[T]:
     inner: Any = attrs.field(default=None)
 
     def is_ok(self) -> Literal[True]:
@@ -34,7 +34,7 @@ class Ok:
 
 
 @attrs.define
-class Err:
+class Err[T]:
     input_args: Any = attrs.field(repr=False)
     error: Exception | None = attrs.field(
         default=None,
@@ -75,7 +75,7 @@ class Err:
         raise self.error
 
 
-Result = Ok | Err
+Result = Ok[T] | Err[T]
 
 
 def safe[**P, T](func: Callable[P, T]) -> Callable[P, Result]:
