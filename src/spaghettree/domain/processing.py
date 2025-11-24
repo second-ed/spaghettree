@@ -1,14 +1,21 @@
+import json
 import os
 from collections import Counter, defaultdict
 from copy import deepcopy
+from pathlib import Path
+from typing import Literal
+
+from danom import Result, safe
 
 from spaghettree.core.logger import logger
-from spaghettree.core.result import Result, safe
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
     AdjMat,
+    get_dwm,
+    get_top_suggested_merges,
     merge_single_entity_communities_if_no_gain_penalty,
     optimise_communities,
+    yellow,
 )
 from spaghettree.domain.parsing import (
     cst_to_str,
@@ -40,6 +47,27 @@ def optimise_entity_positions(
         .and_then(create_new_filepaths, new_root=(new_root or src_root))
         .and_then(add_empty_inits_if_needed)
     )
+
+
+@safe
+def analyse_existing_structure(
+    call_tree: dict[str, list[str]], call_tree_save_path: str, *, optimise_src_code: bool
+) -> tuple[dict[Path, str], Literal[""]]:
+    adj_mat = AdjMat.from_call_tree(call_tree, optimise=optimise_src_code).unwrap()
+    print(  # noqa: T201
+        yellow(
+            f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
+        )
+    )
+    top_merges = get_top_suggested_merges(adj_mat).unwrap()
+
+    for merge in top_merges:
+        merge.display()
+
+    # remove any new_root so that it doesn't try to use ruff on the json
+    new_root = ""
+    res: dict[Path, str] = {Path(call_tree_save_path).absolute(): json.dumps(call_tree, indent=4)}
+    return res, new_root
 
 
 @safe

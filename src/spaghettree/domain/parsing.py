@@ -7,10 +7,10 @@ from copy import deepcopy
 
 import libcst as cst
 import numpy as np
+from danom import safe
 from tqdm import tqdm
 
 from spaghettree.core.logger import logger
-from spaghettree.core.result import safe
 from spaghettree.domain.entities import EntityCST
 from spaghettree.domain.optimisation import AdjMat
 from spaghettree.domain.visitors import EntityLocation, OnePassVisitor
