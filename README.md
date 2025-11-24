@@ -154,8 +154,7 @@ class SomeOtherClass:
 │       │   └── io_wrapper.py
 │       ├── core
 │       │   ├── __init__.py
-│       │   ├── logger.py
-│       │   └── result.py
+│       │   └── logger.py
 │       ├── domain
 │       │   ├── __init__.py
 │       │   ├── entities.py
@@ -170,8 +169,7 @@ class SomeOtherClass:
 │   │   ├── __init__.py
 │   │   └── test_adapter_apis.py
 │   ├── core
-│   │   ├── __init__.py
-│   │   └── test_result.py
+│   │   └── __init__.py
 │   ├── domain
 │   │   ├── __init__.py
 │   │   ├── test_entities.py

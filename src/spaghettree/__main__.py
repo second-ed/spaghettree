@@ -1,8 +1,9 @@
 import argparse
 
+from danom import Result
+
 from spaghettree.adapters.io_wrapper import IOBase, IOWrapper
 from spaghettree.core.logger import logger
-from spaghettree.core.result import Result
 from spaghettree.domain.parsing import (
     create_call_tree,
     extract_entities_and_locations,

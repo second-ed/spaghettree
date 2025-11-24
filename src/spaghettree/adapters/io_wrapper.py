@@ -7,10 +7,10 @@ from pathlib import Path
 import attrs
 import black
 import isort
+from danom import Err, Ok, Result, safe
 from ruff.__main__ import find_ruff_bin
 
 from spaghettree.core.logger import logger
-from spaghettree.core.result import Err, Ok, Result, safe
 from spaghettree.domain.optimisation import yellow
 
 
@@ -50,7 +50,7 @@ class IOBase(ABC):
     def _run_ruff(self, path: str) -> None:
         pass
 
-    def read_files(self, root: str | Path) -> Result:
+    def read_files(self, root: str | Path) -> Result[dict[str, str], dict[str, Err]]:
         paths_res = self.list_files(root)
         if not paths_res.is_ok():
             return paths_res

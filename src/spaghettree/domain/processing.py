@@ -5,8 +5,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Literal
 
+from danom import Result, safe
+
 from spaghettree.core.logger import logger
-from spaghettree.core.result import Result, safe
 from spaghettree.domain.entities import EntityCST, ImportCST, ImportType
 from spaghettree.domain.optimisation import (
     AdjMat,

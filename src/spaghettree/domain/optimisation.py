@@ -6,9 +6,9 @@ from typing import Self
 
 import attrs
 import numpy as np
+from danom import safe
 
 from spaghettree.core.logger import logger
-from spaghettree.core.result import safe
 
 
 @attrs.define
