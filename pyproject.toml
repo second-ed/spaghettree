@@ -10,10 +10,11 @@ requires-python = ">=3.12"
 dependencies = [
     "attrs>=25.4.0",
     "black>=25.1.0",
-    "danom>=0.1.0",
+    "danom>=0.10.0",
     "isort>=6.0.1",
     "libcst>=1.6.0",
     "numpy>=2.3.2",
+    "polars>=1.38.1",
     "python-dotenv>=1.1.1",
     "ruff>=0.12.9",
     "tqdm>=4.67.1",
@@ -26,47 +27,22 @@ spaghettree = "spaghettree:main"
 requires = ["uv-build"]
 build-backend = "uv_build"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [dependency-groups]
 dev = [
     "hypothesis>=6.140.2",
     "ipykernel>=6.29.5",
+    "papertrail>=0.1.2",
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.9",
-]
-research = [
-    "attrs==25.4.0",
-    "black==25.1.0",
-    "faker==37.1.0",
-    "fastapi==0.115.12",
-    "manimgl==1.7.2",
-    "pydantic==2.11.3",
-    "pytest==8.3.4",
-    "pre-commit==4.1.0",
-    "poetry==2.1.2",
-    "prophet==1.1.6",
-    "rich==14.0.0",
-    "textual==3.1.0",
-    "locust==2.35.0",
-    "typer==0.15.2",
-    "class-inspector==0.3.1",
-    "icecream==2.1.4",
-    "dynaconf==3.2.10",
-    "pipx==1.7.1",
-    "more-itertools==10.6.0",
-    "urllib3==2.4.0",
-    "pyupgrade==3.19.1",
-    "tox==4.25.0",
-    "beartype==0.20.2",
-    "sherlock-project==0.15.0",
-    "loguru==0.7.3",
-    "sqlmodel==0.0.24",
-    "redis==6.0.0",
-    "schedule==1.2.2",
-    "structlog==25.3.0",
-    "stamina==25.1.0",
 ]
 
 [tool.pytest.ini_options]

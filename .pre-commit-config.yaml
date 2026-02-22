@@ -19,7 +19,7 @@ repos:
       - id: pytest
         name: pytest
         entry: uv run pytest -vv --cov=src --cov-report term-missing:skip-covered
-        language: python
+        language: system
         pass_filenames: false
         always_run: true
       - id: repo-map
