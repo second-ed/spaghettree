@@ -1,0 +1,170 @@
+from __future__ import annotations
+
+from typing import Self
+
+import attrs
+import polars as pl
+from danom import safe
+
+
+@attrs.define
+class AdjMat:
+    nodes: pl.DataFrame
+    modules: pl.DataFrame
+    communities: pl.DataFrame
+    dwm: DirectedWeightedModularity
+
+    @classmethod
+    @safe
+    def from_lf(cls, df: pl.DataFrame, *, optimise: bool = True) -> Self:
+        nodes = (
+            pl.concat(
+                [
+                    df.select(pl.col("entity_name").alias("node")),
+                    df.filter(pl.col("call_name").ne("")).select(pl.col("call_name").alias("node")),
+                ]
+            )
+            .unique()
+            .sort(by="node")
+            .with_row_index("idx")
+        )
+
+        modules = (
+            df.select(pl.col("module_name").alias("module"))
+            .unique()
+            .sort(by="module")
+            .with_row_index("idx")
+        )
+
+        edges = (
+            df.join(nodes, left_on="entity_name", right_on="node")
+            .rename({"idx": "src"})
+            .join(nodes, left_on="call_name", right_on="node")
+            .rename({"idx": "dst"})
+            .group_by(["src", "dst"])
+            .len()
+            .rename({"len": "weight"})
+        )
+
+        communities = (
+            df.join(nodes, left_on="entity_name", right_on="node")
+            .rename({"idx": "node"})
+            .join(modules, left_on="module_name", right_on="module")
+            .rename({"idx": "module"})
+            .select("node", "module")
+            .unique()
+        )
+
+        dwm = DirectedWeightedModularity.from_edges(edges)
+
+        print(f"Pre-optimisation DWM: {dwm.calc(communities)}")
+
+        if optimise:
+            communities = communities.with_columns(pl.col("node").alias("module"))
+
+        return cls(
+            nodes=nodes,
+            modules=modules,
+            communities=communities,
+            dwm=dwm,
+        )
+
+
+@attrs.define(frozen=True)
+class DirectedWeightedModularity:
+    weighted_edges: pl.DataFrame
+    total_edges: float
+
+    @classmethod
+    def from_edges(cls, edges: pl.DataFrame) -> Self:
+        total_edges = edges.select(pl.col("weight").sum()).item()
+
+        out_deg = edges.group_by("src").agg(pl.col("weight").sum().alias("k_out"))
+        in_deg = edges.group_by("dst").agg(pl.col("weight").sum().alias("k_in"))
+
+        weighted_edges = edges.join(out_deg, on="src").join(in_deg, on="dst")
+        return cls(weighted_edges=weighted_edges, total_edges=total_edges)
+
+    def calc(self, communities: pl.DataFrame) -> float:
+        if self.total_edges == 0:
+            return 0.0
+
+        intra = (
+            self.weighted_edges.join(communities.rename({"node": "src"}), on="src")
+            .rename({"module": "comm_src"})
+            .join(communities.rename({"node": "dst"}), on="dst")
+            .rename({"module": "comm_dst"})
+            .filter(pl.col("comm_src") == pl.col("comm_dst"))
+        )
+        return (
+            intra.with_columns(
+                (pl.col("weight") - (pl.col("k_out") * pl.col("k_in") / self.total_edges)).alias(
+                    "contrib"
+                )
+            )
+            .select(pl.col("contrib").sum() / self.total_edges)
+            .item()
+        )
+
+
+@safe
+def optimise_communities(adj_mat: AdjMat) -> AdjMat:
+    valid_merges = get_merge_scores(adj_mat)
+
+    while not valid_merges.is_empty():
+        to_merge = remove_overlapping_pairs(valid_merges)
+        adj_mat.communities = apply_merges_lf(adj_mat.communities, to_merge)
+        valid_merges = get_merge_scores(adj_mat)
+
+    print(f"Post-optimisation DWM: {adj_mat.dwm.calc(adj_mat.communities)}")
+
+    return adj_mat
+
+
+def get_merge_scores(adj_mat: AdjMat) -> pl.DataFrame:
+    base_score = adj_mat.dwm.calc(communities=adj_mat.communities)
+
+    unique_comms = adj_mat.communities.unique("module")["module"].to_list()
+    merge_scores = []
+
+    for i, c1 in enumerate(unique_comms):
+        for c2 in unique_comms[i + 1 :]:
+            score = adj_mat.dwm.calc(adj_mat.communities.with_columns(merge_communities(c1, c2)))
+            gain = score - base_score
+            merge_scores.append({"c1": c1, "c2": c2, "gain": gain})
+    return pl.DataFrame(
+        merge_scores, schema={"c1": pl.Int64(), "c2": pl.Int64(), "gain": pl.Float32()}
+    ).filter(pl.col("gain") > 0)
+
+
+def remove_overlapping_pairs(possible_pairs: pl.DataFrame) -> pl.DataFrame:
+    selected, seen = [], set()
+
+    for row in possible_pairs.sort("gain", descending=True).iter_rows(named=True):
+        if row["c1"] not in seen and row["c2"] not in seen:
+            selected.append(row)
+            seen.add(row["c1"])
+            seen.add(row["c2"])
+
+    return pl.DataFrame(selected)
+
+
+def apply_merges_lf(communities_lf: pl.DataFrame, merges_lf: pl.DataFrame) -> pl.DataFrame:
+    mapping = merges_lf.select(
+        pl.col("c2").alias("module"),
+        pl.col("c1").alias("new_module"),
+    )
+    return (
+        communities_lf.join(mapping, on="module", how="left")
+        .with_columns(pl.coalesce("new_module", "module").alias("module"))
+        .drop("new_module")
+    )
+
+
+def merge_communities(community_1: int, community_2: int) -> pl.Expr:
+    return (
+        pl.when(pl.col("module") == community_2)
+        .then(community_1)
+        .otherwise(pl.col("module"))
+        .alias("module")
+    )
