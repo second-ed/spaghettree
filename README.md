@@ -170,6 +170,7 @@ class SomeOtherClass:
 │       │   │   ├── imports.py
 │       │   │   ├── optimisation.py
 │       │   │   ├── parsing.py
+│       │   │   ├── processing.py
 │       │   │   └── visitors.py
 │       │   └── __init__.py
 │       ├── __init__.py
