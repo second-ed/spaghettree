@@ -52,7 +52,7 @@ class AdjMat:
             .join(modules, left_on="module_name", right_on="module")
             .rename({"idx": "module"})
             .select("node", "module")
-            .unique()
+            .unique(maintain_order=True)
         )
 
         dwm = DirectedWeightedModularity.from_edges(edges)
@@ -124,7 +124,7 @@ def optimise_communities(adj_mat: AdjMat) -> AdjMat:
 def get_merge_scores(adj_mat: AdjMat) -> pl.DataFrame:
     base_score = adj_mat.dwm.calc(communities=adj_mat.communities)
 
-    unique_comms = adj_mat.communities.unique("module")["module"].to_list()
+    unique_comms = adj_mat.communities.unique("module", maintain_order=True)["module"].to_list()
     merge_scores = []
 
     for i, c1 in enumerate(unique_comms):
