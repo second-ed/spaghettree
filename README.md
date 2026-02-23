@@ -162,6 +162,16 @@ class SomeOtherClass:
 │       │   ├── parsing.py
 │       │   ├── processing.py
 │       │   └── visitors.py
+│       ├── v2
+│       │   ├── adapters
+│       │   │   └── __init__.py
+│       │   ├── domain
+│       │   │   ├── __init__.py
+│       │   │   ├── imports.py
+│       │   │   ├── optimisation.py
+│       │   │   ├── parsing.py
+│       │   │   └── visitors.py
+│       │   └── __init__.py
 │       ├── __init__.py
 │       └── __main__.py
 ├── tests
