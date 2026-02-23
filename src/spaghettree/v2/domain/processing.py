@@ -16,47 +16,50 @@ def compose_facts_and_adj_mat(df: pl.DataFrame, adj_mat: AdjMat) -> pl.DataFrame
 
 
 @safe
-def infer_module_names(df: pl.DataFrame) -> pl.DataFrame:
+def infer_module_names(
+    df: pl.DataFrame,
+    module_col: str = "optimised_module",
+    inferred_module_col: str = "inferred_module",
+) -> pl.DataFrame:
     lf = df.lazy()
 
-    split_module_name = pl.col("optimised_module").str.split(".")
+    split_module_name = pl.col(module_col).str.split(".")
 
     best = (
         lf.with_columns(
             split_module_name.list.slice(0, split_module_name.list.len() - 1)
             .list.join(".")
-            .alias("parent")
+            .alias(inferred_module_col)
         )
-        .group_by(["optimised_module", "parent"])
+        .group_by([module_col, inferred_module_col])
         .agg(pl.len().alias("freq"))
         .sort(
-            by=["optimised_module", "freq", "parent"],
+            by=[module_col, "freq", inferred_module_col],
             descending=[False, True, False],
         )
-        .group_by("optimised_module")
+        .group_by(module_col)
         .first()
     )
 
-    unique_best = best.sort(by=["freq", "parent"], descending=[True, False]).unique(
-        subset=["parent"], keep="first"
+    unique_best = best.sort(by=["freq", inferred_module_col], descending=[True, False]).unique(
+        inferred_module_col, keep="first"
     )
 
     overflow = best.join(
-        unique_best.select("optimised_module"),
-        on="optimised_module",
+        unique_best.select(module_col),
+        on=module_col,
         how="anti",
     ).with_columns(
-        (pl.col("parent") + "_" + pl.col("optimised_module").str.split(".").list.get(-1)).alias(
-            "parent"
+        (pl.col(inferred_module_col) + "_" + pl.col(module_col).str.split(".").list.get(-1)).alias(
+            inferred_module_col
         )
     )
     return (
         lf.join(
-            pl.concat([unique_best, overflow]).select(["optimised_module", "parent"]),
-            on="optimised_module",
+            pl.concat([unique_best, overflow]).select([module_col, inferred_module_col]),
+            on=module_col,
             how="left",
         )
-        .rename({"parent": "inferred_module"})
         # .select("node_name", "inferred_module")
         .collect()
     )
