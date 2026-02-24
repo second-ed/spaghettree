@@ -13,20 +13,20 @@ class ImportType(Enum):
 
 @attrs.define(frozen=True)
 class ImportCST:
-    module: str = attrs.field(validator=[instance_of(str)])
+    import_module: str = attrs.field(validator=[instance_of(str)])
     import_type: ImportType = attrs.field(validator=[instance_of(ImportType)])
-    name: str = attrs.field(validator=[instance_of(str)])
-    as_name: str = attrs.field(validator=[instance_of(str)])
+    import_name: str = attrs.field(validator=[instance_of(str)])
+    import_as_name: str = attrs.field(validator=[instance_of(str)])
 
     def to_str(self) -> str:
         output: list[str] = []
         if self.import_type is ImportType.FROM:
-            output.append(f"from {self.module} import {self.name}")
+            output.append(f"from {self.import_module} import {self.import_name}")
         elif self.import_type is ImportType.IMPORT:
-            output.append(f"import {self.module}")
+            output.append(f"import {self.import_module}")
 
-        if self.name != self.as_name:
-            output.append(f"as {self.as_name}")
+        if self.import_name != self.import_as_name:
+            output.append(f"as {self.import_as_name}")
         return " ".join(output)
 
     def to_dict(self) -> dict:

@@ -41,10 +41,10 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.DataFrame:
             "imports": pl.List(
                 pl.Struct(
                     {
-                        "module": pl.String(),
+                        "import_module": pl.String(),
                         "import_type": pl.String(),
-                        "name": pl.String(),
-                        "as_name": pl.String(),
+                        "import_name": pl.String(),
+                        "import_as_name": pl.String(),
                     }
                 )
             ),
