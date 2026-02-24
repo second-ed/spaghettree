@@ -61,5 +61,16 @@ def infer_module_names(
             how="left",
         )
         # .select("node_name", "inferred_module")
+        .with_columns(construct_imports())
         .collect()
     )
+
+
+def construct_imports(
+    module_col: str = "inferred_module",
+    node_col: str = "node_name",
+    import_col: str = "import_stmt",
+) -> pl.Expr:
+    return (
+        "from " + pl.col(module_col) + " import " + pl.col(node_col).str.split(".").list.get(-1)
+    ).alias(import_col)
