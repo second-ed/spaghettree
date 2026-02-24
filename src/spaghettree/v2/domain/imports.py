@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from enum import Enum, auto
+from enum import Enum
 
 import attrs
 from attrs.validators import instance_of
 
 
 class ImportType(Enum):
-    FROM = auto()
-    IMPORT = auto()
+    FROM = "from"
+    IMPORT = "import"
 
 
 @attrs.define(frozen=True)
@@ -27,4 +27,9 @@ class ImportCST:
 
         if self.name != self.as_name:
             output.append(f"as {self.as_name}")
-        return " ".join(output) + "\n"
+        return " ".join(output)
+
+    def to_dict(self) -> dict:
+        res = attrs.asdict(self)
+        res["import_type"] = res["import_type"].value
+        return res

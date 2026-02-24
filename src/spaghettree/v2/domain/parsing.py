@@ -13,40 +13,41 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.DataFrame:
     rows = []
 
     for ent in entities:
-        if ent.calls:
-            for call in ent.calls:
-                if ent.qualified_names:
-                    name = ent.qualified_names[0]
-                    rows.append(
-                        {
-                            # "filepath": ent.filepath,
-                            "name": name.name,
-                            "source": name.source.name,
-                            "scope": type(ent.scope).__name__,
-                            "call_name": call.name,
-                            "call_source": call.source.name,
-                        }
-                    )
-        elif ent.qualified_names:
+        imports = [imp.to_dict() for imp in ent.imports]
+        if ent.qualified_names:
             name = ent.qualified_names[0]
+
             rows.append(
                 {
-                    # "filepath": ent.filepath,
+                    # "filepath": ent.filepath,  # noqa: ERA001
                     "name": name.name,
                     "source": name.source.name,
                     "scope": type(ent.scope).__name__,
-                    "call_name": "",
-                    "call_source": "",
+                    "calls": [
+                        {"call_name": call.name, "call_source": call.source.name}
+                        for call in ent.calls
+                    ],
+                    "imports": imports,
                 }
             )
+
     return pl.DataFrame(
         rows,
         schema={
             "name": pl.String(),
             "source": pl.String(),
             "scope": pl.String(),
-            "call_name": pl.String(),
-            "call_source": pl.String(),
+            "calls": pl.List(pl.Struct({"call_name": pl.String(), "call_source": pl.String()})),
+            "imports": pl.List(
+                pl.Struct(
+                    {
+                        "module": pl.String(),
+                        "import_type": pl.String(),
+                        "name": pl.String(),
+                        "as_name": pl.String(),
+                    }
+                )
+            ),
         },
     )
 
@@ -62,7 +63,11 @@ def lf_to_call_tree(df: pl.DataFrame) -> dict[str, list[str]]:
 
 def calc_fact_table(df: pl.DataFrame) -> pl.DataFrame:
     return (
-        df.filter(pl.col("scope").ne("FunctionScope") & pl.col("call_source").ne("BUILTIN"))
+        df.lazy()
+        .explode("calls")
+        .unnest("calls")
+        .fill_null("")
+        .filter(pl.col("scope").ne("FunctionScope") & pl.col("call_source").ne("BUILTIN"))
         .with_columns(calc_entity_name(), calc_no_locals_call_name())
         .with_columns(
             remove_non_native_calls(),
@@ -70,6 +75,7 @@ def calc_fact_table(df: pl.DataFrame) -> pl.DataFrame:
             calc_module_name("call_name", "call_module_name"),
         )
         .filter(pl.col("call_name") != pl.col("entity_name"))
+        .collect()
     )
 
 
