@@ -5,11 +5,11 @@ from spaghettree.v2.domain.visitors import NodeMetadata
 
 
 @safe
-def nodes_to_lf(collected_nodes: list[NodeMetadata]) -> pl.DataFrame:
+def nodes_to_lf(collected_nodes: list[NodeMetadata]) -> pl.LazyFrame:
     return entities_to_lf(collected_nodes).pipe(calc_fact_table)
 
 
-def entities_to_lf(entities: list[NodeMetadata]) -> pl.DataFrame:
+def entities_to_lf(entities: list[NodeMetadata]) -> pl.LazyFrame:
     rows = []
 
     for ent in entities:
@@ -49,22 +49,21 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.DataFrame:
                 )
             ),
         },
-    )
+    ).lazy()
 
 
-def lf_to_call_tree(df: pl.DataFrame) -> dict[str, list[str]]:
+def lf_to_call_tree(df: pl.LazyFrame) -> dict[str, list[str]]:
     df = (
         df.group_by("entity_name")
         .agg(pl.when(pl.col("call_name").ne("")).then(pl.col("call_name")))
         .with_columns(pl.col("call_name").list.filter(pl.element().is_not_null()))
     )
-    return {row["entity_name"]: row["call_name"] for row in df.to_dicts()}
+    return {row["entity_name"]: row["call_name"] for row in df.collect().to_dicts()}
 
 
-def calc_fact_table(df: pl.DataFrame) -> pl.DataFrame:
+def calc_fact_table(lf: pl.LazyFrame) -> pl.LazyFrame:
     return (
-        df.lazy()
-        .explode("calls")
+        lf.explode("calls")
         .unnest("calls")
         .fill_null("")
         .filter(pl.col("scope").ne("FunctionScope") & pl.col("call_source").ne("BUILTIN"))
@@ -75,7 +74,6 @@ def calc_fact_table(df: pl.DataFrame) -> pl.DataFrame:
             calc_module_name("call_name", "call_module_name"),
         )
         .filter(pl.col("call_name") != pl.col("entity_name"))
-        .collect()
     )
 
 

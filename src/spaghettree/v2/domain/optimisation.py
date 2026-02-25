@@ -16,7 +16,8 @@ class AdjMat:
 
     @classmethod
     @safe
-    def from_lf(cls, df: pl.DataFrame, *, optimise: bool = True) -> Self:
+    def from_lf(cls, lf: pl.LazyFrame, *, optimise: bool = True) -> Self:
+        df = lf.collect()
         nodes = (
             pl.concat(
                 [
@@ -57,7 +58,7 @@ class AdjMat:
 
         dwm = DirectedWeightedModularity.from_edges(edges)
 
-        print(f"Pre-optimisation DWM: {dwm.calc(communities)}")
+        print(f"Pre-optimisation DWM: {dwm.calc(communities)}")  # noqa: T201
 
         if optimise:
             communities = communities.with_columns(pl.col("node").alias("module"))
@@ -89,15 +90,14 @@ class DirectedWeightedModularity:
         if self.total_edges == 0:
             return 0.0
 
-        intra = (
-            self.weighted_edges.join(communities.rename({"node": "src"}), on="src")
-            .rename({"module": "comm_src"})
-            .join(communities.rename({"node": "dst"}), on="dst")
-            .rename({"module": "comm_dst"})
-            .filter(pl.col("comm_src") == pl.col("comm_dst"))
-        )
+        comm_src = communities.rename({"node": "src", "module": "comm_src"})
+        comm_dst = communities.rename({"node": "dst", "module": "comm_dst"})
+
         return (
-            intra.with_columns(
+            self.weighted_edges.join(comm_src, on="src")
+            .join(comm_dst, on="dst")
+            .filter(pl.col("comm_src") == pl.col("comm_dst"))
+            .with_columns(
                 (pl.col("weight") - (pl.col("k_out") * pl.col("k_in") / self.total_edges)).alias(
                     "contrib"
                 )
@@ -116,7 +116,7 @@ def optimise_communities(adj_mat: AdjMat) -> AdjMat:
         adj_mat.communities = apply_merges_lf(adj_mat.communities, to_merge)
         valid_merges = get_merge_scores(adj_mat)
 
-    print(f"Post-optimisation DWM: {adj_mat.dwm.calc(adj_mat.communities)}")
+    print(f"Post-optimisation DWM: {adj_mat.dwm.calc(adj_mat.communities)}")  # noqa: T201
 
     return adj_mat
 
