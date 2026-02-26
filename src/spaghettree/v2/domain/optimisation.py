@@ -109,12 +109,29 @@ class DirectedWeightedModularity:
 
 @safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
+    connected_nodes = set(adj_mat.dwm.weighted_edges["src"]) | set(
+        adj_mat.dwm.weighted_edges["dst"]
+    )
+    isolated = adj_mat.communities.filter(~pl.col("node").is_in(connected_nodes))
+    adj_mat.communities = adj_mat.communities.filter(pl.col("node").is_in(connected_nodes))
+
     valid_merges = get_merge_scores(adj_mat)
 
     while not valid_merges.is_empty():
         to_merge = remove_overlapping_pairs(valid_merges)
         adj_mat.communities = apply_merges_lf(adj_mat.communities, to_merge)
         valid_merges = get_merge_scores(adj_mat)
+
+    adj_mat.communities = adj_mat.communities.with_columns(
+        pl.col("node").cast(pl.Int64),
+        pl.col("module").cast(pl.Int64),
+    )
+
+    isolated = isolated.with_columns(
+        pl.col("node").cast(pl.Int64),
+        pl.col("module").cast(pl.Int64),
+    )
+    adj_mat.communities = pl.concat([adj_mat.communities, isolated])
 
     print(f"Post-optimisation DWM: {adj_mat.dwm.calc(adj_mat.communities)}")  # noqa: T201
 

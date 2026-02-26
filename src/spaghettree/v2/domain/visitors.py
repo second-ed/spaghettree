@@ -42,29 +42,55 @@ class NodeCollector(MetadataBase):
     imports: list = attrs.field(factory=list)
     filepath: str = attrs.field(default="")
 
-    def on_visit(self, node: cst.CSTNode) -> bool:
-        if m.matches(node, self.entity_matchers):
-            self._handle_entity(node)
+    def visit_AnnAssign(self, node: cst.AnnAssign) -> bool | None:  # noqa: N802
+        self._handle_entity(node)
+        return super().visit_AnnAssign(node)
 
-        if m.matches(node, self.import_matchers):
-            self._handle_import(node)
+    def visit_Assign(self, node: cst.Assign) -> bool | None:  # noqa: N802
+        self._handle_entity(node)
+        return super().visit_Assign(node)
 
-        if not self.entities:
-            return super().on_visit(node)
+    def visit_Call(self, node: cst.Call) -> bool | None:  # noqa: N802
+        if self.entities:
+            self.entities[-1].calls.extend(
+                self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set())
+            )
+        return super().visit_Call(node)
 
-        if m.matches(node, m.Call()):
-            self._handle_call(node)
+    def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:  # noqa: N802
+        self._handle_entity(node)
+        return super().visit_ClassDef(node)
 
-        if m.matches(node, m.Name()):
-            self._handle_name(node)
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> bool | None:  # noqa: N802
+        self._handle_entity(node)
+        return super().visit_FunctionDef(node)
 
-        return super().on_visit(node)
+    def visit_Import(self, node: cst.Import) -> bool | None:  # noqa: N802
+        self._handle_import(node)
+        return super().visit_Import(node)
 
-    def _handle_entity(self, node: cst.CSTNode) -> bool:
+    def visit_ImportFrom(self, node: cst.ImportFrom) -> bool | None:  # noqa: N802
+        self._handle_import(node)
+        return super().visit_ImportFrom(node)
+
+    def visit_Name(self, node: cst.Name) -> bool | None:  # noqa: N802
+        if self.entities:
+            name = self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set())
+
+            if not self.entities[-1].qualified_names:
+                object.__setattr__(self.entities[-1], "qualified_names", tuple(name))
+
+            self.entities[-1].references.extend(name)
+        return super().visit_Name(node)
+
+    def _handle_entity(self, node: cst.CSTNode) -> None:
+        if not m.matches(node, self.entity_matchers):
+            return
+
         scope = self.get_metadata(cst.metadata.ScopeProvider, node, None)
 
         if not isinstance(scope, cst.metadata.scope_provider.GlobalScope):
-            return super().on_visit(node)
+            return
 
         self.entities.append(
             NodeMetadata(
@@ -77,39 +103,26 @@ class NodeCollector(MetadataBase):
                 filepath=self.filepath,
             )
         )
-        return super().on_visit(node)
 
-    def _handle_import(self, node: cst.CSTNode) -> bool:
+    def _handle_import(self, node: cst.CSTNode) -> None:
+        if not m.matches(node, self.import_matchers):
+            return
         if m.matches(node, m.Import()):
             self._record_import(None, node.names, ImportType.IMPORT)
-            return super().on_visit(node)
+            return
 
         module = self._resolve_attr(node.module)
         if module is None:
             # skip relative imports
-            return super().on_visit(node)
+            return
 
         if m.matches(node, m.ImportFrom()):
             if m.matches(node.names, m.ImportStar()):
                 self.imports.append(ImportCST(module, ImportType.FROM, "*", "*"))
-                return super().on_visit(node)
+                return
 
             aliases = [node.names] if isinstance(node.names, cst.ImportAlias) else node.names
             self._record_import(module, aliases, ImportType.FROM)
-        return super().on_visit(node)
-
-    def _handle_call(self, node: cst.CSTNode) -> None:
-        self.entities[-1].calls.extend(
-            self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set())
-        )
-
-    def _handle_name(self, node: cst.CSTNode) -> None:
-        name = self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set())
-
-        if not self.entities[-1].qualified_names:
-            object.__setattr__(self.entities[-1], "qualified_names", tuple(name))
-
-        self.entities[-1].references.extend(name)
 
     def _record_import(self, module: str | None, aliases: list, import_type: ImportType) -> None:
         for alias in aliases:
