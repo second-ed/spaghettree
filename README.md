@@ -1,4 +1,6 @@
 # spaghettree
+
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/second-ed/spaghettree?utm_source=badge)
 Software complexity directly affects the maintainability of modern codebases.
 Most of the software lifecycle is spent maintaining production systems. High complexity leads to harder maintenance, slower feature delivery, and longer onboarding for new engineers.
 
