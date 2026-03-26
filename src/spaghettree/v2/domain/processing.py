@@ -33,10 +33,7 @@ def infer_module_names(
         )
         .group_by([module_col, inferred_module_col])
         .agg(pl.len().alias("freq"))
-        .sort(
-            by=[module_col, "freq", inferred_module_col],
-            descending=[False, True, False],
-        )
+        .sort(by=[module_col, "freq", inferred_module_col], descending=[False, True, False])
         .group_by(module_col)
         .first()
     )
@@ -45,11 +42,7 @@ def infer_module_names(
         inferred_module_col, keep="first"
     )
 
-    overflow = best.join(
-        unique_best.select(module_col),
-        on=module_col,
-        how="anti",
-    ).with_columns(
+    overflow = best.join(unique_best.select(module_col), on=module_col, how="anti").with_columns(
         (pl.col(inferred_module_col) + "_" + pl.col(module_col).str.split(".").list.get(-1)).alias(
             inferred_module_col
         )

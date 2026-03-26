@@ -182,9 +182,7 @@ class ImportCST:
 
 
 def resolve_calls(
-    calls: list[str],
-    import_map: dict[str, str],
-    ent_map: dict[str, str],
+    calls: list[str], import_map: dict[str, str], ent_map: dict[str, str]
 ) -> list[str]:
     logger.debug(f"{calls = }")
     logger.debug(f"{import_map = }")

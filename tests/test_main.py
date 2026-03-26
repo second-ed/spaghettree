@@ -9,8 +9,7 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper
 
 
 @pytest.mark.parametrize(
-    ("src_root"),
-    [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")],
+    ("src_root"), [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")]
 )
 def test_e2e(src_root):
     try:
@@ -266,10 +265,7 @@ def test_run_process(fixture_get_subset_files, expected_result):
             "mock_data/mock_case_1/src/case_1",
             {
                 "case_1.mod_a.func_a": [],
-                "case_1.mod_b.func_b": [
-                    "case_1.mod_a.func_a",
-                    "case_1.mod_a.func_a",
-                ],
+                "case_1.mod_b.func_b": ["case_1.mod_a.func_a", "case_1.mod_a.func_a"],
             },
             id="ensure identifies the correct call tree for case_1",
         ),
@@ -277,18 +273,11 @@ def test_run_process(fixture_get_subset_files, expected_result):
             "mock_data/mock_case_2/src/case_2",
             {
                 "case_2.__init__.__all__": [],
-                "case_2.mod_a.func_a": [
-                    "case_2.mod_a.func_b",
-                ],
+                "case_2.mod_a.func_a": ["case_2.mod_a.func_b"],
                 "case_2.mod_a.func_b": [],
-                "case_2.mod_a.func_c": [
-                    "case_2.mod_b.func_d",
-                ],
+                "case_2.mod_a.func_c": ["case_2.mod_b.func_d"],
                 "case_2.mod_a.isolated_func": [],
-                "case_2.mod_b.ClassA": [
-                    "case_2.mod_b.func_d",
-                    "case_2.mod_b.func_d",
-                ],
+                "case_2.mod_b.ClassA": ["case_2.mod_b.func_d", "case_2.mod_b.func_d"],
                 "case_2.mod_b.func_d": [],
             },
             id="ensure identifies the correct call tree for case_2",
@@ -298,17 +287,9 @@ def test_run_process(fixture_get_subset_files, expected_result):
             {
                 "case_3.mod_a.A": [],
                 "case_3.mod_a.func_a": [],
-                "case_3.mod_a.func_b": [
-                    "case_3.mod_a.func_a",
-                    "case_3.mod_a.func_a",
-                ],
-                "case_3.mod_b.B": [
-                    "case_3.mod_b.CONSTANT",
-                ],
-                "case_3.mod_b.C": [
-                    "case_3.mod_a.A",
-                    "case_3.mod_b.B",
-                ],
+                "case_3.mod_a.func_b": ["case_3.mod_a.func_a", "case_3.mod_a.func_a"],
+                "case_3.mod_b.B": ["case_3.mod_b.CONSTANT"],
+                "case_3.mod_b.C": ["case_3.mod_a.A", "case_3.mod_b.B"],
                 "case_3.mod_b.CONSTANT": [],
             },
             id="ensure identifies the correct call tree for case_3",
@@ -317,37 +298,24 @@ def test_run_process(fixture_get_subset_files, expected_result):
             "mock_data/mock_case_4/src/case_4",
             {
                 "case_4.mod_a.CONSTANT": [],
-                "case_4.mod_a.func_a": [
-                    "case_4.mod_a.CONSTANT",
-                ],
-                "case_4.mod_a.func_b": [
-                    "case_4.mod_a.func_a",
-                    "case_4.mod_a.func_a",
-                ],
-                "case_4.mod_b.B": [
-                    "case_4.mod_b.CONSTANT",
-                ],
+                "case_4.mod_a.func_a": ["case_4.mod_a.CONSTANT"],
+                "case_4.mod_a.func_b": ["case_4.mod_a.func_a", "case_4.mod_a.func_a"],
+                "case_4.mod_b.B": ["case_4.mod_b.CONSTANT"],
                 "case_4.mod_b.CONSTANT": [],
             },
             id="ensure identifies the correct call tree for case_4",
         ),
         pytest.param(
             "mock_data/mock_case_5/src/case_5",
-            {
-                "case_5.mod_a.SomeClass": [],
-            },
+            {"case_5.mod_a.SomeClass": []},
             id="ensure identifies the correct call tree for case_5",
         ),
         pytest.param(
             "mock_data/mock_case_6/src/case_6",
             {
-                "case_6.mod_a.Circle": [
-                    "case_6.mod_a.PI",
-                ],
+                "case_6.mod_a.Circle": ["case_6.mod_a.PI"],
                 "case_6.mod_a.PI": [],
-                "case_6.mod_b.calculate_circumference": [
-                    "case_6.mod_a.PI",
-                ],
+                "case_6.mod_b.calculate_circumference": ["case_6.mod_a.PI"],
             },
             id="ensure identifies the correct call tree for case_6",
         ),
@@ -366,28 +334,19 @@ def test_run_process(fixture_get_subset_files, expected_result):
             {
                 "case_8.logger.__init__.logger": [],
                 "case_8.mod_a.func_a": [],
-                "case_8.mod_b.func_b": [
-                    "case_8.mod_a.func_a",
-                    "case_8.mod_a.func_a",
-                ],
+                "case_8.mod_b.func_b": ["case_8.mod_a.func_a", "case_8.mod_a.func_a"],
             },
             id="ensure identifies the correct call tree for case_8",
         ),
         pytest.param(
             "mock_data/mock_case_9/src/case_9",
             {
-                "case_9.mod_generics.process_list": [
-                    "case_9.mod_utils.process_data",
-                ],
+                "case_9.mod_generics.process_list": ["case_9.mod_utils.process_data"],
                 "case_9.mod_generics.create_mapping": [],
                 "case_9.mod_generics.find_item": [],
                 "case_9.mod_utils.T": [],
-                "case_9.mod_utils.process_data": [
-                    "case_9.mod_utils.T",
-                ],
-                "case_9.mod_utils.get_first_item": [
-                    "case_9.mod_utils.T",
-                ],
+                "case_9.mod_utils.process_data": ["case_9.mod_utils.T"],
+                "case_9.mod_utils.get_first_item": ["case_9.mod_utils.T"],
             },
             id="ensure identifies the correct call tree for case_9 with generics",
         ),

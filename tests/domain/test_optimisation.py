@@ -118,19 +118,11 @@ def st_adj_mat_and_comms(draw, max_n: int = 20, max_val: int = 20) -> tuple[np.n
 
     adj_mat = draw(
         hnp.arrays(
-            dtype=np.int64,
-            shape=(n, n),
-            elements=st.integers(min_value=0, max_value=max_val),
+            dtype=np.int64, shape=(n, n), elements=st.integers(min_value=0, max_value=max_val)
         )
     )
 
-    comms = draw(
-        st.lists(
-            st.integers(min_value=1, max_value=max_val),
-            min_size=n,
-            max_size=n,
-        )
-    )
+    comms = draw(st.lists(st.integers(min_value=1, max_value=max_val), min_size=n, max_size=n))
 
     return adj_mat, comms
 

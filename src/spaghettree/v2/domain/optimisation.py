@@ -63,12 +63,7 @@ class AdjMat:
         if optimise:
             communities = communities.with_columns(pl.col("node").alias("module"))
 
-        return cls(
-            nodes=nodes,
-            modules=modules,
-            communities=communities,
-            dwm=dwm,
-        )
+        return cls(nodes=nodes, modules=modules, communities=communities, dwm=dwm)
 
 
 @attrs.define(frozen=True)
@@ -123,14 +118,10 @@ def optimise_communities(adj_mat: AdjMat) -> AdjMat:
         valid_merges = get_merge_scores(adj_mat)
 
     adj_mat.communities = adj_mat.communities.with_columns(
-        pl.col("node").cast(pl.Int64),
-        pl.col("module").cast(pl.Int64),
+        pl.col("node").cast(pl.Int64), pl.col("module").cast(pl.Int64)
     )
 
-    isolated = isolated.with_columns(
-        pl.col("node").cast(pl.Int64),
-        pl.col("module").cast(pl.Int64),
-    )
+    isolated = isolated.with_columns(pl.col("node").cast(pl.Int64), pl.col("module").cast(pl.Int64))
     adj_mat.communities = pl.concat([adj_mat.communities, isolated])
 
     print(f"Post-optimisation DWM: {adj_mat.dwm.calc(adj_mat.communities)}")  # noqa: T201
@@ -167,10 +158,7 @@ def remove_overlapping_pairs(possible_pairs: pl.DataFrame) -> pl.DataFrame:
 
 
 def apply_merges_lf(communities_lf: pl.DataFrame, merges_lf: pl.DataFrame) -> pl.DataFrame:
-    mapping = merges_lf.select(
-        pl.col("c2").alias("module"),
-        pl.col("c1").alias("new_module"),
-    )
+    mapping = merges_lf.select(pl.col("c2").alias("module"), pl.col("c1").alias("new_module"))
     return (
         communities_lf.join(mapping, on="module", how="left")
         .with_columns(pl.coalesce("new_module", "module").alias("module"))

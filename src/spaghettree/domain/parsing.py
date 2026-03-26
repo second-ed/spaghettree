@@ -71,9 +71,7 @@ def extract_entities_and_locations(
 
 
 @safe
-def filter_non_native_calls(
-    entities: dict[str, EntityCST],
-) -> dict[str, EntityCST]:
+def filter_non_native_calls(entities: dict[str, EntityCST]) -> dict[str, EntityCST]:
     logger.debug(f"{entities = }")
     entities = deepcopy(entities)
     return {

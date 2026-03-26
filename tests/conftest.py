@@ -26,8 +26,4 @@ def fixture_get_subset_files(
     return case_name, {k: v for k, v in fixture_get_files.items() if case_name in k}
 
 
-identifier = st.text(
-    alphabet=string.ascii_lowercase,
-    min_size=3,
-    max_size=3,
-)
+identifier = st.text(alphabet=string.ascii_lowercase, min_size=3, max_size=3)

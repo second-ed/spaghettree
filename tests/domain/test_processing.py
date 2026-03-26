@@ -130,10 +130,7 @@ def test_second_half_of_processing(call_tree, entities, location_map, src_root, 
         .and_then(infer_module_names)
         .and_then(rename_overlapping_mod_names)
         .and_then(remap_imports)
-        .and_then(
-            convert_to_code_str,
-            order_map=location_map,
-        )
+        .and_then(convert_to_code_str, order_map=location_map)
         .and_then(create_new_filepaths, new_root=src_root)
         .and_then(add_empty_inits_if_needed)
     )

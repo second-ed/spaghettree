@@ -17,10 +17,7 @@ from spaghettree.domain.optimisation import (
     optimise_communities,
     yellow,
 )
-from spaghettree.domain.parsing import (
-    cst_to_str,
-    pair_exclusive_calls,
-)
+from spaghettree.domain.parsing import cst_to_str, pair_exclusive_calls
 from spaghettree.domain.visitors import EntityLocation
 
 
@@ -40,10 +37,7 @@ def optimise_entity_positions(
         .and_then(infer_module_names)
         .and_then(rename_overlapping_mod_names)
         .and_then(remap_imports)
-        .and_then(
-            convert_to_code_str,
-            order_map=location_map,
-        )
+        .and_then(convert_to_code_str, order_map=location_map)
         .and_then(create_new_filepaths, new_root=(new_root or src_root))
         .and_then(add_empty_inits_if_needed)
     )
@@ -72,8 +66,7 @@ def analyse_existing_structure(
 
 @safe
 def create_new_module_map(
-    adj_mat: AdjMat,
-    entities: dict[str, EntityCST],
+    adj_mat: AdjMat, entities: dict[str, EntityCST]
 ) -> dict[int, list[EntityCST]]:
     new_modules: defaultdict[int, list[EntityCST]] = defaultdict(list)
 
@@ -85,9 +78,7 @@ def create_new_module_map(
 
 
 @safe
-def infer_module_names(
-    new_modules: dict[int, list[EntityCST]],
-) -> dict[str, list[EntityCST]]:
+def infer_module_names(new_modules: dict[int, list[EntityCST]]) -> dict[str, list[EntityCST]]:
     logger.debug(f"{new_modules = }")
 
     renamed_modules: dict[str, list[EntityCST]] = defaultdict(list)
@@ -153,9 +144,7 @@ def rename_overlapping_mod_names(
 
 
 @safe
-def remap_imports(
-    modules: dict[str, list[EntityCST]],
-) -> dict[str, list[EntityCST]]:
+def remap_imports(modules: dict[str, list[EntityCST]]) -> dict[str, list[EntityCST]]:
     logger.debug(f"{modules = }")
 
     modules = deepcopy(modules)
@@ -178,7 +167,7 @@ def remap_imports(
                             import_type=imp.import_type,
                             name=imp.name,
                             as_name=imp.as_name,
-                        ),
+                        )
                     )
             updated_imports.add(
                 ImportCST(
@@ -195,8 +184,7 @@ def remap_imports(
 
 @safe
 def create_new_filepaths(
-    fixed_name_modules: dict[str, list[EntityCST]],
-    new_root: str,
+    fixed_name_modules: dict[str, list[EntityCST]], new_root: str
 ) -> dict[str, list[EntityCST]]:
     logger.debug(f"{fixed_name_modules = }")
 
@@ -208,8 +196,7 @@ def create_new_filepaths(
 
 @safe
 def convert_to_code_str(
-    new_modules: dict[str, list[EntityCST]],
-    order_map: dict[str, int],
+    new_modules: dict[str, list[EntityCST]], order_map: dict[str, int]
 ) -> dict[str, str]:
     logger.debug(f"{new_modules = }")
     logger.debug(f"{order_map = }")

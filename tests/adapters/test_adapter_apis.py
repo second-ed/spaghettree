@@ -6,11 +6,7 @@ from spaghettree.adapters.io_wrapper import FakeIOWrapper, IOBase, IOWrapper
 
 
 @pytest.mark.parametrize(
-    ("obj", "protocol"),
-    [
-        pytest.param(IOWrapper(), IOBase),
-        pytest.param(FakeIOWrapper(), IOBase),
-    ],
+    ("obj", "protocol"), [pytest.param(IOWrapper(), IOBase), pytest.param(FakeIOWrapper(), IOBase)]
 )
 def test_protocols(obj, protocol):
     assert isinstance(obj, protocol)
@@ -41,39 +37,23 @@ class FakeMismatchingSignature:
 @pytest.mark.parametrize(
     ("real", "fake"),
     [
-        pytest.param(
-            SanityCheck(),
-            FakeSanityCheck(),
-            id="ensure matching public methods pass",
-        ),
+        pytest.param(SanityCheck(), FakeSanityCheck(), id="ensure matching public methods pass"),
         pytest.param(
             SanityCheck(),
             FakeMissingMethod(),
             id="ensure fails if fake missing method",
-            marks=pytest.mark.xfail(
-                reason="ensure fails if fake missing method",
-                strict=True,
-            ),
+            marks=pytest.mark.xfail(reason="ensure fails if fake missing method", strict=True),
         ),
         pytest.param(
             SanityCheck(),
             FakeMismatchingSignature(),
             id="ensure fails if fake not matching signature",
             marks=pytest.mark.xfail(
-                reason="ensure fails if fake not matching signature",
-                strict=True,
+                reason="ensure fails if fake not matching signature", strict=True
             ),
         ),
-        pytest.param(
-            IOWrapper(),
-            FakeIOWrapper(),
-            id="ensure IO wrapper matches fake",
-        ),
-        pytest.param(
-            IOWrapper,
-            IOBase,
-            id="ensure IO wrapper matches protocol",
-        ),
+        pytest.param(IOWrapper(), FakeIOWrapper(), id="ensure IO wrapper matches fake"),
+        pytest.param(IOWrapper, IOBase, id="ensure IO wrapper matches protocol"),
     ],
 )
 def test_api_match(real: object, fake: object) -> None:
