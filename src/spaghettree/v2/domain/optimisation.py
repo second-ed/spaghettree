@@ -17,12 +17,11 @@ class AdjMat:
     @classmethod
     @safe
     def from_lf(cls, lf: pl.LazyFrame, *, optimise: bool = True) -> Self:
-        df = lf.collect()
         nodes = (
             pl.concat(
                 [
-                    df.select(pl.col("entity_name").alias("node")),
-                    df.filter(pl.col("call_name").ne("")).select(pl.col("call_name").alias("node")),
+                    lf.select(pl.col("entity_name").alias("node")),
+                    lf.filter(pl.col("call_name").ne("")).select(pl.col("call_name").alias("node")),
                 ]
             )
             .unique()
@@ -31,14 +30,14 @@ class AdjMat:
         )
 
         modules = (
-            df.select(pl.col("module_name").alias("module"))
+            lf.select(pl.col("module_name").alias("module"))
             .unique()
             .sort(by="module")
             .with_row_index("idx")
         )
 
         edges = (
-            df.join(nodes, left_on="entity_name", right_on="node")
+            lf.join(nodes, left_on="entity_name", right_on="node")
             .rename({"idx": "src"})
             .join(nodes, left_on="call_name", right_on="node")
             .rename({"idx": "dst"})
@@ -48,22 +47,25 @@ class AdjMat:
         )
 
         communities = (
-            df.join(nodes, left_on="entity_name", right_on="node")
+            lf.join(nodes, left_on="entity_name", right_on="node")
             .rename({"idx": "node"})
             .join(modules, left_on="module_name", right_on="module")
             .rename({"idx": "module"})
             .select("node", "module")
             .unique(maintain_order=True)
+            .collect()
         )
 
-        dwm = DirectedWeightedModularity.from_edges(edges)
+        dwm = DirectedWeightedModularity.from_edges(edges.collect())
 
         print(f"Pre-optimisation DWM: {dwm.calc(communities)}")  # noqa: T201
 
         if optimise:
             communities = communities.with_columns(pl.col("node").alias("module"))
 
-        return cls(nodes=nodes, modules=modules, communities=communities, dwm=dwm)
+        return cls(
+            nodes=nodes.collect(), modules=modules.collect(), communities=communities, dwm=dwm
+        )
 
 
 @attrs.define(frozen=True)

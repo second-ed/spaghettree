@@ -189,6 +189,7 @@ class SomeOtherClass:
 │   ├── v2
 │   │   └── domain
 │   │       ├── __init__.py
+│   │       ├── test_benchmarks.py
 │   │       └── test_optimisation.py
 │   ├── __init__.py
 │   ├── conftest.py
