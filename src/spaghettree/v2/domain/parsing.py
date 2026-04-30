@@ -1,6 +1,7 @@
 import polars as pl
 from danom import safe
 
+from spaghettree.v2.domain.utils import to_df, to_lf
 from spaghettree.v2.domain.visitors import NodeMetadata
 
 
@@ -49,7 +50,7 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.LazyFrame:
                 )
             ),
         },
-    ).lazy()
+    ).pipe(to_lf)
 
 
 def lf_to_call_tree(df: pl.LazyFrame) -> dict[str, list[str]]:
@@ -58,7 +59,7 @@ def lf_to_call_tree(df: pl.LazyFrame) -> dict[str, list[str]]:
         .agg(pl.when(pl.col("call_name").ne("")).then(pl.col("call_name")))
         .with_columns(pl.col("call_name").list.filter(pl.element().is_not_null()))
     )
-    return {row["entity_name"]: row["call_name"] for row in df.collect().to_dicts()}
+    return {row["entity_name"]: row["call_name"] for row in df.pipe(to_df).to_dicts()}
 
 
 def calc_fact_table(lf: pl.LazyFrame) -> pl.LazyFrame:

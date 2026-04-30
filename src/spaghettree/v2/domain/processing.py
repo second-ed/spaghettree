@@ -2,16 +2,21 @@ import polars as pl
 from danom import safe
 
 from spaghettree.v2.domain.optimisation import AdjMat
+from spaghettree.v2.domain.utils import to_df, to_lf
 
 
 @safe
-def compose_facts_and_adj_mat(df: pl.DataFrame, adj_mat: AdjMat) -> pl.DataFrame:
+def compose_facts_and_adj_mat(lf: pl.LazyFrame, adj_mat: AdjMat) -> pl.DataFrame:
+    nodes = adj_mat.nodes.pipe(to_lf)
+
     return (
-        adj_mat.communities.join(adj_mat.nodes, left_on="node", right_on="idx")
+        adj_mat.communities.pipe(to_lf)
+        .join(nodes, left_on="node", right_on="idx")
         .rename({"node_right": "node_name"})
-        .join(adj_mat.nodes, left_on="module", right_on="idx")
+        .join(nodes, left_on="module", right_on="idx")
         .rename({"node_right": "optimised_module"})
-        .join(df, left_on="node_name", right_on="name")
+        .join(lf, left_on="node_name", right_on="name")
+        .pipe(to_df)
     )
 
 
@@ -21,7 +26,7 @@ def infer_module_names(
     module_col: str = "optimised_module",
     inferred_module_col: str = "inferred_module",
 ) -> pl.DataFrame:
-    lf = df.lazy()
+    lf = df.pipe(to_lf)
 
     split_module_name = pl.col(module_col).str.split(".")
 
@@ -55,7 +60,7 @@ def infer_module_names(
         )
         # .select("node_name", "inferred_module")
         .with_columns(construct_imports())
-        .collect()
+        .pipe(to_df)
     )
 
 

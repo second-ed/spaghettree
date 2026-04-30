@@ -6,6 +6,8 @@ import attrs
 import polars as pl
 from danom import safe
 
+from spaghettree.v2.domain.utils import to_df
+
 
 @attrs.define
 class AdjMat:
@@ -53,10 +55,10 @@ class AdjMat:
             .rename({"idx": "module"})
             .select("node", "module")
             .unique(maintain_order=True)
-            .collect()
+            .pipe(to_df)
         )
 
-        dwm = DirectedWeightedModularity.from_edges(edges.collect())
+        dwm = DirectedWeightedModularity.from_edges(edges.pipe(to_df))
 
         print(f"Pre-optimisation DWM: {dwm.calc(communities)}")  # noqa: T201
 
@@ -64,7 +66,7 @@ class AdjMat:
             communities = communities.with_columns(pl.col("node").alias("module"))
 
         return cls(
-            nodes=nodes.collect(), modules=modules.collect(), communities=communities, dwm=dwm
+            nodes=nodes.pipe(to_df), modules=modules.pipe(to_df), communities=communities, dwm=dwm
         )
 
 

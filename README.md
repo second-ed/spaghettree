@@ -171,6 +171,7 @@ class SomeOtherClass:
 │       │   │   ├── optimisation.py
 │       │   │   ├── parsing.py
 │       │   │   ├── processing.py
+│       │   │   ├── utils.py
 │       │   │   └── visitors.py
 │       │   └── __init__.py
 │       ├── __init__.py
