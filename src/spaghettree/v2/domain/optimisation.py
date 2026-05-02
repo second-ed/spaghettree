@@ -72,6 +72,7 @@ class AdjMat:
 
 @attrs.define(frozen=True)
 class DirectedWeightedModularity:
+    weighted_nodes: pl.DataFrame
     weighted_edges: pl.DataFrame
     total_edges: float
 
@@ -79,29 +80,50 @@ class DirectedWeightedModularity:
     def from_edges(cls, edges: pl.DataFrame) -> Self:
         total_edges = edges.select(pl.col("weight").sum()).item()
 
-        out_deg = edges.group_by("src").agg(pl.col("weight").sum().alias("k_out"))
-        in_deg = edges.group_by("dst").agg(pl.col("weight").sum().alias("k_in"))
+        out_deg = edges.group_by("src").agg(pl.col("weight").sum().alias("k_out")).lazy()
+        in_deg = edges.group_by("dst").agg(pl.col("weight").sum().alias("k_in")).lazy()
 
-        weighted_edges = edges.join(out_deg, on="src").join(in_deg, on="dst")
-        return cls(weighted_edges=weighted_edges, total_edges=total_edges)
+        weighted_nodes = (
+            edges.select(pl.col("src").alias("node"))
+            .vstack(edges.select(pl.col("dst").alias("node")))
+            .lazy()
+            .unique()
+            .join(out_deg.rename({"src": "node"}), on="node", how="left")
+            .join(in_deg.rename({"dst": "node"}), on="node", how="left")
+            .with_columns([pl.col("k_out").fill_null(0.0), pl.col("k_in").fill_null(0.0)])
+        )
+
+        weighted_edges = (
+            edges.lazy()
+            .filter(pl.col("weight") != 0)
+            .select(pl.col("src"), pl.col("dst"), pl.col("weight").cast(pl.Float64))
+        )
+
+        return cls(
+            weighted_nodes=weighted_nodes.collect(),
+            weighted_edges=weighted_edges.collect(),
+            total_edges=float(total_edges),
+        )
 
     def calc(self, communities: pl.DataFrame) -> float:
         if self.total_edges == 0:
             return 0.0
 
-        comm_src = communities.rename({"node": "src", "module": "comm_src"})
-        comm_dst = communities.rename({"node": "dst", "module": "comm_dst"})
+        nodes = self.weighted_nodes.join(communities, on="node", how="left")
 
         return (
-            self.weighted_edges.join(comm_src, on="src")
-            .join(comm_dst, on="dst")
-            .filter(pl.col("comm_src") == pl.col("comm_dst"))
+            nodes.join(nodes, how="cross", suffix="_j")
+            .join(
+                self.weighted_edges, left_on=["node", "node_j"], right_on=["src", "dst"], how="left"
+            )
+            .with_columns(pl.col("weight").fill_null(0.0))
+            .filter(pl.col("module") == pl.col("module_j"))
             .with_columns(
-                (pl.col("weight") - (pl.col("k_out") * pl.col("k_in") / self.total_edges)).alias(
+                (pl.col("weight") - (pl.col("k_out") * pl.col("k_in_j") / self.total_edges)).alias(
                     "contrib"
                 )
             )
-            .select(pl.col("contrib").sum() / self.total_edges)
+            .select((pl.col("contrib").sum().fill_null(0.0) / self.total_edges).cast(pl.Float64()))
             .item()
         )
 

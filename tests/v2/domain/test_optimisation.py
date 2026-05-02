@@ -19,7 +19,7 @@ from src.spaghettree.v2.domain.optimisation import DirectedWeightedModularity
                     {"node": 6, "module": 2},
                 ]
             ),
-            0.3125,
+            0.25,
         ),
         pytest.param(
             pl.DataFrame(
@@ -33,7 +33,7 @@ from src.spaghettree.v2.domain.optimisation import DirectedWeightedModularity
                     {"node": 6, "module": 2},
                 ]
             ),
-            0.125,
+            0.0,
         ),
     ],
 )
