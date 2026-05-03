@@ -90,7 +90,7 @@ class DirectedWeightedModularity:
             .unique()
             .join(out_deg.rename({"src": "node"}), on="node", how="left")
             .join(in_deg.rename({"dst": "node"}), on="node", how="left")
-            .with_columns([pl.col("k_out").fill_null(0.0), pl.col("k_in").fill_null(0.0)])
+            .with_columns([pl.col("k_out").fill_null(0), pl.col("k_in").fill_null(0)])
         )
 
         weighted_edges = (
@@ -116,7 +116,7 @@ class DirectedWeightedModularity:
             .join(
                 self.weighted_edges, left_on=["node", "node_j"], right_on=["src", "dst"], how="left"
             )
-            .with_columns(pl.col("weight").fill_null(0.0))
+            .with_columns(pl.col("weight").fill_null(0))
             .filter(pl.col("module") == pl.col("module_j"))
             .with_columns(
                 (pl.col("weight") - (pl.col("k_out") * pl.col("k_in_j") / self.total_edges)).alias(

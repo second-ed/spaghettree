@@ -53,13 +53,15 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.LazyFrame:
     ).pipe(to_lf)
 
 
-def lf_to_call_tree(df: pl.LazyFrame) -> dict[str, list[str]]:
+def lf_to_call_tree(
+    df: pl.LazyFrame, entity_name: str = "entity_name", call_name: str = "call_name"
+) -> dict[str, list[str]]:
     df = (
-        df.group_by("entity_name")
-        .agg(pl.when(pl.col("call_name").ne("")).then(pl.col("call_name")))
-        .with_columns(pl.col("call_name").list.filter(pl.element().is_not_null()))
+        df.group_by(entity_name)
+        .agg(pl.when(pl.col(call_name).ne("")).then(pl.col(call_name)))
+        .with_columns(pl.col(call_name).list.filter(pl.element().is_not_null()))
     )
-    return {row["entity_name"]: row["call_name"] for row in df.pipe(to_df).to_dicts()}
+    return {row[entity_name]: row[call_name] for row in df.pipe(to_df).to_dicts()}
 
 
 def calc_fact_table(lf: pl.LazyFrame) -> pl.LazyFrame:
