@@ -162,6 +162,18 @@ class SomeOtherClass:
 │       │   ├── parsing.py
 │       │   ├── processing.py
 │       │   └── visitors.py
+│       ├── v2
+│       │   ├── adapters
+│       │   │   └── __init__.py
+│       │   ├── domain
+│       │   │   ├── __init__.py
+│       │   │   ├── imports.py
+│       │   │   ├── optimisation.py
+│       │   │   ├── parsing.py
+│       │   │   ├── processing.py
+│       │   │   ├── utils.py
+│       │   │   └── visitors.py
+│       │   └── __init__.py
 │       ├── __init__.py
 │       └── __main__.py
 ├── tests
@@ -175,6 +187,11 @@ class SomeOtherClass:
 │   │   ├── test_entities.py
 │   │   ├── test_optimisation.py
 │   │   └── test_processing.py
+│   ├── v2
+│   │   └── domain
+│   │       ├── __init__.py
+│   │       ├── test_optimisation.py
+│   │       └── test_parsing.py
 │   ├── __init__.py
 │   ├── conftest.py
 │   └── test_main.py

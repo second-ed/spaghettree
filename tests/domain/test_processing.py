@@ -33,19 +33,13 @@ CASE_3_ENTITIES = {
         name="case_3.mod_a.func_a",
         tree=str_to_cst("def func_a() -> int:\n    return math.ceil(0.5)\n").body[0],
         calls=[],
-        imports={
-            ImportCST(module="math", import_type=ImportType.IMPORT, name="math", as_name="math")
-        },
+        imports={ImportCST(module="math", import_type=ImportType.IMPORT, name="math", as_name="math")},
     ),
     "case_3.mod_a.func_b": FuncCST(
         name="case_3.mod_a.func_b",
         tree=str_to_cst("def func_b() -> int:\n    return func_a() + func_a()\n").body[0],
         calls=["case_3.mod_a.func_a", "case_3.mod_a.func_a"],
-        imports={
-            ImportCST(
-                module="case_3.mod_a", import_type=ImportType.FROM, name="func_a", as_name="func_a"
-            )
-        },
+        imports={ImportCST(module="case_3.mod_a", import_type=ImportType.FROM, name="func_a", as_name="func_a")},
     ),
     "case_3.mod_b.CONSTANT": GlobalCST(
         name="case_3.mod_b.CONSTANT",
@@ -55,9 +49,7 @@ CASE_3_ENTITIES = {
     ),
     "case_3.mod_b.B": ClassCST(
         name="case_3.mod_b.B",
-        tree=str_to_cst("class B:\n    def method_a(self) -> int:\n        return CONSTANT\n").body[
-            0
-        ],
+        tree=str_to_cst("class B:\n    def method_a(self) -> int:\n        return CONSTANT\n").body[0],
         methods=[
             FuncCST(
                 name="case_3.mod_b.B.method_a",
@@ -130,10 +122,7 @@ def test_second_half_of_processing(call_tree, entities, location_map, src_root, 
         .and_then(infer_module_names)
         .and_then(rename_overlapping_mod_names)
         .and_then(remap_imports)
-        .and_then(
-            convert_to_code_str,
-            order_map=location_map,
-        )
+        .and_then(convert_to_code_str, order_map=location_map)
         .and_then(create_new_filepaths, new_root=src_root)
         .and_then(add_empty_inits_if_needed)
     )

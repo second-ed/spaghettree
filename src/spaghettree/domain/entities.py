@@ -57,9 +57,7 @@ class ClassCST:
     def filter_native_calls(self, entities: Collection[str]) -> Self:
         for meth in self.methods:
             bases_and_calls = self.bases + meth.calls
-            meth.calls = [
-                call for call in bases_and_calls if call in entities and meth != self.name
-            ]
+            meth.calls = [call for call in bases_and_calls if call in entities and meth != self.name]
         return self
 
     def resolve_native_imports(self) -> Self:
@@ -148,11 +146,7 @@ class GlobalCST:
             return self
 
         self.imports.update(
-            {
-                imp
-                for imp in imports
-                if imp.as_name in self.referenced or imp.module in sys.stdlib_module_names
-            }
+            {imp for imp in imports if imp.as_name in self.referenced or imp.module in sys.stdlib_module_names}
         )
         return self
 
@@ -181,11 +175,7 @@ class ImportCST:
         return " ".join(output) + "\n"
 
 
-def resolve_calls(
-    calls: list[str],
-    import_map: dict[str, str],
-    ent_map: dict[str, str],
-) -> list[str]:
+def resolve_calls(calls: list[str], import_map: dict[str, str], ent_map: dict[str, str]) -> list[str]:
     logger.debug(f"{calls = }")
     logger.debug(f"{import_map = }")
     logger.debug(f"{ent_map = }")

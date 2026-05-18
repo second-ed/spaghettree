@@ -12,9 +12,7 @@ REPO_ROOT = Path(__file__).absolute().parents[3]
 load_dotenv(f"{REPO_ROOT}/envs/.env")
 
 if os.getenv("SPAGHETTREE_LOGGING_ENABLED", "false").lower() == "true":
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)-8s [%(filename)s:%(lineno)d:%(funcName)s] %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s | %(levelname)-8s [%(filename)s:%(lineno)d:%(funcName)s] %(message)s")
     logger.setLevel(logging.DEBUG)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.DEBUG)

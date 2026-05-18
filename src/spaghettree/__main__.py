@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 
 from danom import Result
@@ -9,10 +11,7 @@ from spaghettree.domain.parsing import (
     extract_entities_and_locations,
     filter_non_native_calls,
 )
-from spaghettree.domain.processing import (
-    analyse_existing_structure,
-    optimise_entity_positions,
-)
+from spaghettree.domain.processing import analyse_existing_structure, optimise_entity_positions
 
 
 def main(

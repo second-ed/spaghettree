@@ -21,17 +21,13 @@ class IOBase(ABC):
         converter=lambda x: str(x).strip("/"),
         validator=attrs.validators.instance_of(str),
     )
-    src_files: dict[str, str] = attrs.field(
-        factory=dict, validator=attrs.validators.instance_of(dict)
-    )
+    src_files: dict[str, str] = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     tests_dirname: str = attrs.field(
         default="tests",
         converter=lambda x: str(x).strip("/"),
         validator=attrs.validators.instance_of(str),
     )
-    test_files: dict[str, str] = attrs.field(
-        factory=dict, validator=attrs.validators.instance_of(dict)
-    )
+    test_files: dict[str, str] = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     ignore_dirs: list[str] = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
 
     @abstractmethod
@@ -67,8 +63,7 @@ class IOBase(ABC):
                 if f"/{self.src_dirname}/" in path:
                     self.src_files[path] = res.inner
                 elif f"/{self.tests_dirname}/" in path and (
-                    Path(path).stem.startswith("test_")
-                    or Path(path).stem in ["__init__", "conftest"]
+                    Path(path).stem.startswith("test_") or Path(path).stem in ["__init__", "conftest"]
                 ):
                     self.test_files[path] = res.inner
             else:
@@ -141,13 +136,7 @@ class FakeIOWrapper(IOBase):
         logger.debug(f"{self.files = }")
         if recursive:
             return sorted([f for f in self.files if root in f and f.endswith(".py")])
-        return sorted(
-            [
-                f
-                for f in self.files
-                if f.removeprefix(root).lstrip("/").split("/")[0].endswith(".py")
-            ]
-        )
+        return sorted([f for f in self.files if f.removeprefix(root).lstrip("/").split("/")[0].endswith(".py")])
 
     @safe
     def read(self, path: str) -> str:
@@ -159,10 +148,7 @@ class FakeIOWrapper(IOBase):
 
     def _run_ruff(self, path: str) -> None:
         tgt_files = self.list_files(path).unwrap()
-        self.files = {
-            p: format_code_str(self.files[p]) if p.endswith(".py") else self.files[p]
-            for p in tgt_files
-        }
+        self.files = {p: format_code_str(self.files[p]) if p.endswith(".py") else self.files[p] for p in tgt_files}
 
 
 def format_code_str(code: str) -> str:
