@@ -1,3 +1,5 @@
+from typing import Any
+
 import attrs
 import libcst as cst
 import libcst.matchers as m
@@ -28,6 +30,9 @@ class NodeMetadata:
     references: list = attrs.field(factory=list)
     imports: list = attrs.field(factory=list)
 
+    def to_dict(self) -> dict[str, Any]:
+        return attrs.asdict(self)
+
 
 def get_manager(root: str, paths: list[str]) -> FullRepoManager:
     return FullRepoManager(root, paths=paths, providers=METADATA_DEPS)
@@ -52,9 +57,7 @@ class NodeCollector(MetadataBase):
 
     def visit_Call(self, node: cst.Call) -> bool | None:  # noqa: N802
         if self.entities:
-            self.entities[-1].calls.extend(
-                self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set())
-            )
+            self.entities[-1].calls.extend(self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set()))
         return super().visit_Call(node)
 
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:  # noqa: N802
@@ -97,9 +100,7 @@ class NodeCollector(MetadataBase):
                 node=node,
                 position=self.get_metadata(cst.metadata.PositionProvider, node, None),
                 scope=self.get_metadata(cst.metadata.ScopeProvider, node, None),
-                qualified_names=self.get_metadata(
-                    cst.metadata.FullyQualifiedNameProvider, node, set()
-                ),
+                qualified_names=self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set()),
                 filepath=self.filepath,
             )
         )

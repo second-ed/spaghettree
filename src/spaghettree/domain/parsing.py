@@ -51,8 +51,7 @@ def extract_entities_and_locations(
         locations.update(visitor.locations)
 
         import_map = {
-            i.as_name: f"{i.module}.{i.as_name}" if i.module != i.as_name else i.module
-            for i in visitor.imports
+            i.as_name: f"{i.module}.{i.as_name}" if i.module != i.as_name else i.module for i in visitor.imports
         }
         ent_map = {ent.name.split(".")[-1]: ent.name for ent in entities.values()}
 
@@ -74,10 +73,7 @@ def extract_entities_and_locations(
 def filter_non_native_calls(entities: dict[str, EntityCST]) -> dict[str, EntityCST]:
     logger.debug(f"{entities = }")
     entities = deepcopy(entities)
-    return {
-        name: ent.filter_native_calls(entities).resolve_native_imports()
-        for name, ent in entities.items()
-    }
+    return {name: ent.filter_native_calls(entities).resolve_native_imports() for name, ent in entities.items()}
 
 
 @safe

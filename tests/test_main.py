@@ -8,9 +8,7 @@ from spaghettree.__main__ import main, run_process
 from spaghettree.adapters.io_wrapper import FakeIOWrapper
 
 
-@pytest.mark.parametrize(
-    ("src_root"), [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")]
-)
+@pytest.mark.parametrize(("src_root"), [pytest.param("./mock_data/mock_case_1", id="Should run E2E without any errs")])
 def test_e2e(src_root):
     try:
         tmp: Path = Path("./tmp_test").absolute()

@@ -1,8 +1,46 @@
+from pathlib import Path
+
+import libcst.matchers as m
 import polars as pl
 from danom import safe
 
 from spaghettree.v2.domain.utils import to_df, to_lf
-from spaghettree.v2.domain.visitors import NodeMetadata
+from spaghettree.v2.domain.visitors import NodeCollector, NodeMetadata, get_manager
+
+ENTITY_MATCHERS = m.OneOf(m.FunctionDef(), m.ClassDef(), m.Assign(), m.AnnAssign())
+REFERENCE_MATCHERS = m.OneOf(m.Call(), m.Name())
+IMPORT_MATCHERS = m.OneOf(m.Import(), m.ImportFrom())
+
+
+@safe
+def collect_node_metadata(
+    root: str,
+    entity_matchers: m.OneOf = ENTITY_MATCHERS,
+    reference_matchers: m.OneOf = REFERENCE_MATCHERS,
+    import_matchers: m.OneOf = IMPORT_MATCHERS,
+) -> list[NodeMetadata]:
+    paths = list(map(str, Path(root).rglob("**/*.py")))
+
+    manager = get_manager(root, paths)
+    manager.resolve_cache()
+
+    collected_nodes = []
+
+    for path in paths:
+        wrapper = manager.get_metadata_wrapper_for_path(path)
+        collector = NodeCollector(
+            entity_matchers=entity_matchers,
+            reference_matchers=reference_matchers,
+            import_matchers=import_matchers,
+            filepath=path,
+        )
+        wrapper.visit(collector)
+
+        for ent in collector.entities:
+            ent.imports.extend(collector.imports)
+
+        collected_nodes.extend(collector.entities)
+    return collected_nodes
 
 
 @safe
@@ -24,10 +62,7 @@ def entities_to_lf(entities: list[NodeMetadata]) -> pl.LazyFrame:
                     "name": name.name,
                     "source": name.source.name,
                     "scope": type(ent.scope).__name__,
-                    "calls": [
-                        {"call_name": call.name, "call_source": call.source.name}
-                        for call in ent.calls
-                    ],
+                    "calls": [{"call_name": call.name, "call_source": call.source.name} for call in ent.calls],
                     "imports": imports,
                 }
             )
@@ -96,13 +131,7 @@ def calc_module_name(name_col: str = "entity_name", alias: str = "module_name") 
 
 
 def calc_no_locals_call_name(call_name_col: str = "call_name") -> pl.Expr:
-    return (
-        pl.col(call_name_col)
-        .str.split("<locals>")
-        .list.get(0)
-        .str.strip_chars(".")
-        .alias("call_name")
-    )
+    return pl.col(call_name_col).str.split("<locals>").list.get(0).str.strip_chars(".").alias("call_name")
 
 
 def remove_non_native_calls() -> pl.Expr:

@@ -35,11 +35,7 @@ from tests.conftest import identifier
                 "case_2.mod_b.func_d": [],
                 "case_2.mod_b.ClassA": ["case_2.mod_b.func_d", "case_2.mod_b.func_d"],
             },
-            [
-                SuggestedMerge(
-                    entity="case_2.mod_a.func_c", target_community="case_2.mod_b", gain=0.125
-                )
-            ],
+            [SuggestedMerge(entity="case_2.mod_a.func_c", target_community="case_2.mod_b", gain=0.125)],
         ),
         pytest.param(
             {
@@ -116,11 +112,7 @@ def test_get_top_suggested_merges(call_tree, expected_result):
 def st_adj_mat_and_comms(draw, max_n: int = 20, max_val: int = 20) -> tuple[np.ndarray, list[int]]:
     n = draw(st.integers(min_value=1, max_value=max_n))
 
-    adj_mat = draw(
-        hnp.arrays(
-            dtype=np.int64, shape=(n, n), elements=st.integers(min_value=0, max_value=max_val)
-        )
-    )
+    adj_mat = draw(hnp.arrays(dtype=np.int64, shape=(n, n), elements=st.integers(min_value=0, max_value=max_val)))
 
     comms = draw(st.lists(st.integers(min_value=1, max_value=max_val), min_size=n, max_size=n))
 
@@ -152,9 +144,7 @@ def st_call_tree():
         st.tuples(subs_s, mods_s, ents_s)
         .flatmap(lambda x: _make_paths(*x))
         .flatmap(
-            lambda k: st.fixed_dictionaries(
-                {key: st.lists(st.sampled_from(k), min_size=0, max_size=5) for key in k}
-            )
+            lambda k: st.fixed_dictionaries({key: st.lists(st.sampled_from(k), min_size=0, max_size=5) for key in k})
         )
     )
 

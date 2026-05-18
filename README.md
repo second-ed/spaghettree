@@ -190,8 +190,8 @@ class SomeOtherClass:
 │   ├── v2
 │   │   └── domain
 │   │       ├── __init__.py
-│   │       ├── test_benchmarks.py
-│   │       └── test_optimisation.py
+│   │       ├── test_optimisation.py
+│   │       └── test_parsing.py
 │   ├── __init__.py
 │   ├── conftest.py
 │   └── test_main.py

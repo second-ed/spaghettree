@@ -31,12 +31,7 @@ class AdjMat:
             .with_row_index("idx")
         )
 
-        modules = (
-            lf.select(pl.col("module_name").alias("module"))
-            .unique()
-            .sort(by="module")
-            .with_row_index("idx")
-        )
+        modules = lf.select(pl.col("module_name").alias("module")).unique().sort(by="module").with_row_index("idx")
 
         edges = (
             lf.join(nodes, left_on="entity_name", right_on="node")
@@ -65,9 +60,7 @@ class AdjMat:
         if optimise:
             communities = communities.with_columns(pl.col("node").alias("module"))
 
-        return cls(
-            nodes=nodes.pipe(to_df), modules=modules.pipe(to_df), communities=communities, dwm=dwm
-        )
+        return cls(nodes=nodes.pipe(to_df), modules=modules.pipe(to_df), communities=communities, dwm=dwm)
 
 
 @attrs.define(frozen=True)
@@ -113,16 +106,10 @@ class DirectedWeightedModularity:
 
         return (
             nodes.join(nodes, how="cross", suffix="_j")
-            .join(
-                self.weighted_edges, left_on=["node", "node_j"], right_on=["src", "dst"], how="left"
-            )
+            .join(self.weighted_edges, left_on=["node", "node_j"], right_on=["src", "dst"], how="left")
             .with_columns(pl.col("weight").fill_null(0))
             .filter(pl.col("module") == pl.col("module_j"))
-            .with_columns(
-                (pl.col("weight") - (pl.col("k_out") * pl.col("k_in_j") / self.total_edges)).alias(
-                    "contrib"
-                )
-            )
+            .with_columns((pl.col("weight") - (pl.col("k_out") * pl.col("k_in_j") / self.total_edges)).alias("contrib"))
             .select((pl.col("contrib").sum().fill_null(0.0) / self.total_edges).cast(pl.Float64()))
             .item()
         )
@@ -130,9 +117,7 @@ class DirectedWeightedModularity:
 
 @safe
 def optimise_communities(adj_mat: AdjMat) -> AdjMat:
-    connected_nodes = set(adj_mat.dwm.weighted_edges["src"]) | set(
-        adj_mat.dwm.weighted_edges["dst"]
-    )
+    connected_nodes = set(adj_mat.dwm.weighted_edges["src"]) | set(adj_mat.dwm.weighted_edges["dst"])
     isolated = adj_mat.communities.filter(~pl.col("node").is_in(connected_nodes))
     adj_mat.communities = adj_mat.communities.filter(pl.col("node").is_in(connected_nodes))
 
@@ -166,9 +151,9 @@ def get_merge_scores(adj_mat: AdjMat) -> pl.DataFrame:
             score = adj_mat.dwm.calc(adj_mat.communities.with_columns(merge_communities(c1, c2)))
             gain = score - base_score
             merge_scores.append({"c1": c1, "c2": c2, "gain": gain})
-    return pl.DataFrame(
-        merge_scores, schema={"c1": pl.Int64(), "c2": pl.Int64(), "gain": pl.Float32()}
-    ).filter(pl.col("gain") > 0)
+    return pl.DataFrame(merge_scores, schema={"c1": pl.Int64(), "c2": pl.Int64(), "gain": pl.Float32()}).filter(
+        pl.col("gain") > 0
+    )
 
 
 def remove_overlapping_pairs(possible_pairs: pl.DataFrame) -> pl.DataFrame:
@@ -193,9 +178,4 @@ def apply_merges_lf(communities_lf: pl.DataFrame, merges_lf: pl.DataFrame) -> pl
 
 
 def merge_communities(community_1: int, community_2: int) -> pl.Expr:
-    return (
-        pl.when(pl.col("module") == community_2)
-        .then(community_1)
-        .otherwise(pl.col("module"))
-        .alias("module")
-    )
+    return pl.when(pl.col("module") == community_2).then(community_1).otherwise(pl.col("module")).alias("module")

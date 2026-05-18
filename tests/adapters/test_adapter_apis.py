@@ -48,9 +48,7 @@ class FakeMismatchingSignature:
             SanityCheck(),
             FakeMismatchingSignature(),
             id="ensure fails if fake not matching signature",
-            marks=pytest.mark.xfail(
-                reason="ensure fails if fake not matching signature", strict=True
-            ),
+            marks=pytest.mark.xfail(reason="ensure fails if fake not matching signature", strict=True),
         ),
         pytest.param(IOWrapper(), FakeIOWrapper(), id="ensure IO wrapper matches fake"),
         pytest.param(IOWrapper, IOBase, id="ensure IO wrapper matches protocol"),

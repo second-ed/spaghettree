@@ -32,9 +32,7 @@ def infer_module_names(
 
     best = (
         lf.with_columns(
-            split_module_name.list.slice(0, split_module_name.list.len() - 1)
-            .list.join(".")
-            .alias(inferred_module_col)
+            split_module_name.list.slice(0, split_module_name.list.len() - 1).list.join(".").alias(inferred_module_col)
         )
         .group_by([module_col, inferred_module_col])
         .agg(pl.len().alias("freq"))
@@ -48,9 +46,7 @@ def infer_module_names(
     )
 
     overflow = best.join(unique_best.select(module_col), on=module_col, how="anti").with_columns(
-        (pl.col(inferred_module_col) + "_" + pl.col(module_col).str.split(".").list.get(-1)).alias(
-            inferred_module_col
-        )
+        (pl.col(inferred_module_col) + "_" + pl.col(module_col).str.split(".").list.get(-1)).alias(inferred_module_col)
     )
     return (
         lf.join(
@@ -69,6 +65,4 @@ def construct_imports(
     node_col: str = "node_name",
     import_col: str = "import_stmt",
 ) -> pl.Expr:
-    return (
-        "from " + pl.col(module_col) + " import " + pl.col(node_col).str.split(".").list.get(-1)
-    ).alias(import_col)
+    return ("from " + pl.col(module_col) + " import " + pl.col(node_col).str.split(".").list.get(-1)).alias(import_col)

@@ -49,9 +49,7 @@ def analyse_existing_structure(
 ) -> tuple[dict[Path, str], Literal[""]]:
     adj_mat = AdjMat.from_call_tree(call_tree, optimise=optimise_src_code).unwrap()
     print(  # noqa: T201
-        yellow(
-            f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}"
-        )
+        yellow(f"Current Directed Weighted Modularity (DWM): {get_dwm(adj_mat.mat, adj_mat.communities): .5f}")
     )
     top_merges = get_top_suggested_merges(adj_mat).unwrap()
 
@@ -65,9 +63,7 @@ def analyse_existing_structure(
 
 
 @safe
-def create_new_module_map(
-    adj_mat: AdjMat, entities: dict[str, EntityCST]
-) -> dict[int, list[EntityCST]]:
+def create_new_module_map(adj_mat: AdjMat, entities: dict[str, EntityCST]) -> dict[int, list[EntityCST]]:
     new_modules: defaultdict[int, list[EntityCST]] = defaultdict(list)
 
     for i, mod_name in enumerate(adj_mat.communities):
@@ -87,9 +83,7 @@ def infer_module_names(new_modules: dict[int, list[EntityCST]]) -> dict[str, lis
         logger.debug(f"{contents = }")
         if len(contents) > 1:
             names = [".".join(ent.name.split(".")[:-1]) for ent in contents]
-            possible_module_names = sorted(
-                {(name, names.count(name)) for name in names}, key=lambda x: (-x[1], x[0])
-            )
+            possible_module_names = sorted({(name, names.count(name)) for name in names}, key=lambda x: (-x[1], x[0]))
             logger.debug(f"{possible_module_names = }")
 
             for name, _ in possible_module_names:
@@ -138,9 +132,7 @@ def rename_overlapping_mod_names(
     mod_names = list(renamed_modules)
     logger.debug(f"{renamed_modules = }")
     logger.debug(f"{mod_names = }")
-    return {
-        rename_mod_name(name, mod_names): contents for name, contents in renamed_modules.items()
-    }
+    return {rename_mod_name(name, mod_names): contents for name, contents in renamed_modules.items()}
 
 
 @safe
@@ -148,9 +140,7 @@ def remap_imports(modules: dict[str, list[EntityCST]]) -> dict[str, list[EntityC
     logger.debug(f"{modules = }")
 
     modules = deepcopy(modules)
-    entity_mod_map: dict[str, str] = {
-        ent.name: mod_name for mod_name, ents in modules.items() for ent in ents
-    }
+    entity_mod_map: dict[str, str] = {ent.name: mod_name for mod_name, ents in modules.items() for ent in ents}
 
     for mod_name, ents in modules.items():
         for ent in ents:
@@ -183,9 +173,7 @@ def remap_imports(modules: dict[str, list[EntityCST]]) -> dict[str, list[EntityC
 
 
 @safe
-def create_new_filepaths(
-    fixed_name_modules: dict[str, list[EntityCST]], new_root: str
-) -> dict[str, list[EntityCST]]:
+def create_new_filepaths(fixed_name_modules: dict[str, list[EntityCST]], new_root: str) -> dict[str, list[EntityCST]]:
     logger.debug(f"{fixed_name_modules = }")
 
     def to_filepath(new_root: str, name: str) -> str:
@@ -195,9 +183,7 @@ def create_new_filepaths(
 
 
 @safe
-def convert_to_code_str(
-    new_modules: dict[str, list[EntityCST]], order_map: dict[str, int]
-) -> dict[str, str]:
+def convert_to_code_str(new_modules: dict[str, list[EntityCST]], order_map: dict[str, int]) -> dict[str, str]:
     logger.debug(f"{new_modules = }")
     logger.debug(f"{order_map = }")
 
