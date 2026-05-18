@@ -19,7 +19,7 @@ def collect_node_metadata(
     reference_matchers: m.OneOf = REFERENCE_MATCHERS,
     import_matchers: m.OneOf = IMPORT_MATCHERS,
 ) -> list[NodeMetadata]:
-    paths = list(map(str, Path(root).rglob("**/*.py")))
+    paths = sorted(map(str, Path(root).rglob("**/*.py")))
 
     manager = get_manager(root, paths)
     manager.resolve_cache()

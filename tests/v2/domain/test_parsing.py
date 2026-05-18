@@ -24,6 +24,19 @@ def _convert_node_to_comparable_obj(node: NodeMetadata) -> dict[str, Any]:
             f"{REPO_ROOT}/mock_data/mock_case_1/src/case_1",
             [
                 {
+                    "calls": [],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_1/src/case_1/mod_a.py",
+                    "imports": [],
+                    "node": "def func_a() -> int:\n    return 0\n",
+                    "position": CodeRange(start=CodePosition(line=1, column=0), end=CodePosition(line=2, column=12)),
+                    "qualified_names": (QualifiedName("mod_a.func_a", QualifiedNameSource.LOCAL),),
+                    "references": [
+                        QualifiedName("mod_a.func_a", QualifiedNameSource.LOCAL),
+                        QualifiedName("builtins.int", QualifiedNameSource.BUILTIN),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
                     "calls": [
                         QualifiedName("case_1.mod_a.func_a", QualifiedNameSource.IMPORT),
                         QualifiedName("builtins.float", QualifiedNameSource.BUILTIN),
@@ -47,19 +60,6 @@ def _convert_node_to_comparable_obj(node: NodeMetadata) -> dict[str, Any]:
                         QualifiedName("case_1.mod_a.func_a", QualifiedNameSource.IMPORT),
                         QualifiedName("builtins.float", QualifiedNameSource.BUILTIN),
                         QualifiedName("case_1.mod_a.func_a", QualifiedNameSource.IMPORT),
-                    ],
-                    "scope": "GlobalScope",
-                },
-                {
-                    "calls": [],
-                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_1/src/case_1/mod_a.py",
-                    "imports": [],
-                    "node": "def func_a() -> int:\n    return 0\n",
-                    "position": CodeRange(start=CodePosition(line=1, column=0), end=CodePosition(line=2, column=12)),
-                    "qualified_names": (QualifiedName("mod_a.func_a", QualifiedNameSource.LOCAL),),
-                    "references": [
-                        QualifiedName("mod_a.func_a", QualifiedNameSource.LOCAL),
-                        QualifiedName("builtins.int", QualifiedNameSource.BUILTIN),
                     ],
                     "scope": "GlobalScope",
                 },
