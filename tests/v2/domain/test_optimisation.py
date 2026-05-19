@@ -41,11 +41,7 @@ from tests.conftest import st_dwm_and_comms
 )
 def test_directed_weighted_modularity(communities, expected_result):
     edges = pl.DataFrame(
-        [
-            {"src": 1, "dst": 2, "weight": 1},
-            {"src": 5, "dst": 6, "weight": 2},
-            {"src": 3, "dst": 6, "weight": 1},
-        ]
+        [{"src": 1, "dst": 2, "weight": 1}, {"src": 5, "dst": 6, "weight": 2}, {"src": 3, "dst": 6, "weight": 1}]
     )
 
     dwm = DirectedWeightedModularity.from_edges(edges)

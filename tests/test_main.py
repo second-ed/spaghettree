@@ -261,10 +261,7 @@ def test_run_process(fixture_get_subset_files, expected_result):
     [
         pytest.param(
             "mock_data/mock_case_1/src/case_1",
-            {
-                "case_1.mod_a.func_a": [],
-                "case_1.mod_b.func_b": ["case_1.mod_a.func_a", "case_1.mod_a.func_a"],
-            },
+            {"case_1.mod_a.func_a": [], "case_1.mod_b.func_b": ["case_1.mod_a.func_a", "case_1.mod_a.func_a"]},
             id="ensure identifies the correct call tree for case_1",
         ),
         pytest.param(

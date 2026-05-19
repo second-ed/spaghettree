@@ -3,14 +3,7 @@ from __future__ import annotations
 import attrs
 import libcst as cst
 
-from spaghettree.domain.entities import (
-    ClassCST,
-    FuncCST,
-    GlobalCST,
-    ImportCST,
-    ImportType,
-    scope_to_str,
-)
+from spaghettree.domain.entities import ClassCST, FuncCST, GlobalCST, ImportCST, ImportType, scope_to_str
 
 
 @attrs.define(frozen=True, eq=True, order=True)
@@ -182,9 +175,7 @@ class OnePassVisitor(MetadataBase):
 
     def _record_location(self, node: cst.CSTNode, name: str) -> None:
         self.locations[name] = EntityLocation(
-            path=self.module_name,
-            name=name,
-            line_no=self.get_metadata(cst.metadata.PositionProvider, node).start.line,
+            path=self.module_name, name=name, line_no=self.get_metadata(cst.metadata.PositionProvider, node).start.line
         )
 
     def _resolve_attr(self, node: cst.BaseExpression) -> str | None:

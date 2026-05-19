@@ -24,7 +24,7 @@ class NodeMetadata:
     node: cst.CSTNode = attrs.field(repr=False)
     position: cst.metadata.CodeRange
     scope: cst.metadata.Scope
-    qualified_names: tuple[cst.metadata.QualifiedName] = attrs.field(converter=tuple)
+    qualified_names: tuple[cst.metadata.QualifiedName] = attrs.field(converter=[sorted, tuple])
     filepath: str
     calls: list = attrs.field(factory=list)
     references: list = attrs.field(factory=list)

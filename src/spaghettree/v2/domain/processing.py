@@ -22,9 +22,7 @@ def compose_facts_and_adj_mat(lf: pl.LazyFrame, adj_mat: AdjMat) -> pl.DataFrame
 
 @safe
 def infer_module_names(
-    df: pl.DataFrame,
-    module_col: str = "optimised_module",
-    inferred_module_col: str = "inferred_module",
+    df: pl.DataFrame, module_col: str = "optimised_module", inferred_module_col: str = "inferred_module"
 ) -> pl.DataFrame:
     lf = df.pipe(to_lf)
 
@@ -49,11 +47,7 @@ def infer_module_names(
         (pl.col(inferred_module_col) + "_" + pl.col(module_col).str.split(".").list.get(-1)).alias(inferred_module_col)
     )
     return (
-        lf.join(
-            pl.concat([unique_best, overflow]).select([module_col, inferred_module_col]),
-            on=module_col,
-            how="left",
-        )
+        lf.join(pl.concat([unique_best, overflow]).select([module_col, inferred_module_col]), on=module_col, how="left")
         # .select("node_name", "inferred_module")
         .with_columns(construct_imports())
         .pipe(to_df)
@@ -61,8 +55,6 @@ def infer_module_names(
 
 
 def construct_imports(
-    module_col: str = "inferred_module",
-    node_col: str = "node_name",
-    import_col: str = "import_stmt",
+    module_col: str = "inferred_module", node_col: str = "node_name", import_col: str = "import_stmt"
 ) -> pl.Expr:
     return ("from " + pl.col(module_col) + " import " + pl.col(node_col).str.split(".").list.get(-1)).alias(import_col)

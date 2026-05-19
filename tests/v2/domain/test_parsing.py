@@ -64,7 +64,228 @@ def _convert_node_to_comparable_obj(node: NodeMetadata) -> dict[str, Any]:
                     "scope": "GlobalScope",
                 },
             ],
-        )
+        ),
+        pytest.param(
+            f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9",
+            [
+                {
+                    "calls": [QualifiedName(name="case_9.mod_utils.process_data", source=QualifiedNameSource.IMPORT)],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_generics.py",
+                    "imports": [
+                        {
+                            "import_as_name": "annotations",
+                            "import_module": "__future__",
+                            "import_name": "annotations",
+                            "import_type": ImportType.FROM,
+                        },
+                        {
+                            "import_as_name": "process_data",
+                            "import_module": "case_9.mod_utils",
+                            "import_name": "process_data",
+                            "import_type": ImportType.FROM,
+                        },
+                    ],
+                    "node": "\n\ndef process_list(items: list[str]) -> list[str]:\n    return process_data(items)\n",
+                    "position": CodeRange(start=CodePosition(line=6, column=0), end=CodePosition(line=7, column=30)),
+                    "qualified_names": (
+                        QualifiedName(name="mod_generics.process_list", source=QualifiedNameSource.LOCAL),
+                    ),
+                    "references": [
+                        QualifiedName(name="mod_generics.process_list", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(
+                            name="mod_generics.process_list.<locals>.items", source=QualifiedNameSource.LOCAL
+                        ),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="case_9.mod_utils.process_data", source=QualifiedNameSource.IMPORT),
+                        QualifiedName(
+                            name="mod_generics.process_list.<locals>.items", source=QualifiedNameSource.LOCAL
+                        ),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
+                    "calls": [
+                        QualifiedName(name="builtins.dict", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.zip", source=QualifiedNameSource.BUILTIN),
+                    ],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_generics.py",
+                    "imports": [
+                        {
+                            "import_as_name": "annotations",
+                            "import_module": "__future__",
+                            "import_name": "annotations",
+                            "import_type": ImportType.FROM,
+                        },
+                        {
+                            "import_as_name": "process_data",
+                            "import_module": "case_9.mod_utils",
+                            "import_name": "process_data",
+                            "import_type": ImportType.FROM,
+                        },
+                    ],
+                    "node": "\n\ndef create_mapping(keys: list[str], values: list[int]) -> dict[str, int]:\n    return dict(zip(keys, values, strict=False))\n",
+                    "position": CodeRange(start=CodePosition(line=10, column=0), end=CodePosition(line=11, column=48)),
+                    "qualified_names": (
+                        QualifiedName(name="mod_generics.create_mapping", source=QualifiedNameSource.LOCAL),
+                    ),
+                    "references": [
+                        QualifiedName(name="mod_generics.create_mapping", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(
+                            name="mod_generics.create_mapping.<locals>.keys", source=QualifiedNameSource.LOCAL
+                        ),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(
+                            name="mod_generics.create_mapping.<locals>.values", source=QualifiedNameSource.LOCAL
+                        ),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.int", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.dict", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.int", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.dict", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.zip", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(
+                            name="mod_generics.create_mapping.<locals>.keys", source=QualifiedNameSource.LOCAL
+                        ),
+                        QualifiedName(
+                            name="mod_generics.create_mapping.<locals>.values", source=QualifiedNameSource.LOCAL
+                        ),
+                        QualifiedName(name="builtins.False", source=QualifiedNameSource.BUILTIN),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
+                    "calls": [],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_generics.py",
+                    "imports": [
+                        {
+                            "import_as_name": "annotations",
+                            "import_module": "__future__",
+                            "import_name": "annotations",
+                            "import_type": ImportType.FROM,
+                        },
+                        {
+                            "import_as_name": "process_data",
+                            "import_module": "case_9.mod_utils",
+                            "import_name": "process_data",
+                            "import_type": ImportType.FROM,
+                        },
+                    ],
+                    "node": "\n\ndef find_item(items: list[str], target: str) -> str | None:\n    for item in items:\n        if item == target:\n            return item\n    return None\n",
+                    "position": CodeRange(start=CodePosition(line=14, column=0), end=CodePosition(line=18, column=15)),
+                    "qualified_names": (
+                        QualifiedName(name="mod_generics.find_item", source=QualifiedNameSource.LOCAL),
+                    ),
+                    "references": [
+                        QualifiedName(name="mod_generics.find_item", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_generics.find_item.<locals>.items", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="mod_generics.find_item.<locals>.target", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.str", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="builtins.None", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="mod_generics.find_item.<locals>.item", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_generics.find_item.<locals>.items", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_generics.find_item.<locals>.item", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_generics.find_item.<locals>.target", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_generics.find_item.<locals>.item", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.None", source=QualifiedNameSource.BUILTIN),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
+                    "calls": [QualifiedName(name="typing.TypeVar", source=QualifiedNameSource.IMPORT)],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_utils.py",
+                    "imports": [
+                        {
+                            "import_as_name": "TypeVar",
+                            "import_module": "typing",
+                            "import_name": "TypeVar",
+                            "import_type": ImportType.FROM,
+                        }
+                    ],
+                    "node": 'T = TypeVar("T")',
+                    "position": CodeRange(start=CodePosition(line=3, column=0), end=CodePosition(line=3, column=16)),
+                    "qualified_names": (QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),),
+                    "references": [
+                        QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="typing.TypeVar", source=QualifiedNameSource.IMPORT),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
+                    "calls": [],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_utils.py",
+                    "imports": [
+                        {
+                            "import_as_name": "TypeVar",
+                            "import_module": "typing",
+                            "import_name": "TypeVar",
+                            "import_type": ImportType.FROM,
+                        }
+                    ],
+                    "node": "\n\ndef process_data[T](data: list[T]) -> list[T]:\n    return [item for item in data if item is not None]\n",
+                    "position": CodeRange(start=CodePosition(line=6, column=0), end=CodePosition(line=7, column=54)),
+                    "qualified_names": (
+                        QualifiedName(name="mod_utils.process_data", source=QualifiedNameSource.LOCAL),
+                    ),
+                    "references": [
+                        QualifiedName(name="mod_utils.process_data", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_utils.process_data.<locals>.data", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(
+                            name="mod_utils.process_data.<locals>.<comprehension>.item",
+                            source=QualifiedNameSource.LOCAL,
+                        ),
+                        QualifiedName(
+                            name="mod_utils.process_data.<locals>.<comprehension>.item",
+                            source=QualifiedNameSource.LOCAL,
+                        ),
+                        QualifiedName(name="mod_utils.process_data.<locals>.data", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(
+                            name="mod_utils.process_data.<locals>.<comprehension>.item",
+                            source=QualifiedNameSource.LOCAL,
+                        ),
+                        QualifiedName(name="builtins.None", source=QualifiedNameSource.BUILTIN),
+                    ],
+                    "scope": "GlobalScope",
+                },
+                {
+                    "calls": [],
+                    "filepath": f"{REPO_ROOT}/mock_data/mock_case_9/src/case_9/mod_utils.py",
+                    "imports": [
+                        {
+                            "import_as_name": "TypeVar",
+                            "import_module": "typing",
+                            "import_name": "TypeVar",
+                            "import_type": ImportType.FROM,
+                        }
+                    ],
+                    "node": "\n\ndef get_first_item[T](items: list[T]) -> T:\n    return items[0]\n",
+                    "position": CodeRange(start=CodePosition(line=10, column=0), end=CodePosition(line=11, column=19)),
+                    "qualified_names": (
+                        QualifiedName(name="mod_utils.get_first_item", source=QualifiedNameSource.LOCAL),
+                    ),
+                    "references": [
+                        QualifiedName(name="mod_utils.get_first_item", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_utils.get_first_item.<locals>.items", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="builtins.list", source=QualifiedNameSource.BUILTIN),
+                        QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_utils.T", source=QualifiedNameSource.LOCAL),
+                        QualifiedName(name="mod_utils.get_first_item.<locals>.items", source=QualifiedNameSource.LOCAL),
+                    ],
+                    "scope": "GlobalScope",
+                },
+            ],
+        ),
     ],
 )
 def test_collect_node_metadata(root, expected_result) -> None:

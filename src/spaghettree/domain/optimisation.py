@@ -184,10 +184,7 @@ class SuggestedMerge:
 
     def display(self) -> None:
         print(  # noqa: T201
-            cyan(f"{self.entity}"),
-            yellow("->"),
-            cyan(f"{self.target_community}"),
-            green(f"+{self.gain:.3f}"),
+            cyan(f"{self.entity}"), yellow("->"), cyan(f"{self.target_community}"), green(f"+{self.gain:.3f}")
         )
 
 
@@ -218,9 +215,7 @@ def get_top_suggested_merges(adj_mat: AdjMat, top_n: int = 5) -> list[SuggestedM
         if best_choice is not None:
             suggested_merges.append(
                 SuggestedMerge(
-                    adj_mat.node_map.get(idx),
-                    adj_mat.comm_map.get(best_choice),
-                    best_score - starting_score,
+                    adj_mat.node_map.get(idx), adj_mat.comm_map.get(best_choice), best_score - starting_score
                 )
             )
 

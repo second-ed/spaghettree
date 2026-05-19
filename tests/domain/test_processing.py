@@ -24,10 +24,7 @@ CASE_3_CALL_TREE = {
 }
 CASE_3_ENTITIES = {
     "case_3.mod_a.A": ClassCST(
-        name="case_3.mod_a.A",
-        tree=str_to_cst("class A:\n    pass\n").body[0],
-        methods=[],
-        imports=set(),
+        name="case_3.mod_a.A", tree=str_to_cst("class A:\n    pass\n").body[0], methods=[], imports=set()
     ),
     "case_3.mod_a.func_a": FuncCST(
         name="case_3.mod_a.func_a",
@@ -42,10 +39,7 @@ CASE_3_ENTITIES = {
         imports={ImportCST(module="case_3.mod_a", import_type=ImportType.FROM, name="func_a", as_name="func_a")},
     ),
     "case_3.mod_b.CONSTANT": GlobalCST(
-        name="case_3.mod_b.CONSTANT",
-        tree=str_to_cst("CONSTANT = 3_000\n"),
-        referenced=[],
-        imports=set(),
+        name="case_3.mod_b.CONSTANT", tree=str_to_cst("CONSTANT = 3_000\n"), referenced=[], imports=set()
     ),
     "case_3.mod_b.B": ClassCST(
         name="case_3.mod_b.B",
@@ -58,14 +52,7 @@ CASE_3_ENTITIES = {
                 imports=set(),
             )
         ],
-        imports={
-            ImportCST(
-                module="case_3.mod_b",
-                import_type=ImportType.FROM,
-                name="CONSTANT",
-                as_name="CONSTANT",
-            )
-        },
+        imports={ImportCST(module="case_3.mod_b", import_type=ImportType.FROM, name="CONSTANT", as_name="CONSTANT")},
     ),
     "case_3.mod_b.C": GlobalCST(
         name="case_3.mod_b.C",
@@ -104,15 +91,7 @@ CASE_3_EXPECTED_RESULT = {
 
 @pytest.mark.parametrize(
     ("call_tree", "entities", "location_map", "src_root", "expected_result"),
-    [
-        pytest.param(
-            CASE_3_CALL_TREE,
-            CASE_3_ENTITIES,
-            CASE_3_LOC_MAP,
-            "some/src/root/case_3",
-            CASE_3_EXPECTED_RESULT,
-        )
-    ],
+    [pytest.param(CASE_3_CALL_TREE, CASE_3_ENTITIES, CASE_3_LOC_MAP, "some/src/root/case_3", CASE_3_EXPECTED_RESULT)],
 )
 def test_second_half_of_processing(call_tree, entities, location_map, src_root, expected_result):
     adj_mat = AdjMat.from_call_tree(call_tree, optimise=True).inner

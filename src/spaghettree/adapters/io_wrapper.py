@@ -17,15 +17,11 @@ from spaghettree.domain.optimisation import yellow
 @attrs.define
 class IOBase(ABC):
     src_dirname: str = attrs.field(
-        default="src",
-        converter=lambda x: str(x).strip("/"),
-        validator=attrs.validators.instance_of(str),
+        default="src", converter=lambda x: str(x).strip("/"), validator=attrs.validators.instance_of(str)
     )
     src_files: dict[str, str] = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     tests_dirname: str = attrs.field(
-        default="tests",
-        converter=lambda x: str(x).strip("/"),
-        validator=attrs.validators.instance_of(str),
+        default="tests", converter=lambda x: str(x).strip("/"), validator=attrs.validators.instance_of(str)
     )
     test_files: dict[str, str] = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     ignore_dirs: list[str] = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
