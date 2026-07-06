@@ -60,9 +60,7 @@ def build_dwm_st(weighted_edges: pl.DataFrame) -> DirectedWeightedModularity:
     )
 
     return DirectedWeightedModularity(
-        weighted_nodes=weighted_nodes,
-        weighted_edges=weighted_edges,
-        total_edges=weighted_edges["weight"].sum(),
+        weighted_nodes=weighted_nodes, weighted_edges=weighted_edges, total_edges=weighted_edges["weight"].sum()
     )
 
 

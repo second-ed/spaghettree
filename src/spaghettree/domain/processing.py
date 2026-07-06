@@ -102,9 +102,7 @@ def infer_module_names(new_modules: dict[int, list[EntityCST]]) -> dict[str, lis
 
 
 @safe
-def rename_overlapping_mod_names(
-    renamed_modules: dict[str, list[EntityCST]],
-) -> dict[str, list[EntityCST]]:
+def rename_overlapping_mod_names(renamed_modules: dict[str, list[EntityCST]]) -> dict[str, list[EntityCST]]:
     def rename_mod_name(name: str, renamed_modules: list[str]) -> str:
         logger.debug(f"{name = }")
         name_parts = name.split(".")
@@ -152,20 +150,10 @@ def remap_imports(modules: dict[str, list[EntityCST]]) -> dict[str, list[EntityC
                     updated_imports.add(imp)
                 elif new_mod != mod_name:
                     updated_imports.add(
-                        ImportCST(
-                            module=new_mod,
-                            import_type=imp.import_type,
-                            name=imp.name,
-                            as_name=imp.as_name,
-                        )
+                        ImportCST(module=new_mod, import_type=imp.import_type, name=imp.name, as_name=imp.as_name)
                     )
             updated_imports.add(
-                ImportCST(
-                    module="__future__",
-                    import_type=ImportType.FROM,
-                    name="annotations",
-                    as_name="annotations",
-                )
+                ImportCST(module="__future__", import_type=ImportType.FROM, name="annotations", as_name="annotations")
             )
             ent.imports = updated_imports
             logger.debug(f"{mod_name = } {ent = }")

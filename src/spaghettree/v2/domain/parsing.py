@@ -106,11 +106,7 @@ def calc_fact_table(lf: pl.LazyFrame) -> pl.LazyFrame:
         .fill_null("")
         .filter(pl.col("scope").ne("FunctionScope") & pl.col("call_source").ne("BUILTIN"))
         .with_columns(calc_entity_name(), calc_no_locals_call_name())
-        .with_columns(
-            remove_non_native_calls(),
-            calc_module_name(),
-            calc_module_name("call_name", "call_module_name"),
-        )
+        .with_columns(remove_non_native_calls(), calc_module_name(), calc_module_name("call_name", "call_module_name"))
         .filter(pl.col("call_name") != pl.col("entity_name"))
     )
 

@@ -6,11 +6,7 @@ from danom import Result
 
 from spaghettree.adapters.io_wrapper import IOBase, IOWrapper
 from spaghettree.core.logger import logger
-from spaghettree.domain.parsing import (
-    create_call_tree,
-    extract_entities_and_locations,
-    filter_non_native_calls,
-)
+from spaghettree.domain.parsing import create_call_tree, extract_entities_and_locations, filter_non_native_calls
 from spaghettree.domain.processing import analyse_existing_structure, optimise_entity_positions
 
 
@@ -24,11 +20,7 @@ def main(
 ) -> Result:
     io = IOWrapper(ignore_dirs=ignore_dirs or [])
     return run_process(
-        io,
-        src_root,
-        new_root=new_root,
-        optimise_src_code=optimise_src_code,
-        call_tree_save_path=call_tree_save_path,
+        io, src_root, new_root=new_root, optimise_src_code=optimise_src_code, call_tree_save_path=call_tree_save_path
     )
 
 
@@ -51,11 +43,7 @@ def run_process(
 
     if optimise_src_code:
         res = optimise_entity_positions(
-            entities=entities,
-            location_map=location_map,
-            call_tree=call_tree,
-            src_root=src_root,
-            new_root=new_root,
+            entities=entities, location_map=location_map, call_tree=call_tree, src_root=src_root, new_root=new_root
         ).unwrap()
     else:
         res, new_root = analyse_existing_structure(

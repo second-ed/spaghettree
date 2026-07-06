@@ -19,11 +19,7 @@ from tests.conftest import identifier
     ("call_tree", "expected_result"),
     [
         pytest.param(
-            {
-                "case_1.mod_a.func_a": [],
-                "case_1.mod_b.func_b": ["case_1.mod_a.func_a", "case_1.mod_a.func_a"],
-            },
-            [],
+            {"case_1.mod_a.func_a": [], "case_1.mod_b.func_b": ["case_1.mod_a.func_a", "case_1.mod_a.func_a"]}, []
         ),
         pytest.param(
             {
@@ -46,13 +42,7 @@ from tests.conftest import identifier
                 "case_3.mod_b.B": ["case_3.mod_b.CONSTANT"],
                 "case_3.mod_b.C": ["case_3.mod_a.A", "case_3.mod_b.B"],
             },
-            [
-                SuggestedMerge(
-                    entity="case_3.mod_a.A",
-                    target_community="case_3.mod_b",
-                    gain=0.15999999999999986,
-                )
-            ],
+            [SuggestedMerge(entity="case_3.mod_a.A", target_community="case_3.mod_b", gain=0.15999999999999986)],
         ),
         pytest.param(
             {
@@ -133,10 +123,7 @@ def st_call_tree():
 
     def _make_paths(subs, mods, ents):
         path_strategy = st.builds(
-            lambda s, m, e: f"package.{s}.{m}.{e}",
-            st.sampled_from(subs),
-            st.sampled_from(mods),
-            st.sampled_from(ents),
+            lambda s, m, e: f"package.{s}.{m}.{e}", st.sampled_from(subs), st.sampled_from(mods), st.sampled_from(ents)
         )
         return st.sets(path_strategy, min_size=len(ents), max_size=len(ents)).map(sorted)
 

@@ -25,9 +25,7 @@ def cst_to_str(node: cst.CSTNode) -> str:
 
 
 @safe
-def extract_entities_and_locations(
-    src_code: dict[str, str],
-) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
+def extract_entities_and_locations(src_code: dict[str, str]) -> tuple[dict[str, EntityCST], dict[str, EntityLocation]]:
     def find_common_prefix(paths: Iterable[str]) -> str:
         logger.debug(f"{paths = }")
         return str(pathlib.Path(os.path.commonpath(paths)).parent)
