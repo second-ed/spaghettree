@@ -40,6 +40,7 @@ dev = [
     "papertrail>=0.1.2",
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
+    "pytest-codspeed",
     "pytest-cov>=6.0.0",
     "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.9",
