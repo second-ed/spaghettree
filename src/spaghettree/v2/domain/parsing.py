@@ -26,14 +26,12 @@ def collect_node_metadata(
 
     collected_nodes = []
 
+    collector = NodeCollector(
+        entity_matchers=entity_matchers, reference_matchers=reference_matchers, import_matchers=import_matchers
+    )
+
     for path in paths:
         wrapper = manager.get_metadata_wrapper_for_path(path)
-        collector = NodeCollector(
-            entity_matchers=entity_matchers,
-            reference_matchers=reference_matchers,
-            import_matchers=import_matchers,
-            filepath=path,
-        )
         wrapper.visit(collector)
 
         for ent in collector.entities:

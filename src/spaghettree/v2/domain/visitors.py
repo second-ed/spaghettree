@@ -45,7 +45,16 @@ class NodeCollector(MetadataBase):
     import_matchers: m.BaseMatcherNode
     entities: list[NodeMetadata] = attrs.field(factory=list)
     imports: list = attrs.field(factory=list)
-    filepath: str = attrs.field(default="")
+    filepath: str = attrs.field(default="", converter=str)
+
+    def visit_Module(self, node: cst.Module) -> bool | None:  # noqa: N802
+        self.entities, self.imports = [], []
+        self.filepath = self.get_metadata(cst.metadata.FilePathProvider, node, "")
+        return super().visit_Module(node)
+
+    def leave_Module(self, original_node: cst.Module) -> None:  # noqa: N802
+        self.filepath = ""
+        return super().leave_Module(original_node)
 
     def visit_AnnAssign(self, node: cst.AnnAssign) -> bool | None:  # noqa: N802
         self._handle_entity(node)
@@ -99,7 +108,7 @@ class NodeCollector(MetadataBase):
             NodeMetadata(
                 node=node,
                 position=self.get_metadata(cst.metadata.PositionProvider, node, None),
-                scope=self.get_metadata(cst.metadata.ScopeProvider, node, None),
+                scope=scope,
                 qualified_names=self.get_metadata(cst.metadata.FullyQualifiedNameProvider, node, set()),
                 filepath=self.filepath,
             )
